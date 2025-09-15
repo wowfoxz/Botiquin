@@ -9,15 +9,14 @@ import { analyzeImageWithGemini, getDrugInfoWithGemini } from '@/lib/ai-processo
 
 export async function processUploadedImage(imageBase64: string, mimeType: string) {
     if (!imageBase64 || !mimeType) {
-        // This should be handled on the client, but as a safeguard:
         redirect('/medications/new/upload?error=No-image');
         return;
     }
 
     const imageBuffer = Buffer.from(imageBase64, 'base64');
-
+    
     const imageAnalysis = await analyzeImageWithGemini(imageBuffer, mimeType);
-
+    
     if (imageAnalysis.error || !imageAnalysis.nombre_comercial) {
         const errorMessage = imageAnalysis.error || 'No se pudo identificar el medicamento en la imagen.';
         redirect(`/medications/new/upload?error=${encodeURIComponent(errorMessage)}`);
@@ -28,7 +27,7 @@ export async function processUploadedImage(imageBase64: string, mimeType: string
     if (drugInfo.error) {
         console.error("Error en la búsqueda de información web:", drugInfo.error);
     }
-
+    
     const combinedData = {
         nombre_comercial: imageAnalysis.nombre_comercial,
         cantidad_inicial: imageAnalysis.cantidad,
@@ -76,7 +75,6 @@ export async function registerUser(formData: FormData) {
     },
   });
 
-  // Iniciar sesión automáticamente después del registro
   await createSession(newUser.id);
   redirect('/');
 }
@@ -103,7 +101,6 @@ export async function loginUser(formData: FormData) {
     return { error: 'Credenciales no válidas.' };
   }
 
-  // Crear la sesión
   await createSession(user.id);
   redirect('/');
 }
@@ -151,11 +148,9 @@ export async function updateMedicationQuantity(formData: FormData) {
   const newQuantity = parseFloat(formData.get('newQuantity') as string);
 
   if (newQuantity < 0) {
-    // Maybe return an error message in the future
     return;
   }
 
-  // Future improvement: check if the medication belongs to the logged-in user
   await prisma.medication.update({
     where: { id },
     data: {
@@ -169,7 +164,6 @@ export async function updateMedicationQuantity(formData: FormData) {
 export async function toggleMedicationArchiveStatus(formData: FormData) {
     const id = formData.get('id') as string;
 
-    // Future improvement: check if the medication belongs to the logged-in user
     const medication = await prisma.medication.findUnique({
         where: { id },
         select: { archived: true },
