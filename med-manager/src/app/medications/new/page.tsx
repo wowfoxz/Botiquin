@@ -72,7 +72,7 @@ export default function NewMedicationPage({
                         Fecha de Vencimiento
                         </label>
                         <input name="expirationDate" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" id="expirationDate" type="date" required />
-                        <p className="text-gray-600 text-xs italic mt-2">Este campo debes rellenarlo manualmente.</p>
+                        <p className="text-gray-600 text-xs italic mt-2">Este campo debes rellenarlo manually.</p>
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
