@@ -1,15 +1,16 @@
 import { updateNotificationSettings } from '@/app/actions';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/session';
 import Link from 'next/link';
 
 export default async function SettingsPage() {
-  // In the future, we'll get the logged-in user's ID.
-  const user = await prisma.user.findFirst();
+  const session = await getSession();
+  const userId = session?.userId;
 
   let settings = null;
-  if (user) {
+  if (userId) {
     settings = await prisma.notificationSettings.findUnique({
-      where: { userId: user.id },
+      where: { userId: userId },
     });
   }
 

@@ -1,3 +1,4 @@
+import { logoutUser } from '@/app/actions';
 import MedicationList from '@/components/medication-list';
 import NotificationPanel from '@/components/notification-panel';
 import Search from '@/components/search';
@@ -26,6 +27,11 @@ export default async function Home({
                 <Link href="/settings" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                     Configuración
                 </Link>
+                <form action={logoutUser}>
+                    <button type="submit" className="text-sm font-medium text-red-600 hover:text-red-900">
+                        Cerrar Sesión
+                    </button>
+                </form>
                 <Link href="/medications/new" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Agregar Medicamento
                 </Link>

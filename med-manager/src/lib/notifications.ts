@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { Medication, NotificationSettings } from '@prisma/client';
+import { getSession } from '@/lib/session';
 
 export interface Notification {
   id: string;
@@ -9,22 +9,21 @@ export interface Notification {
 
 // This function will be called from a Server Component to get the notifications.
 export async function getNotifications(): Promise<Notification[]> {
-  // In the future, we'll get the logged-in user's ID.
-  const user = await prisma.user.findFirst();
-
-  if (!user) {
+  const session = await getSession();
+  if (!session?.userId) {
     return [];
   }
+  const userId = session.userId;
 
   let settings = await prisma.notificationSettings.findUnique({
-    where: { userId: user.id },
+    where: { userId: userId },
   });
 
   // If user has no settings, create them with default values.
   if (!settings) {
     settings = await prisma.notificationSettings.create({
       data: {
-        userId: user.id,
+        userId: userId,
         daysBeforeExpiration: 30,
         lowStockThreshold: 10,
       },
@@ -38,7 +37,7 @@ export async function getNotifications(): Promise<Notification[]> {
 
   const medicationsToNotify = await prisma.medication.findMany({
     where: {
-      userId: user.id,
+      userId: userId,
       archived: false,
       OR: [
         {
@@ -58,7 +57,6 @@ export async function getNotifications(): Promise<Notification[]> {
   const notifications: Notification[] = [];
 
   for (const med of medicationsToNotify) {
-    // Check if the medication is within the expiration threshold and not already expired
     const isExpiringSoon = med.expirationDate <= expirationDateThreshold && med.expirationDate > new Date();
     const isLowStock = med.currentQuantity <= lowStockThreshold;
 
@@ -85,7 +83,6 @@ export async function getNotifications(): Promise<Notification[]> {
     }
   }
 
-  // Remove duplicate notifications if a medication triggers both expiry and stock alerts
   const uniqueNotifications = Array.from(new Map(notifications.map(item => [item.id, item])).values());
 
   return uniqueNotifications;
