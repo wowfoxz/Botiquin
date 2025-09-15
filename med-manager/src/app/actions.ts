@@ -86,3 +86,33 @@ export async function toggleMedicationArchiveStatus(formData: FormData) {
     revalidatePath('/');
     revalidatePath('/medications/archived');
 }
+
+export async function updateNotificationSettings(formData: FormData) {
+  const daysBeforeExpiration = parseInt(formData.get('daysBeforeExpiration') as string, 10);
+  const lowStockThreshold = parseFloat(formData.get('lowStockThreshold') as string);
+
+  // In the future, we'll get the logged-in user's ID.
+  const user = await prisma.user.findFirst();
+  if (!user) {
+    // Or handle error appropriately
+    // This case should ideally not happen if the user is on the settings page.
+    return;
+  }
+
+  await prisma.notificationSettings.upsert({
+    where: { userId: user.id },
+    update: {
+      daysBeforeExpiration,
+      lowStockThreshold,
+    },
+    create: {
+      userId: user.id,
+      daysBeforeExpiration,
+      lowStockThreshold,
+    },
+  });
+
+  revalidatePath('/'); // Revalidate the home page to get new notifications
+  revalidatePath('/settings'); // Revalidate the settings page itself
+  redirect('/settings'); // Redirect back to settings page to show a success state
+}

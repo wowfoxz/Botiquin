@@ -2,10 +2,24 @@ import React from 'react';
 import MedicationCard from './medication-card';
 import prisma from '@/lib/prisma';
 
-const MedicationList = async () => {
+const MedicationList = async ({ query }: { query: string }) => {
   const medications = await prisma.medication.findMany({
     where: {
       archived: false,
+      OR: [
+        {
+          commercialName: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+        {
+          activeIngredient: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+      ],
     },
     orderBy: {
       expirationDate: 'asc',
@@ -15,8 +29,8 @@ const MedicationList = async () => {
   if (medications.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No hay medicamentos en tu stock.</p>
-        <p className="text-gray-500">¡Agrega uno para empezar!</p>
+        <p className="text-gray-500">No se encontraron medicamentos.</p>
+        <p className="text-gray-500">Intenta con otra búsqueda o agrega un nuevo medicamento.</p>
       </div>
     );
   }
