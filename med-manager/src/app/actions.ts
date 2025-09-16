@@ -14,9 +14,15 @@ export async function processUploadedImage(imageBase64: string, mimeType: string
     }
 
     const imageBuffer = Buffer.from(imageBase64, 'base64');
+<<<<<<< HEAD
 
     const imageAnalysis = await analyzeImageWithGemini(imageBuffer, mimeType);
 
+=======
+    
+    const imageAnalysis = await analyzeImageWithGemini(imageBuffer, mimeType);
+    
+>>>>>>> main
     if (imageAnalysis.error || !imageAnalysis.nombre_comercial) {
         const errorMessage = imageAnalysis.error || 'No se pudo identificar el medicamento en la imagen.';
         redirect(`/medications/new/upload?error=${encodeURIComponent(errorMessage)}`);
@@ -27,7 +33,11 @@ export async function processUploadedImage(imageBase64: string, mimeType: string
     if (drugInfo.error) {
         console.error("Error en la búsqueda de información web:", drugInfo.error);
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
     const combinedData = {
         nombre_comercial: imageAnalysis.nombre_comercial,
         cantidad_inicial: imageAnalysis.cantidad,
@@ -144,13 +154,17 @@ export async function addMedication(formData: FormData) {
 }
 
 export async function updateMedicationQuantity(formData: FormData) {
+<<<<<<< HEAD
   const session = await getSession();
   if (!session?.userId) return { error: 'No autenticado.' };
 
+=======
+>>>>>>> main
   const id = formData.get('id') as string;
   const newQuantity = parseFloat(formData.get('newQuantity') as string);
 
   if (newQuantity < 0) {
+<<<<<<< HEAD
     return { error: 'La cantidad no puede ser negativa.' };
   }
 
@@ -165,6 +179,13 @@ export async function updateMedicationQuantity(formData: FormData) {
 
   await prisma.medication.update({
     where: { id: id },
+=======
+    return;
+  }
+
+  await prisma.medication.update({
+    where: { id },
+>>>>>>> main
     data: {
       currentQuantity: newQuantity,
     },
@@ -174,6 +195,7 @@ export async function updateMedicationQuantity(formData: FormData) {
 }
 
 export async function toggleMedicationArchiveStatus(formData: FormData) {
+<<<<<<< HEAD
     const session = await getSession();
     if (!session?.userId) return { error: 'No autenticado.' };
 
@@ -194,6 +216,21 @@ export async function toggleMedicationArchiveStatus(formData: FormData) {
 
     await prisma.medication.update({
         where: { id: id },
+=======
+    const id = formData.get('id') as string;
+
+    const medication = await prisma.medication.findUnique({
+        where: { id },
+        select: { archived: true },
+    });
+
+    if (!medication) {
+      return;
+    }
+
+    await prisma.medication.update({
+        where: { id },
+>>>>>>> main
         data: {
             archived: !medication.archived,
         },
@@ -229,4 +266,8 @@ export async function updateNotificationSettings(formData: FormData) {
   revalidatePath('/');
   revalidatePath('/settings');
   redirect('/settings');
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> main

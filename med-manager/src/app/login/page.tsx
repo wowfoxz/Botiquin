@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 'use client';
 
 import { loginUser } from '@/app/actions';
@@ -36,6 +37,18 @@ export default function LoginPage() {
             </div>
           )}
 
+=======
+import { loginUser } from '@/app/actions';
+import Link from 'next/link';
+
+export default function LoginPage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-50">
+      <div className="w-full max-w-md">
+        <form action={loginUser} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Iniciar Sesión</h1>
+
+>>>>>>> main
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
               Correo Electrónico
@@ -65,10 +78,16 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <button
               type="submit"
+<<<<<<< HEAD
               disabled={isSubmitting}
               className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
             >
               {isSubmitting ? 'Entrando...' : 'Entrar'}
+=======
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+            >
+              Entrar
+>>>>>>> main
             </button>
           </div>
         </form>
