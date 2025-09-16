@@ -6,13 +6,20 @@ import { cookies } from 'next/headers';
 // larga y aleatoria, guardada de forma segura en una variable de entorno.
 const secretKey = 'una-clave-secreta-muy-larga-y-dificil-de-adivinar-para-el-desarrollo';
 const key = new TextEncoder().encode(secretKey);
+<<<<<<< HEAD
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
+=======
+>>>>>>> main
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
+<<<<<<< HEAD
     .setExpirationTime('24h') // La sesión expira en 24 horas
+=======
+    .setExpirationTime('1d') // La sesión expira en 1 día
+>>>>>>> main
     .sign(key);
 }
 
@@ -23,15 +30,24 @@ export async function decrypt(input: string): Promise<any> {
     });
     return payload;
   } catch (error) {
+<<<<<<< HEAD
+=======
+    // Esto puede ocurrir si el token ha expirado o es inválido
+>>>>>>> main
     return null;
   }
 }
 
 export async function createSession(userId: string) {
+<<<<<<< HEAD
   const expires = new Date(Date.now() + SESSION_DURATION_MS);
   const sessionPayload = { userId, expires: expires.toISOString() };
 
   const session = await encrypt(sessionPayload);
+=======
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 día
+  const session = await encrypt({ userId, expires });
+>>>>>>> main
 
   cookies().set('session', session, {
     httpOnly: true,
@@ -46,6 +62,7 @@ export async function getSession() {
   if (!sessionCookie) return null;
 
   const session = await decrypt(sessionCookie);
+<<<<<<< HEAD
   if (!session?.userId || !session?.expires) return null;
 
   // Comprobar si la sesión está a punto de expirar (ej: en la última mitad de su vida útil)
@@ -58,6 +75,16 @@ export async function getSession() {
   }
 
   return session;
+=======
+
+  // Refresca la sesión para que no expire mientras el usuario está activo
+  if (session?.userId) {
+    await createSession(session.userId);
+    return session;
+  }
+
+  return null;
+>>>>>>> main
 }
 
 export async function deleteSession() {
