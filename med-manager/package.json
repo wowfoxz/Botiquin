@@ -3,19 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-<<<<<<< HEAD
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
-=======
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "lint": "eslint"
-},
->>>>>>> main
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.16.1",
@@ -39,8 +31,4 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> main
