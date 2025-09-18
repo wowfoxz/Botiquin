@@ -4,15 +4,36 @@ import NotificationPanel from '@/components/notification-panel';
 import Search from '@/components/search';
 import { getNotifications } from '@/lib/notifications';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { decrypt } from '@/lib/session';
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     query?: string;
-  };
+  }>;
 }) {
-  const query = searchParams?.query || '';
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams?.query || '';
+
+  // Verificar si el usuario está autenticado
+  const sessionCookie = (await cookies()).get("session")?.value;
+  if (!sessionCookie) {
+    redirect('/login');
+  }
+
+  // Verificar si la sesión ha expirado
+  try {
+    const session = await decrypt(sessionCookie);
+    if (!session?.userId || (session.expires && new Date(session.expires) < new Date())) {
+      redirect('/login');
+    }
+  } catch {
+    redirect('/login');
+  }
+
   const notifications = await getNotifications();
 
   return (
