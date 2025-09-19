@@ -6,11 +6,18 @@ export default function NotificationPanel({ notifications }: { notifications: No
   }
 
   return (
-    <div className="mb-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 rounded-md">
-      <h3 className="text-lg font-bold text-yellow-800">Alertas Importantes</h3>
+    <div
+      className="mb-8 p-4 border-l-4 rounded-md"
+      style={{
+        backgroundColor: 'var(--advertencia)',
+        borderColor: 'var(--color-advertencia)',
+        color: 'var(--negro)'
+      }}
+    >
+      <h3 className="text-lg font-bold">Alertas Importantes</h3>
       <ul className="mt-2 list-disc list-inside">
         {notifications.map((notification) => (
-          <li key={notification.id} className="text-yellow-700">
+          <li key={notification.id}>
             {notification.message}
           </li>
         ))}

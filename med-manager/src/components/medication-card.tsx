@@ -17,11 +17,18 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   });
 
   return (
-    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${isExpired ? 'border-red-500' : 'border-green-500'}`}>
+    <div
+      className="rounded-lg shadow-md p-6 border-l-4"
+      style={{
+        backgroundColor: 'var(--fondo-secundario)',
+        borderColor: isExpired ? 'var(--error)' : 'var(--exito)',
+        color: 'var(--texto-primario)'
+      }}
+    >
       <h2 className="text-xl font-bold mb-2">{commercialName}</h2>
 
       <div className="mb-4">
-        <p className="text-gray-700">
+        <p>
           Quedan: <span className="font-semibold">{currentQuantity} {unit}</span>
         </p>
         <form action={updateMedicationQuantity} className="flex items-center gap-2 mt-2">
@@ -31,31 +38,47 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
               name="newQuantity"
               defaultValue={currentQuantity}
               step="any"
-              className="w-24 appearance-none block bg-gray-200 text-gray-700 border rounded py-2 px-3 leading-tight focus:outline-none focus:bg-white"
+              className="appearance-none block rounded py-2 px-3 leading-tight focus:outline-none"
+              style={{
+                backgroundColor: 'var(--gris-claro)',
+                color: 'var(--texto-primario)',
+                borderColor: 'var(--gris-medio)'
+              }}
             />
-            <button type="submit" className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-3 rounded text-sm">
+            <button
+              type="submit"
+              className="font-bold py-2 px-3 rounded text-sm"
+              style={{
+                backgroundColor: 'var(--gris-medio)',
+                color: 'var(--blanco)'
+              }}
+            >
               Actualizar
             </button>
         </form>
       </div>
 
       <div className="mb-4">
-        <h3 className="font-semibold text-gray-800">Para qué se usa:</h3>
-        <p className="text-gray-600">{description || 'No especificado'}</p>
+        <h3 className="font-semibold">Para qué se usa:</h3>
+        <p>{description || 'No especificado'}</p>
       </div>
 
       <div className="mb-4">
-        <h3 className="font-semibold text-gray-800">Recomendaciones de Ingesta:</h3>
-        <p className="text-gray-600">{intakeRecommendations || 'No especificado'}</p>
+        <h3 className="font-semibold">Recomendaciones de Ingesta:</h3>
+        <p>{intakeRecommendations || 'No especificado'}</p>
       </div>
 
       <div className="flex justify-between items-center mt-6">
-        <div className="text-sm text-gray-500">
-          Vence el: <span className={isExpired ? 'text-red-600 font-bold' : ''}>{expirationDateFormatted}</span>
+        <div className="text-sm">
+          Vence el: <span className={isExpired ? 'font-bold' : ''} style={{ color: isExpired ? 'var(--error)' : 'inherit' }}>{expirationDateFormatted}</span>
         </div>
         <form action={toggleMedicationArchiveStatus}>
             <input type="hidden" name="id" value={id} />
-            <button type="submit" className="text-sm font-medium text-red-600 hover:text-red-800">
+            <button
+              type="submit"
+              className="text-sm font-medium hover:opacity-80"
+              style={{ color: 'var(--error)' }}
+            >
               {archived ? 'Desarchivar' : 'Archivar'}
             </button>
         </form>
