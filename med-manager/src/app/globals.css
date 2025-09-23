@@ -1,80 +1,66 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "./tw-reset.css";
 
-@custom-variant dark (&:is(.dark *));
-
+/* ===== VARIABLES CSS PARA MODO CLARO ===== */
 :root {
-  /* ---- MODO CLARO ---- */
-  --fondo-primario: #f5f7fa;
-  --fondo-secundario: #e2e8f0;
-  --texto-primario: #1e293b;
-  --texto-secundario: #64748b;
+  --color-primary-soft-blue: #a2d5ff;
+  --color-primary-lavender: #d8c5f7;
+  --color-secondary-mint: #b5f2d9;
+  --color-secondary-coral: #ffb5b5;
+  --color-additional-purple: #a399ef;
+  --color-additional-dark-blue: #0a1123;
+  --color-additional-bright-blue: #717ff9;
 
-  --color-primario: #0a7bff;
-  --color-secundario: #2ecc71;
-  --color-acento: #9b59b6;
-  --color-advertencia: #ff6b35;
-  --color-error: #e74c3c;
-  --color-neutro: #7f8c8d;
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f8fafc;
+  --color-surface-tertiary: #f1f5f9;
+  --color-surface-interactive: #e2e8f0;
 
-  --blanco: #ffffff;
-  --radius: 0.5rem;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748b;
+  --color-text-inverse: #ffffff;
 
-  /* Variables para focus ring */
-  --ring: var(--color-primario);
+  --color-border-primary: #e2e8f0;
+  --color-border-secondary: #cbd5e1;
+  --color-border-focus: var(--color-primary-soft-blue);
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: var(--color-additional-bright-blue);
 }
 
-.dark {
-  /* ---- MODO OSCURO ---- */
-  --fondo-primario: #0f172a;
-  --fondo-secundario: #1e293b;
-  --texto-primario: #f1f5f9;
-  --texto-secundario: #cbd5e1;
+/* ===== MODO OSCURO ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface-primary: #0f172a;
+    --color-surface-secondary: #1e293b;
+    --color-surface-tertiary: #334155;
+    --color-surface-interactive: #475569;
 
-  --color-primario: #4da6ff;
-  --color-secundario: #55d98d;
-  --color-acento: #b07cc7;
-  --color-advertencia: #ff8c66;
-  --color-error: #ff6b6b;
-  --color-neutro: #94a3b8;
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #94a3b8;
+    --color-text-inverse: #0f172a;
 
-  --blanco: #f8fafc;
-
-  /* Variables para focus ring en modo oscuro */
-  --ring: var(--color-primario);
+    --color-border-primary: #334155;
+    --color-border-secondary: #475569;
+    --color-border-focus: var(--color-primary-lavender);
+  }
 }
 
-@theme inline {
-  --color-background: var(--fondo-primario);
-  --color-foreground: var(--texto-primario);
-  --color-primary: var(--color-primario);
-  --color-secondary: var(--color-secundario);
-  --color-accent: var(--color-acento);
-  --color-destructive: var(--color-error);
-  --color-warning: var(--color-advertencia);
-  --color-muted: var(--color-neutro);
-  --color-border: color-mix(in srgb, var(--color-neutro) 20%, transparent);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: calc(var(--radius) - 1px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
-}
-
-@layer base {
-  * {
-    border-color: var(--color-border);
-  }
-  body {
-    background-color: var(--fondo-primario);
-    color: var(--texto-primario);
-  }
-  
-  /* Asegurar que el botón de tema sea visible */
-  .theme-toggle-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+/* ===== MAPEO DE COLORES EN TAILWIND V4 ===== */
+@theme {
+  --color-primary-500: var(--color-primary-soft-blue);
+  --color-secondary-500: var(--color-secondary-mint);
+  --color-accent-500: var(--color-secondary-coral);
+  --color-surface-primary: var(--color-surface-primary);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border-primary: var(--color-border-primary);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
 }
