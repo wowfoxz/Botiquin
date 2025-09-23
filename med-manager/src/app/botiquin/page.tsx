@@ -41,14 +41,14 @@ export default async function Home({
   return (
     <main
       className="flex min-h-screen flex-col items-center p-24"
-      style={{ backgroundColor: "var(--fondo-primario)" }}
+      style={{ backgroundColor: "var(--color-surface-primary)" }}
     >
       <div className="w-full max-w-5xl">
         {/* Header */}
         <div className="flex items-center justify-between gap-4 mb-8">
           <h1
             className="text-4xl font-bold"
-            style={{ color: "var(--texto-primario)" }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             Botiquín
           </h1>
@@ -60,7 +60,7 @@ export default async function Home({
             <Link
               href="/medications/archived"
               className="text-sm font-medium hover:text-color-principal-oscuro"
-              style={{ color: "var(--texto-secundario)" }}
+              style={{ color: "var(--color-text-secondary)" }}
             >
               Ver Archivados
             </Link>
@@ -69,8 +69,8 @@ export default async function Home({
               href="/medications/new"
               className="font-bold py-2 px-4 rounded"
               style={{
-                backgroundColor: "var(--color-principal)",
-                color: "var(--blanco)",
+                backgroundColor: "var(--color-primary-soft-blue)",
+                color: "var(--color-text-inverse)",
               }}
             >
               Agregar Medicamento

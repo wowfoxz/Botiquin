@@ -34,7 +34,11 @@ const Menu = () => {
       {!isMenuOpen && (
         <button
           onClick={toggleMenu}
-          className="fixed top-4 left-4 z-50 p-2 rounded-md bg-blue-600 text-white shadow-lg focus:outline-none"
+          className="fixed top-4 left-4 z-50 p-2 rounded-md shadow-lg focus:outline-none"
+          style={{
+            backgroundColor: 'var(--color-primary-soft-blue)',
+            color: 'var(--color-text-inverse)'
+          }}
           aria-label="Abrir menú"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,7 +55,8 @@ const Menu = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/70 z-40"
+              className="fixed inset-0 z-40"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
               onClick={closeMenu}
             />
             <motion.div
@@ -59,13 +64,15 @@ const Menu = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 h-full w-64 bg-gray-100 shadow-xl z-50 p-4"
+              className="fixed top-0 left-0 h-full w-64 shadow-xl z-50 p-4"
+              style={{ backgroundColor: 'var(--color-surface-secondary)' }}
             >
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-xl font-bold text-gray-800">Menú</h2>
+                <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Menú</h2>
                 <button
                   onClick={closeMenu}
-                  className="p-2 rounded-md hover:bg-gray-200 focus:outline-none"
+                  className="p-2 rounded-md focus:outline-none"
+                  style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
                   aria-label="Cerrar menú"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,9 +88,11 @@ const Menu = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="rounded-md hover:bg-gray-200"
+                      className="rounded-md"
+                      style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
                     >
-                      <Link href={item.href} className="block py-2 px-4 text-gray-800">
+                      <Link href={item.href} className="block py-2 px-4"
+                        style={{ color: 'var(--color-text-primary)' }}>
                         {item.name}
                       </Link>
                     </motion.li>
@@ -92,12 +101,22 @@ const Menu = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: menuItems.length * 0.1 }}
-                    className="rounded-md hover:bg-gray-200"
+                    className="rounded-md"
+                    style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
                   >
                     <form action={logoutUser} className="w-full">
                       <button
                         type="submit"
-                        className="w-full text-left py-2 px-4 text-gray-800 hover:bg-red-500 hover:text-white rounded-md transition-colors"
+                        className="w-full text-left py-2 px-4 rounded-md transition-colors"
+                        style={{ color: 'var(--color-text-primary)' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--color-error)';
+                          e.currentTarget.style.color = 'var(--color-text-inverse)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '';
+                          e.currentTarget.style.color = 'var(--color-text-primary)';
+                        }}
                       >
                         Cerrar Sesión
                       </button>
