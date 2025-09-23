@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Configuración para optimizar el rendimiento
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
 };
 
 export default nextConfig;
