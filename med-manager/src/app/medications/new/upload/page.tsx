@@ -52,44 +52,52 @@ export default function UploadPage() {
         // This catch block is a safeguard for unexpected client-side errors.
         setError('Ocurrió un error inesperado al enviar la imagen.');
         console.error(err);
+    } finally {
         setIsSubmitting(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-50">
+    <main className="flex min-h-screen flex-col items-center justify-center p-24" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6">Agregar con Foto</h1>
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <h1 className="text-3xl font-bold text-center mb-6" style={{ color: 'var(--color-text-primary)' }}>Agregar con Foto</h1>
+        <form onSubmit={handleSubmit} className="shadow-md rounded px-8 pt-6 pb-8 mb-4" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
           <div className="mb-6">
-            <label htmlFor="image-upload" className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="image-upload" className="block text-sm font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
               Sube una foto de la caja del medicamento
             </label>
-            <p className="text-gray-600 text-xs italic mb-4">En tu teléfono, podrás usar la cámara directamente.</p>
+            <p className="text-xs italic mb-4" style={{ color: 'var(--color-text-secondary)' }}>En tu teléfono, podrás usar la cámara directamente.</p>
             <input
               id="image-upload"
               name="image"
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold focus:outline-none"
+              style={{
+                color: 'var(--color-text-secondary)'
+              }}
             />
           </div>
 
           {file && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-700">Vista previa:</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>Vista previa:</p>
               <img src={URL.createObjectURL(file)} alt="Vista previa de la imagen seleccionada" className="mt-2 rounded-md max-h-48 mx-auto" />
             </div>
           )}
 
-          {error && <p className="text-red-500 text-xs italic mb-4 text-center">{error}</p>}
+          {error && <p className="text-xs italic mb-4 text-center" style={{ color: 'var(--color-error)' }}>{error}</p>}
 
           <div className="flex items-center justify-center mt-6">
             <button
               type="submit"
               disabled={isSubmitting || !file}
-              className="w-full bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="w-full font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              style={{
+                backgroundColor: isSubmitting || !file ? 'var(--color-surface-interactive)' : 'var(--color-primary-soft-blue)',
+                color: 'var(--color-text-inverse)'
+              }}
             >
               {isSubmitting ? 'Analizando con IA...' : 'Analizar Imagen'}
             </button>

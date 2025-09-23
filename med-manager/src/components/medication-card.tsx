@@ -20,9 +20,9 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     <div
       className="rounded-lg shadow-md p-6 border-l-4"
       style={{
-        backgroundColor: 'var(--fondo-secundario)',
-        borderColor: isExpired ? 'var(--error)' : 'var(--exito)',
-        color: 'var(--texto-primario)'
+        backgroundColor: 'var(--color-surface-secondary)',
+        borderColor: isExpired ? 'var(--color-error)' : 'var(--color-success)',
+        color: 'var(--color-text-primary)'
       }}
     >
       <h2 className="text-xl font-bold mb-2">{commercialName}</h2>
@@ -40,17 +40,17 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
               step="any"
               className="appearance-none block rounded py-2 px-3 leading-tight focus:outline-none"
               style={{
-                backgroundColor: 'var(--gris-claro)',
-                color: 'var(--texto-primario)',
-                borderColor: 'var(--gris-medio)'
+                backgroundColor: 'var(--color-surface-tertiary)',
+                color: 'var(--color-text-primary)',
+                borderColor: 'var(--color-border-primary)'
               }}
             />
             <button
               type="submit"
               className="font-bold py-2 px-3 rounded text-sm"
               style={{
-                backgroundColor: 'var(--gris-medio)',
-                color: 'var(--blanco)'
+                backgroundColor: 'var(--color-surface-interactive)',
+                color: 'var(--color-text-inverse)'
               }}
             >
               Actualizar
@@ -70,14 +70,14 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
 
       <div className="flex justify-between items-center mt-6">
         <div className="text-sm">
-          Vence el: <span className={isExpired ? 'font-bold' : ''} style={{ color: isExpired ? 'var(--error)' : 'inherit' }}>{expirationDateFormatted}</span>
+          Vence el: <span className={isExpired ? 'font-bold' : ''} style={{ color: isExpired ? 'var(--color-error)' : 'inherit' }}>{expirationDateFormatted}</span>
         </div>
         <form action={toggleMedicationArchiveStatus}>
             <input type="hidden" name="id" value={id} />
             <button
               type="submit"
               className="text-sm font-medium hover:opacity-80"
-              style={{ color: 'var(--error)' }}
+              style={{ color: 'var(--color-error)' }}
             >
               {archived ? 'Desarchivar' : 'Archivar'}
             </button>

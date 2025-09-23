@@ -37,89 +37,119 @@ export default function PreciosPage() {
         body: JSON.stringify({ searchdata: searchTerm }),
       });
 
-      if (!response.ok) {
-        throw new Error('Error al buscar medicamentos');
-      }
-
       const data = await response.json();
-      setMedicamentos(data);
+
+      // Asegurarse de que siempre tengamos un array de medicamentos
+      const medicamentosArray = Array.isArray(data)
+        ? data
+        : data?.medicamentos || [];
+
+      setMedicamentos(medicamentosArray);
     } catch (err) {
       setError('Error al buscar medicamentos. Por favor, intente nuevamente.');
       console.error(err);
+      // En caso de error, aseguramos que la lista de medicamentos esté vacía
+      setMedicamentos([]);
     } finally {
+      setLoading(false);
       setLoading(false);
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Consulta de Precios de Medicamentos</h1>
-      
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h1 className="text-3xl font-bold mb-6" style={{ color: 'var(--color-text-primary)' }}>Consulta de Precios de Medicamentos</h1>
+
+      <div className="rounded-lg shadow-md p-6 mb-8" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
         <form onSubmit={handleSearch} className="flex gap-4">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar medicamento..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+            style={{
+              backgroundColor: 'var(--color-surface-secondary)',
+              color: 'var(--color-text-primary)',
+              borderColor: 'var(--color-border-primary)'
+            }}
             disabled={loading}
           />
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-6 py-2 rounded-lg disabled:opacity-50 font-medium"
+            style={{
+              backgroundColor: 'var(--color-primary-soft-blue)',
+              color: 'var(--color-text-inverse)'
+            }}
             disabled={loading || !searchTerm.trim()}
           >
             {loading ? 'Buscando...' : 'Buscar'}
           </button>
         </form>
-        
-        {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
       </div>
 
+      {loading && (
+        <div className="text-center py-8">
+          <p style={{ color: 'var(--color-text-secondary)' }}>Buscando medicamentos...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg shadow-md p-6 mb-8" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
+          <p className="text-center" style={{ color: 'var(--color-error)' }}>{error}</p>
+        </div>
+      )}
+
       {medicamentos.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="rounded-lg shadow-md overflow-hidden" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full">
+              <thead style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
                     Medicamento
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
                     Presentación
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
                     Laboratorio
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
                     Precio
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
                     Fecha
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y" style={{ borderColor: 'var(--color-border-secondary)' }}>
                 {medicamentos.map((med, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'var(--color-surface-primary)' : 'var(--color-surface-secondary)' }}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-text-primary)' }}>
                       {med.NOMBRE}
+                      {med.DROGA && med.DROGA !== med.NOMBRE && (
+                        <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                          ({med.DROGA})
+                        </div>
+                      )}
+                      {med.ACCION && (
+                        <div className="text-xs italic" style={{ color: 'var(--color-text-tertiary)' }}>
+                          {med.ACCION} - {med.VIA}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-text-primary)' }}>
                       {med.PRESENTACION}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-text-primary)' }}>
                       {med.LABORATORIO}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
                       ${med.PRECIO}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--color-text-primary)' }}>
                       {med.FECHA}
                     </td>
                   </tr>
@@ -131,9 +161,9 @@ export default function PreciosPage() {
       )}
 
       {medicamentos.length === 0 && !loading && !error && (
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <p className="text-gray-500">
-            Ingrese el nombre de un medicamento en el campo de búsqueda para consultar sus precios.
+        <div className="rounded-lg shadow-md p-8 text-center" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
+            {searchTerm ? 'No se encontraron medicamentos para su búsqueda.' : 'Ingrese el nombre de un medicamento en el campo de búsqueda para consultar sus precios.'}
           </p>
         </div>
       )}

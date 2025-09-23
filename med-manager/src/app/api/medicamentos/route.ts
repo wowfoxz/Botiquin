@@ -32,6 +32,27 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
+    // Verificar si la respuesta contiene medicamentos o la estructura es inesperada
+    if (
+      !data ||
+      (Array.isArray(data) && data.length === 0) ||
+      (data.medicamentos &&
+        Array.isArray(data.medicamentos) &&
+        data.medicamentos.length === 0) ||
+      // Si no es un array directo ni contiene la propiedad 'medicamentos' como array
+      (!Array.isArray(data) &&
+        !Array.isArray((data as { medicamentos?: unknown[] })?.medicamentos))
+    ) {
+      // Normalizar la respuesta para devolver siempre un array de medicamentos vacío
+      // y mantener un esquema consistente incluyendo el campo 'error' (null en caso de éxito)
+      return new Response(JSON.stringify({ error: null, medicamentos: [] }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
@@ -41,7 +62,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error al buscar medicamentos:", error);
     return new Response(
-      JSON.stringify({ error: "Error al buscar medicamentos" }),
+      JSON.stringify({
+        error: "Error al buscar medicamentos",
+        medicamentos: [],
+      }),
       {
         status: 500,
         headers: {

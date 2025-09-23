@@ -52,9 +52,9 @@ const MedicationList = async ({ query }: { query: string }) => {
 
   if (medications.length === 0) {
     return (
-      <div className="text-center py-12" style={{ backgroundColor: 'var(--fondo-primario)' }}>
-        <h3 className="text-lg font-medium" style={{ color: 'var(--texto-primario)' }}>No se encontraron medicamentos</h3>
-        <p className="mt-1" style={{ color: 'var(--texto-secundario)' }}>Intenta usar palabras clave diferentes</p>
+      <div className="text-center py-12" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
+        <h3 className="text-lg font-medium" style={{ color: 'var(--color-text-primary)' }}>No se encontraron medicamentos</h3>
+        <p className="mt-1" style={{ color: 'var(--color-text-secondary)' }}>Intenta usar palabras clave diferentes</p>
       </div>
     );
   }

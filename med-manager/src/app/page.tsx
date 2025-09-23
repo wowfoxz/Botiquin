@@ -28,18 +28,18 @@ export default async function Home({
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'var(--fondo-primario)' }}>
+    <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
       <div className="w-full max-w-5xl">
         <div className="flex items-center justify-between gap-2 mb-8">
-          <h1 className="text-4xl font-bold" style={{ color: 'var(--texto-primario)' }}>Dashboard</h1>
+          <h1 className="text-4xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Dashboard</h1>
           <div className="flex items-center gap-4">
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          <div className="bg-white rounded-lg shadow p-6" style={{ backgroundColor: 'var(--fondo-blanco)' }}>
-            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--texto-primario)' }}>Bienvenido</h2>
-            <p style={{ color: 'var(--texto-secundario)' }}>Este es tu panel de control personal.</p>
+          <div className="bg-white rounded-lg shadow p-6" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>Bienvenido</h2>
+            <p style={{ color: 'var(--color-text-secondary)' }}>Este es tu panel de control personal.</p>
           </div>
         </div>
       </div>

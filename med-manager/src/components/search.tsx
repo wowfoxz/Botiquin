@@ -26,9 +26,9 @@ export default function Search({ placeholder }: { placeholder: string }) {
         id="search"
         className="peer block w-full rounded-md py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
         style={{
-          backgroundColor: 'var(--fondo-secundario)',
-          borderColor: 'var(--gris-claro)',
-          color: 'var(--texto-primario)'
+          backgroundColor: 'var(--color-surface-secondary)',
+          borderColor: 'var(--color-border-primary)',
+          color: 'var(--color-text-primary)'
         }}
         placeholder={placeholder}
         onChange={(e) => {

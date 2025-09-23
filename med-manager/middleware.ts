@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/session";
-import { decrypt } from "@/lib/crypto";
+import { decrypt } from "@/lib/session";
 import { cookies } from "next/headers";
 
 // Este middleware se ejecuta para casi todas las peticiones.
@@ -28,7 +28,12 @@ export async function middleware(request: NextRequest) {
     : pathname;
 
   // Definir las rutas públicas que no requieren autenticación
-  const publicPaths = ["/login", "/register", "/api/health"];
+  const publicPaths = [
+    "/login",
+    "/register",
+    "/api/health",
+    "/api/medicamentos",
+  ];
   const isPublicPath = publicPaths.includes(adjustedPathname);
 
   // Permitir el acceso a archivos estáticos sin autenticación
