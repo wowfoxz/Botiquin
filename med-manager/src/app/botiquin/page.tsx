@@ -6,6 +6,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/session";
+import { Button } from "@/components/ui/button";
+import { PackagePlus, Archive } from "lucide-react";
 
 export default async function Home({
   searchParams,
@@ -39,52 +41,41 @@ export default async function Home({
   const notifications = await getNotifications();
 
   return (
-    <main
-      className="flex min-h-screen flex-col items-center p-24"
-      style={{ backgroundColor: "var(--color-surface-primary)" }}
-    >
-      <div className="w-full max-w-5xl">
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
+      <div className="w-full max-w-6xl">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <h1
-            className="text-4xl font-bold"
-            style={{ color: "var(--color-text-primary)" }}
-          >
-            Botiquín
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+            Mi Botiquín
           </h1>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {/* Notifications */}
             <NotificationPanel notifications={notifications} />
 
-            <Link
-              href="/medications/archived"
-              className="text-sm font-medium hover:text-color-principal-oscuro"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              Ver Archivados
+            <Link href="/medications/archived">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Archive className="h-4 w-4" />
+                <span className="hidden sm:inline">Ver Archivados</span>
+              </Button>
             </Link>
 
-            <Link
-              href="/medications/new"
-              className="font-bold py-2 px-4 rounded"
-              style={{
-                backgroundColor: "var(--color-primary-soft-blue)",
-                color: "var(--color-text-inverse)",
-              }}
-            >
-              Agregar Medicamento
+            <Link href="/medications/new">
+              <Button size="sm" className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600">
+                <PackagePlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Agregar Medicamento</span>
+              </Button>
             </Link>
           </div>
         </div>
 
         {/* Search */}
-        <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-          <Search placeholder="Buscar por nombre o droga..." />
+        <div className="mt-4">
+          <Search placeholder="Buscar por nombre comercial o principio activo..." />
         </div>
 
         {/* Medication list */}
-        <div className="mt-12">
+        <div className="mt-6 md:mt-8">
           <MedicationList query={query} />
         </div>
       </div>

@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Medication } from '@prisma/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const MedicationList = async ({ query }: { query: string }) => {
   // Verificar si el usuario está autenticado
@@ -52,15 +54,18 @@ const MedicationList = async ({ query }: { query: string }) => {
 
   if (medications.length === 0) {
     return (
-      <div className="text-center py-12" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
-        <h3 className="text-lg font-medium" style={{ color: 'var(--color-text-primary)' }}>No se encontraron medicamentos</h3>
-        <p className="mt-1" style={{ color: 'var(--color-text-secondary)' }}>Intenta usar palabras clave diferentes</p>
-      </div>
+      <Alert variant="default" className="mt-8">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>No se encontraron medicamentos</AlertTitle>
+        <AlertDescription>
+          Intenta usar palabras clave diferentes
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
       {medications.map((medication) => (
         <MedicationCard key={medication.id} medication={medication} />
       ))}
