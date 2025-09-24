@@ -2,6 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
+import { Input } from '@/components/ui/input';
+import { SearchIcon } from 'lucide-react';
 
 export default function Search({ placeholder }: { placeholder: string }) {
   const searchParams = useSearchParams();
@@ -18,27 +20,16 @@ export default function Search({ placeholder }: { placeholder: string }) {
   }, 300);
 
   return (
-    <div className="relative flex flex-1 flex-shrink-0">
-      <label htmlFor="search" className="sr-only">
-        Buscar
-      </label>
-      <input
-        id="search"
-        className="peer block w-full rounded-md py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
-        style={{
-          backgroundColor: 'var(--color-surface-secondary)',
-          borderColor: 'var(--color-border-primary)',
-          color: 'var(--color-text-primary)'
-        }}
+    <div className="relative w-full">
+      <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
         placeholder={placeholder}
         onChange={(e) => {
           handleSearch(e.target.value);
         }}
         defaultValue={searchParams.get('query')?.toString()}
+        className="pl-10"
       />
-      <div className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900">
-        <p>🔎</p>
-      </div>
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="flex flex-col min-h-screen">
-            <header className="flex justify-between items-center p-4 bg-background border-b relative">
+            <header className="flex justify-between items-center p-4 bg-background  relative">
               <Menu />
               <div className="absolute top-4 right-4 z-50">
                 <ThemeToggle />
