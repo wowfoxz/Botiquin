@@ -2,6 +2,11 @@ import { updateNotificationSettings } from '@/app/actions';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Home } from 'lucide-react';
 
 export default async function SettingsPage() {
   const session = await getSession();
@@ -19,69 +24,74 @@ export default async function SettingsPage() {
   const lowStockThreshold = settings?.lowStockThreshold ?? 10;
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
-      <div className="w-full max-w-lg">
-        <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Configuración</h1>
-            <Link href="/" className="hover:underline" style={{ color: 'var(--color-primary-soft-blue)' }}>
-                &larr; Volver al Stock
-            </Link>
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-24">
+      <div className="w-full max-w-2xl">
+        <div className="flex justify-between items-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configuración</h1>
+          <Link href="/">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span>Volver al Stock</span>
+            </Button>
+          </Link>
         </div>
 
-        <form action={updateNotificationSettings} className="shadow-md rounded px-8 pt-6 pb-8 mb-4" style={{ backgroundColor: 'var(--color-surface-primary)' }}>
-            <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text-primary)' }}>Notificaciones</h2>
-            <div className="mb-6">
-                <label className="block text-sm font-bold mb-2" style={{ color: 'var(--color-text-primary)' }} htmlFor="daysBeforeExpiration">
-                    Avisar de vencimiento (días antes)
-                </label>
-                <input
-                    id="daysBeforeExpiration"
-                    name="daysBeforeExpiration"
-                    type="number"
-                    defaultValue={daysBeforeExpiration}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                    style={{
-                      backgroundColor: 'var(--color-surface-secondary)',
-                      color: 'var(--color-text-primary)',
-                      borderColor: 'var(--color-border-primary)'
-                    }}
-                    required
+        <Card className="shadow-sm border border-border bg-card">
+          <CardHeader>
+            <CardTitle className="text-xl md:text-2xl font-bold text-foreground">Notificaciones</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Configura cuándo deseas recibir alertas sobre tus medicamentos
+            </CardDescription>
+          </CardHeader>
+
+          <form action={updateNotificationSettings}>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="daysBeforeExpiration" className="text-foreground">
+                  Avisar de vencimiento (días antes)
+                </Label>
+                <Input
+                  id="daysBeforeExpiration"
+                  name="daysBeforeExpiration"
+                  type="number"
+                  defaultValue={daysBeforeExpiration}
+                  className="bg-background text-foreground border-input"
+                  required
                 />
-                <p className="text-xs italic mt-2" style={{ color: 'var(--color-text-secondary)' }}>Recibirás una alerta cuando a un medicamento le queden estos días o menos para vencer.</p>
-            </div>
-            <div className="mb-6">
-                <label className="block text-sm font-bold mb-2" style={{ color: 'var(--color-text-primary)' }} htmlFor="lowStockThreshold">
-                    Umbral de stock bajo (unidades)
-                </label>
-                <input
-                    id="lowStockThreshold"
-                    name="lowStockThreshold"
-                    type="number"
-                    step="any"
-                    defaultValue={lowStockThreshold}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                    style={{
-                      backgroundColor: 'var(--color-surface-secondary)',
-                      color: 'var(--color-text-primary)',
-                      borderColor: 'var(--color-border-primary)'
-                    }}
-                    required
+                <p className="text-xs text-muted-foreground">
+                  Recibirás una alerta cuando a un medicamento le queden estos días o menos para vencer.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lowStockThreshold" className="text-foreground">
+                  Umbral de stock bajo (unidades)
+                </Label>
+                <Input
+                  id="lowStockThreshold"
+                  name="lowStockThreshold"
+                  type="number"
+                  step="any"
+                  defaultValue={lowStockThreshold}
+                  className="bg-background text-foreground border-input"
+                  required
                 />
-                <p className="text-xs italic mt-2" style={{ color: 'var(--color-text-secondary)' }}>Recibirás una alerta cuando la cantidad de un medicamento sea igual o inferior a este número.</p>
-            </div>
-            <div className="flex items-center justify-end">
-                <button
-                    type="submit"
-                    className="font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    style={{
-                      backgroundColor: 'var(--color-primary-soft-blue)',
-                      color: 'var(--color-text-inverse)'
-                    }}
-                >
-                    Guardar Cambios
-                </button>
-            </div>
-        </form>
+                <p className="text-xs text-muted-foreground">
+                  Recibirás una alerta cuando la cantidad de un medicamento sea igual o inferior a este número.
+                </p>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex justify-end">
+              <Button
+                type="submit"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Guardar Cambios
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
     </main>
   );

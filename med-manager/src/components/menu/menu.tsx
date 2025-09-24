@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { logoutUser } from '@/app/actions';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
+import { logoutUser } from "@/app/actions";
 
 const Menu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,12 +21,17 @@ const Menu = () => {
     setIsMenuOpen(false);
   };
 
+  // Función para manejar el clic en los enlaces de navegación
+  const handleNavigation = () => {
+    closeMenu();
+  };
+
   const menuItems = [
-    { name: 'Inicio', href: '/' },
-    { name: 'Botiquín', href: '/botiquin' },
-    { name: 'Tratamientos', href: '/tratamientos' },
-    { name: 'Precios', href: '/precios' },
-    { name: 'Configuración', href: '/configuracion' },
+    { name: "Inicio", href: "/" },
+    { name: "Botiquín", href: "/botiquin" },
+    { name: "Tratamientos", href: "/tratamientos" },
+    { name: "Precios", href: "/precios" },
+    { name: "Configuración", href: "/configuracion" },
   ];
 
   return (
@@ -36,13 +42,24 @@ const Menu = () => {
           onClick={toggleMenu}
           className="fixed top-4 left-4 z-50 p-2 rounded-md shadow-lg focus:outline-none"
           style={{
-            backgroundColor: 'var(--color-primary-soft-blue)',
-            color: 'var(--color-text-inverse)'
+            backgroundColor: "var(--color-primary-soft-blue)",
+            color: "var(--color-primary-foreground)",
           }}
           aria-label="Abrir menú"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
       )}
@@ -56,30 +73,34 @@ const Menu = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="fixed inset-0 z-40"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
               onClick={closeMenu}
             />
             <motion.div
-              initial={{ x: '-100%' }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed top-0 left-0 h-full w-64 shadow-xl z-50 p-4"
-              style={{ backgroundColor: 'var(--color-surface-secondary)' }}
+              style={{ backgroundColor: "var(--background)" }}
             >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Menú</h2>
-                <button
-                  onClick={closeMenu}
-                  className="p-2 rounded-md focus:outline-none"
-                  style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
-                  aria-label="Cerrar menú"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+              <div className="flex justify-center items-center w-full">
+                {/* Logo de la aplicación */}
+                <div className="h-25 w-full relative">
+                  <Image
+                    src="/Botilyx_color_2.svg"
+                    alt="Logo de Botilyx"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
+              <div
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  margin: "1rem 0",
+                }}
+              ></div>
               <nav>
                 <ul className="space-y-2">
                   {menuItems.map((item, index) => (
@@ -89,10 +110,24 @@ const Menu = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
                       className="rounded-md"
-                      style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
+                      style={{ backgroundColor: "var(--muted)" }}
                     >
-                      <Link href={item.href} className="block py-2 px-4"
-                        style={{ color: 'var(--color-text-primary)' }}>
+                      <Link
+                        href={item.href}
+                        className="block py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
+                        style={{ color: "var(--foreground)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "var(--color-primary-soft-blue)";
+                          e.currentTarget.style.color =
+                            "var(--color-primary-foreground)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "";
+                          e.currentTarget.style.color = "var(--foreground)";
+                        }}
+                        onClick={handleNavigation}
+                      >
                         {item.name}
                       </Link>
                     </motion.li>
@@ -102,20 +137,22 @@ const Menu = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: menuItems.length * 0.1 }}
                     className="rounded-md"
-                    style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
+                    style={{ backgroundColor: "var(--muted)" }}
                   >
                     <form action={logoutUser} className="w-full">
                       <button
                         type="submit"
-                        className="w-full text-left py-2 px-4 rounded-md transition-colors"
-                        style={{ color: 'var(--color-text-primary)' }}
+                        className="w-full text-left py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
+                        style={{ color: "var(--foreground)" }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--color-error)';
-                          e.currentTarget.style.color = 'var(--color-text-inverse)';
+                          e.currentTarget.style.backgroundColor =
+                            "var(--destructive)";
+                          e.currentTarget.style.color =
+                            "var(--destructive-foreground)";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '';
-                          e.currentTarget.style.color = 'var(--color-text-primary)';
+                          e.currentTarget.style.backgroundColor = "";
+                          e.currentTarget.style.color = "var(--foreground)";
                         }}
                       >
                         Cerrar Sesión

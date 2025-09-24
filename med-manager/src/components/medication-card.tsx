@@ -2,14 +2,16 @@
 
 import { Medication } from '@prisma/client';
 import React, { useState } from 'react';
-import { updateMedicationQuantity, toggleMedicationArchiveStatus } from '@/app/actions';
+import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Info, MoreHorizontal } from 'lucide-react';
+import { Info, MoreHorizontal, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type MedicationCardProps = {
   medication: Medication;
@@ -20,6 +22,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     id,
     commercialName,
     currentQuantity,
+    initialQuantity,
     unit,
     description,
     intakeRecommendations,
@@ -31,6 +34,9 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   } = medication;
 
   const [quantity, setQuantity] = useState(currentQuantity);
+  const [isUnarchiveDialogOpen, setIsUnarchiveDialogOpen] = useState(false);
+  const [newExpirationDate, setNewExpirationDate] = useState('');
+
   const isExpired = new Date() > new Date(expirationDate);
   const expirationDateFormatted = new Date(expirationDate).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -51,6 +57,28 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     } catch (error) {
       console.error('Error updating quantity:', error);
       setQuantity(quantity); // Revert on error
+    }
+  };
+
+  const handleUnarchive = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newExpirationDate) {
+      alert('Por favor ingresa una nueva fecha de vencimiento');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('newExpirationDate', newExpirationDate);
+
+    try {
+      await unarchiveMedicationWithNewExpiration(formData);
+      setIsUnarchiveDialogOpen(false);
+      setNewExpirationDate('');
+    } catch (error) {
+      console.error('Error unarchiving medication:', error);
+      alert('Error al desarchivar el medicamento');
     }
   };
 
@@ -168,17 +196,72 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
 
       <CardFooter className="flex justify-end">
         {quantity === 0 && (
-          <form action={toggleMedicationArchiveStatus}>
-            <input type="hidden" name="id" value={id} />
-            <Button
-              type="submit"
-              variant="ghost"
-              size="sm"
-              className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
-            >
-              {archived ? 'Desarchivar' : 'Archivar'}
-            </Button>
-          </form>
+          <>
+            {archived ? (
+              <>
+                <Dialog open={isUnarchiveDialogOpen} onOpenChange={setIsUnarchiveDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-6 px-2 text-green-500 hover:text-green-600 hover:bg-green-50"
+                    >
+                      Desarchivar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Desarchivar Medicamento</DialogTitle>
+                      <DialogDescription>
+                        Ingresa la nueva fecha de vencimiento para {commercialName}.
+                        La cantidad se reiniciará a {initialQuantity} {unit}.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleUnarchive} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="newExpirationDate">Nueva Fecha de Vencimiento</Label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="newExpirationDate"
+                            type="date"
+                            value={newExpirationDate}
+                            onChange={(e) => setNewExpirationDate(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsUnarchiveDialogOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                          Confirmar y Desarchivar
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : (
+              <form action={toggleMedicationArchiveStatus}>
+                <input type="hidden" name="id" value={id} />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  Archivar
+                </Button>
+              </form>
+            )}
+          </>
         )}
       </CardFooter>
     </Card>
