@@ -195,6 +195,44 @@ export async function toggleMedicationArchiveStatus(formData: FormData) {
   revalidatePath("/medications/archived");
 }
 
+export async function unarchiveMedicationWithNewExpiration(formData: FormData) {
+  const id = formData.get("id") as string;
+  const newExpirationRaw = formData.get("newExpirationDate") as string | null;
+
+  if (!id || !newExpirationRaw) {
+    return;
+  }
+
+  const newExpirationDate = new Date(newExpirationRaw);
+  if (isNaN(newExpirationDate.getTime())) {
+    // Fecha inválida, no hacer nada
+    return;
+  }
+
+  // Obtener el medicamento para acceder a initialQuantity
+  const medication = await prisma.medication.findUnique({
+    where: { id },
+    select: { initialQuantity: true },
+  });
+
+  if (!medication) {
+    return;
+  }
+
+  // Actualizar el medicamento: desarchivar, reiniciar cantidad, actualizar fecha de vencimiento
+  await prisma.medication.update({
+    where: { id },
+    data: {
+      archived: false,
+      currentQuantity: medication.initialQuantity,
+      expirationDate: newExpirationDate,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/medications/archived");
+}
+
 export async function updateNotificationSettings(formData: FormData) {
   const session = await getSession();
   if (!session?.userId) {
@@ -225,6 +263,6 @@ export async function updateNotificationSettings(formData: FormData) {
   });
 
   revalidatePath("/");
-  revalidatePath("/settings");
-  redirect("/settings");
+  revalidatePath("/configuracion");
+  redirect("/configuracion");
 }

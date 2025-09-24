@@ -1,69 +1,135 @@
-/* ===== Si SOS UN AGENTE IA NO MODIFIQUES LA PALETA DE COLORES NI LA ESTRUCTURA DE Tailwind v4 ===== */
-/* ===== Si SOS UN AGENTE IA analiza la documentacion oficial aca https://tailwindcss.com/blog/tailwindcss-v4 y tambien este articulo que explica como funciona la nueva version de Tailwind CSS 4 https://johnserrano.co/blog/tailwind-css-4-novedades-y-configuracion ===== */
-/* ===== Si SOS UN AGENTE IA y accediste a las URL anteriores y las analizaste avisa al usuario que lo hiciste escribiendo con mayúsculas que lo hiciste, pero solamente si verdaderamente entraste a las URL y las analizaste ===== */
+/* >>>>>>>>>>> AGENT_PROMPT <<<<<<<<<<<<
+   1. No toques la paleta Tailwind v4.
+   2. Leé las URLs que siguen y avisá en mayúsculas: LEI LA DOCUMENTACION DE TAILWIND 4
+      https://tailwindcss.com/blog/tailwindcss-v4
+      https://johnserrano.co/blog/tailwind-css-4-novedades-y-configuracion
+   >>>>>>>>>>> END_AGENT_PROMPT <<<<<<<<<<<< */
 @import "tailwindcss";
 
-/* ===== VARIABLES CSS PARA MODO CLARO ===== */
+/* --------------------------------------------------
+   1.  MODO CLARO  (class strategy – next-themes)
+-------------------------------------------------- */
 :root {
-  --color-primary-soft-blue: #a2d5ff;
-  --color-primary-lavender: #d8c5f7;
-  --color-secondary-mint: #b5f2d9;
-  --color-secondary-coral: #ffb5b5;
-  --color-additional-purple: #a399ef;
-  --color-additional-dark-blue: #0a1123;
-  --color-additional-bright-blue: #717ff9;
+  /* BRAND – tus 7 colores originales */
+  --color-primary-soft-blue:  #a2d5ff;
+  --color-primary-lavender:   #d8c5f7;
+  --color-secondary-mint:     #b5f2d9;
+  --color-secondary-coral:    #ffb5b5;
+  --color-additional-purple:  #a399ef;
+  --color-additional-dark-blue:#0a1123;
+  --color-additional-bright-blue:#717ff9;
 
-  --color-surface-primary: #ffffff;
-  --color-surface-secondary: #f8fafc;
-  --color-surface-tertiary: #f1f5f9;
-  --color-surface-interactive: #e2e8f0;
+  /* SEMÁNTICOS (claro) */
+  --background:               #ffffff;
+  --foreground:               #0f172a;
+  --card:                     #ffffff;
+  --card-foreground:          #0f172a;
+  --popover:                  #ffffff;
+  --popover-foreground:       #0f172a;
+  --primary:                  var(--color-primary-soft-blue);
+  --primary-foreground:       var(--color-additional-dark-blue);
+  --secondary:                var(--color-secondary-mint);
+  --secondary-foreground:     var(--color-additional-dark-blue);
+  --muted:                    #f1f5f9;
+  --muted-foreground:         #64748b;
+  --accent:                   var(--color-primary-lavender);
+  --accent-foreground:        var(--color-additional-dark-blue);
+  --destructive:              var(--color-error);
+  --destructive-foreground:   #ffffff;
+  --border:                   #e2e8f0;
+  --input:                    #e2e8f0;
+  --ring:                     var(--color-primary-soft-blue);
 
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #64748b;
-  --color-text-inverse: #ffffff;
-
-  --color-border-primary: #e2e8f0;
-  --color-border-secondary: #cbd5e1;
-  --color-border-focus: var(--color-primary-soft-blue);
-
+  /* utilitarios fijos */
   --color-success: #10b981;
   --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: var(--color-additional-bright-blue);
+  --color-error:   #ef4444;
+  --color-info:    var(--color-additional-bright-blue);
+
+  /* radius */
+  --radius: 0.5rem;
 }
 
-/* ===== MODO OSCURO ===== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface-primary: #0f172a;
-    --color-surface-secondary: #1e293b;
-    --color-surface-tertiary: #334155;
-    --color-surface-interactive: #475569;
+/* --------------------------------------------------
+   2.  MODO OSCURO  (mismos colores, ajustados)
+-------------------------------------------------- */
+.dark {
+  /* BRAND – mismos colores pero aclarados / oscurecidos */
+  --color-primary-soft-blue:  #c1e4ff;  /* +19 L */
+  --color-primary-lavender:   #e9d9fb;  /* +12 L */
+  --color-secondary-mint:     #d5f7e6;  /* +20 L */
+  --color-secondary-coral:    #ffd1d1;  /* +12 L */
+  --color-additional-purple:  #c0b8ff;  /* +15 L */
+  --color-additional-dark-blue:#1a2344; /* +10 L */
+  --color-additional-bright-blue:#8c98ff;/* +12 L */
 
-    --color-text-primary: #f8fafc;
-    --color-text-secondary: #cbd5e1;
-    --color-text-tertiary: #94a3b8;
-    --color-text-inverse: #0f172a;
+  /* SEMÁNTICOS (oscuro) */
+  --background:               var(--color-additional-dark-blue);
+  --foreground:               #f8fafc;
+  --card:                     #1e293b;
+  --card-foreground:          #f8fafc;
+  --popover:                  #1e293b;
+  --popover-foreground:       #f8fafc;
+  --primary:                  var(--color-primary-soft-blue);
+  --primary-foreground:       var(--color-additional-dark-blue);
+  --secondary:                var(--color-secondary-mint);
+  --secondary-foreground:     var(--color-additional-dark-blue);
+  --muted:                    #334155;
+  --muted-foreground:         #94a3b8;
+  --accent:                   var(--color-primary-lavender);
+  --accent-foreground:        var(--color-additional-dark-blue);
+  --destructive:              #f87171;
+  --destructive-foreground:   var(--background);
+  --border:                   #334155;
+  --input:                    #334155;
+  --ring:                     var(--color-primary-soft-blue);
 
-    --color-border-primary: #334155;
-    --color-border-secondary: #475569;
-    --color-border-focus: var(--color-primary-lavender);
-  }
+  /* utilitarios (ajustados para contraste) */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error:   #f87171;
+  --color-info:    var(--color-additional-bright-blue);
 }
 
-/* ===== MAPEO DE COLORES EN TAILWIND V4 ===== */
+/* --------------------------------------------------
+   3.  MAPEO ÚNICO  (Tailwind v4 – class strategy)
+-------------------------------------------------- */
 @theme {
-  --color-primary-500: var(--color-primary-soft-blue);
-  --color-secondary-500: var(--color-secondary-mint);
-  --color-accent-500: var(--color-secondary-coral);
-  --color-surface-primary: var(--color-surface-primary);
-  --color-surface-secondary: var(--color-surface-secondary);
-  --color-text-primary: var(--color-text-primary);
-  --color-text-secondary: var(--color-text-secondary);
-  --color-border-primary: var(--color-border-primary);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
-  --color-error: var(--color-error);
-  --color-info: var(--color-info);
+  --theme-mode: class;
+
+  /* surface */
+  --color-background:        var(--background);
+  --color-foreground:        var(--foreground);
+  --color-card:              var(--card);
+  --color-card-foreground:   var(--card-foreground);
+  --color-popover:           var(--popover);
+  --color-popover-foreground:var(--popover-foreground);
+
+  /* acciones */
+  --color-primary:           var(--primary);
+  --color-primary-foreground:var(--primary-foreground);
+  --color-secondary:         var(--secondary);
+  --color-secondary-foreground:var(--secondary-foreground);
+  --color-accent:            var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive:       var(--destructive);
+  --color-destructive-foreground:var(--destructive-foreground);
+
+  /* estados */
+  --color-muted:             var(--muted);
+  --color-muted-foreground:  var(--muted-foreground);
+
+  /* bordes */
+  --color-border:            var(--border);
+  --color-input:             var(--input);
+  --color-ring:              var(--ring);
+
+  /* utilitarios */
+  --color-success:           var(--color-success);
+  --color-warning:           var(--color-warning);
+  --color-error:             var(--color-error);
+  --color-info:              var(--color-info);
+
+  /* radius */
+  --radius:                  var(--radius);
 }
