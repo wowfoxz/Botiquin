@@ -1,52 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Menu from "@/components/menu/menu";
-import { ThemeProvider } from "next-themes";
-import { ThemeToggle } from "@/components/providers/theme-toggle";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import type { Metadata } from 'next';
+import './globals.css';
+import Menu from '@/components/menu/menu';
+import { ThemeSwitch } from '@/components/providers/theme-switch';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 
 export const metadata: Metadata = {
-  title: "Botiquín - Gestión de Medicamentos",
-  description: "Aplicación para gestionar tu botiquín personal",
+  title: 'MedManager',
+  description: 'Gestión de medicamentos y tratamientos',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background2 text-foreground`}
-      >
+      <body>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col min-h-screen">
-            <header className="flex justify-between items-center p-4 relative">
-              <Menu />
-              <div className="absolute top-4 right-4 z-50">
-                <ThemeToggle />
-              </div>
-            </header>
-            <main className="flex-1 container mx-auto px-4 py-8">
-              {children}
-            </main>
+          <div className="fixed top-4 right-4 z-50">
+            <ThemeSwitch />
           </div>
+          <Menu />
+          {children}
         </ThemeProvider>
       </body>
     </html>

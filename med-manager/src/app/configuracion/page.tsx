@@ -7,10 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { decrypt } from '@/lib/session';
 
 export default async function SettingsPage() {
-  const session = await getSession();
-  const userId = session?.userId;
+  // Verificar si el usuario está autenticado
+  const sessionCookie = (await cookies()).get("session")?.value;
+  if (!sessionCookie) {
+    redirect('/login');
+  }
+
+  // Verificar si la sesión ha expirado
+  let userId: string | null = null;
+  try {
+    const session = await decrypt(sessionCookie);
+    if (!session?.userId || (session.expires && new Date(session.expires) < new Date())) {
+      redirect('/login');
+    }
+    userId = session.userId;
+  } catch {
+    redirect('/login');
+  }
 
   let settings = null;
   if (userId) {
@@ -54,39 +72,31 @@ export default async function SettingsPage() {
                   id="daysBeforeExpiration"
                   name="daysBeforeExpiration"
                   type="number"
+                  min="1"
+                  max="365"
                   defaultValue={daysBeforeExpiration}
-                  className="bg-background text-foreground border-input"
-                  required
+                  className="bg-background border-input"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Recibirás una alerta cuando a un medicamento le queden estos días o menos para vencer.
-                </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="lowStockThreshold" className="text-foreground">
-                  Umbral de stock bajo (unidades)
+                  Avisar de stock bajo (cantidad)
                 </Label>
                 <Input
                   id="lowStockThreshold"
                   name="lowStockThreshold"
                   type="number"
-                  step="any"
+                  min="0"
+                  step="0.5"
                   defaultValue={lowStockThreshold}
-                  className="bg-background text-foreground border-input"
-                  required
+                  className="bg-background border-input"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Recibirás una alerta cuando la cantidad de un medicamento sea igual o inferior a este número.
-                </p>
               </div>
             </CardContent>
 
-            <CardFooter className="flex justify-end">
-              <Button
-                type="submit"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
+            <CardFooter>
+              <Button type="submit" className="w-full md:w-auto">
                 Guardar Cambios
               </Button>
             </CardFooter>

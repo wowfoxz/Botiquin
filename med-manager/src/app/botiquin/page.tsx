@@ -48,36 +48,36 @@ export default async function Home({
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             Mi Botiquín
           </h1>
-
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
-            {/* Notifications */}
-            <NotificationPanel notifications={notifications} />
-
+          <div className="flex gap-2">
             <Link href="/medications/archived">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2">
                 <Archive className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver Archivados</span>
+                <span className="sm:hidden">Archivados</span>
               </Button>
             </Link>
-
             <Link href="/medications/new">
-              <Button size="sm" className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600">
+              <Button className="flex items-center gap-2">
                 <PackagePlus className="h-4 w-4" />
                 <span className="hidden sm:inline">Agregar Medicamento</span>
+                <span className="sm:hidden">Agregar</span>
               </Button>
             </Link>
           </div>
         </div>
 
         {/* Search */}
-        <div className="mt-4">
-          <Search placeholder="Buscar por nombre comercial o principio activo..." />
+        <div className="mb-6">
+          <Search placeholder="Buscar medicamentos..." />
         </div>
 
-        {/* Medication list */}
-        <div className="mt-6 md:mt-8">
-          <MedicationList query={query} />
+        {/* Notifications Panel */}
+        <div className="mb-6">
+          <NotificationPanel notifications={notifications} />
         </div>
+
+        {/* Medication List */}
+        <MedicationList query={query} />
       </div>
     </main>
   );

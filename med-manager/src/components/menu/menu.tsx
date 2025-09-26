@@ -5,13 +5,42 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { logoutUser } from "@/app/actions";
+import { usePathname } from "next/navigation";
 
 const Menu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const pathname = usePathname();
+
+  // Función para verificar manualmente la autenticación
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("/api/auth", { method: "GET" });
+      setIsAuthenticated(response.ok);
+    } catch (error) {
+      console.error("Error al verificar autenticación:", error);
+      setIsAuthenticated(false);
+    }
+  };
 
   useEffect(() => {
-    // This is just to ensure the component is mounted
-  }, []);
+    checkAuth();
+
+    // Escuchar el evento de inicio de sesión
+    const handleUserLogin = () => {
+      checkAuth();
+    };
+
+    window.addEventListener('user-login', handleUserLogin);
+
+    // También verificar en intervalos regulares para mantener la sincronización
+    const interval = setInterval(checkAuth, 5000);
+
+    return () => {
+      window.removeEventListener('user-login', handleUserLogin);
+      clearInterval(interval);
+    };
+  }, [pathname]); // Volver a verificar cuando cambia la ruta
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -36,8 +65,8 @@ const Menu = () => {
 
   return (
     <>
-      {/* Mostrar el botón solo cuando el menú está cerrado */}
-      {!isMenuOpen && (
+      {/* Mostrar el botón solo cuando el menú está cerrado y el usuario está autenticado */}
+      {!isMenuOpen && isAuthenticated && (
         <button
           onClick={toggleMenu}
           className="fixed top-4 left-4 z-50 p-2 rounded-md shadow-lg focus:outline-none"
@@ -65,7 +94,7 @@ const Menu = () => {
       )}
 
       <AnimatePresence>
-        {isMenuOpen && (
+        {isMenuOpen && isAuthenticated && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
