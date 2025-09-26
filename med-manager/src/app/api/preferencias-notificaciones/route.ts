@@ -3,69 +3,82 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// POST /api/preferencias-notificaciones - Crear/actualizar preferencias de notificaciones
-export async function POST(request: Request) {
+// GET /api/preferencias-notificaciones - Obtener preferencias de notificaciones (opcionalmente filtrar por userId)
+export async function GET(request: Request) {
   try {
-    const body = await request.json();
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
-    // Validar datos requeridos
-    if (!body.userId) {
+    if (!userId) {
       return NextResponse.json(
-        { error: "Faltan datos requeridos" },
+        { error: "Se requiere userId" },
         { status: 400 }
       );
     }
 
-    // Verificar si ya existen preferencias para este usuario
-    const preferenciasExistentes =
-      await prisma.notificationPreferences.findUnique({
-        where: { userId: body.userId },
-      });
+    let preferencias = await prisma.notificationPreferences.findUnique({
+      where: { userId },
+    });
 
-    if (preferenciasExistentes) {
-      // Actualizar preferencias existentes
-      const preferencias = await prisma.notificationPreferences.update({
-        where: { userId: body.userId },
+    // Si no existen preferencias, crear unas por defecto
+    if (!preferencias) {
+      preferencias = await prisma.notificationPreferences.create({
         data: {
-          push:
-            body.push !== undefined ? body.push : preferenciasExistentes.push,
-          sound:
-            body.sound !== undefined
-              ? body.sound
-              : preferenciasExistentes.sound,
-          email:
-            body.email !== undefined
-              ? body.email
-              : preferenciasExistentes.email,
-          browser:
-            body.browser !== undefined
-              ? body.browser
-              : preferenciasExistentes.browser,
+          userId,
+          push: false,
+          sound: false,
+          email: false,
+          browser: false,
         },
       });
-
-      return NextResponse.json(preferencias);
     }
 
-    // Crear nuevas preferencias
-    const preferencias = await prisma.notificationPreferences.create({
-      data: {
+    return NextResponse.json(preferencias);
+  } catch (error) {
+    console.error("Error al obtener preferencias de notificaciones:", error);
+    return NextResponse.json(
+      { error: "Error al obtener preferencias de notificaciones" },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+// POST /api/preferencias-notificaciones - Crear o actualizar preferencias de notificaciones
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    if (!body.userId) {
+      return NextResponse.json(
+        { error: "Se requiere userId" },
+        { status: 400 }
+      );
+    }
+
+    const preferencias = await prisma.notificationPreferences.upsert({
+      where: { userId: body.userId },
+      update: {
+        push: body.push ?? false,
+        sound: body.sound ?? false,
+        email: body.email ?? false,
+        browser: body.browser ?? false,
+      },
+      create: {
         userId: body.userId,
-        push: body.push || false,
-        sound: body.sound || false,
-        email: body.email || false,
-        browser: body.browser || false,
+        push: body.push ?? false,
+        sound: body.sound ?? false,
+        email: body.email ?? false,
+        browser: body.browser ?? false,
       },
     });
 
     return NextResponse.json(preferencias);
   } catch (error) {
-    console.error(
-      "Error al crear/actualizar preferencias de notificaciones:",
-      error
-    );
+    console.error("Error al actualizar preferencias de notificaciones:", error);
     return NextResponse.json(
-      { error: "Error al crear/actualizar preferencias de notificaciones" },
+      { error: "Error al actualizar preferencias de notificaciones" },
       { status: 500 }
     );
   } finally {

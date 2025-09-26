@@ -5,12 +5,13 @@ const prisma = new PrismaClient();
 
 // GET /api/tratamientos/[id] - Obtener un tratamiento por ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const tratamiento = await prisma.treatment.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         medication: true,
         user: true,
@@ -39,15 +40,16 @@ export async function GET(
 
 // PUT /api/tratamientos/[id] - Actualizar un tratamiento
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await request.json();
+    const { id } = await params;
+    const body = await _request.json();
 
     // Verificar si el tratamiento existe
     const tratamientoExistente = await prisma.treatment.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!tratamientoExistente) {
@@ -71,7 +73,7 @@ export async function PUT(
 
     // Actualizar el tratamiento
     const tratamiento = await prisma.treatment.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         name: body.name,
         medicationId: body.medicationId,
@@ -102,13 +104,14 @@ export async function PUT(
 
 // DELETE /api/tratamientos/[id] - Eliminar un tratamiento
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Verificar si el tratamiento existe
     const tratamientoExistente = await prisma.treatment.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!tratamientoExistente) {
@@ -120,12 +123,12 @@ export async function DELETE(
 
     // Eliminar notificaciones asociadas primero
     await prisma.notification.deleteMany({
-      where: { treatmentId: params.id },
+      where: { treatmentId: id },
     });
 
     // Eliminar el tratamiento
     await prisma.treatment.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({
