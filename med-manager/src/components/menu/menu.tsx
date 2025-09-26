@@ -33,15 +33,15 @@ const Menu = () => {
 
     window.addEventListener('user-login', handleUserLogin);
 
-    // También verificar en intervalos regulares para mantener la sincronización
-    const interval = setInterval(checkAuth, 5000);
+    // Eliminar el intervalo para reducir la carga en el servidor
+    // Solo verificar cuando cambia la ruta o cuando se inicia sesión
 
     return () => {
       window.removeEventListener('user-login', handleUserLogin);
-      clearInterval(interval);
+      // clearInterval(interval); // Ya no es necesario
     };
   }, [pathname]); // Volver a verificar cuando cambia la ruta
-
+ 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
