@@ -50,7 +50,7 @@ export async function analyzeImageWithGemini(
     };
   }
   // Usar el modelo multimodal actualizado
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const prompt = `Analiza MUY CUIDADOSAMENTE la imagen de esta caja de medicamento y extrae la siguiente información en formato JSON. Sé muy preciso.
 
@@ -114,7 +114,7 @@ export async function getDrugInfoWithGemini(
     };
   }
   // Usar el modelo de texto actualizado
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const prompt = `Eres un experto farmacéutico. Basado en el nombre del medicamento "${medicineName}", busca información y responde ÚNICAMENTE con un objeto JSON con los siguientes campos:
 
