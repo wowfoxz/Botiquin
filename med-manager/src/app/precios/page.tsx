@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpDown } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 interface Medicamento {
   NOMBRE: string;
@@ -148,12 +149,7 @@ export default function PreciosPage() {
               className="w-full sm:w-auto px-6 py-2 bg-primary-500 hover:bg-primary-500/90 text-text-inverse font-medium transition-all duration-200"
               disabled={loading || !searchTerm.trim()}
             >
-              {loading ? (
-                <span className="flex items-center">
-                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-text-inverse border-t-transparent rounded-full"></span>
-                  Buscando...
-                </span>
-              ) : 'Buscar'}
+              {loading ? 'Buscando...' : 'Buscar'}
             </Button>
           </form>
         </CardContent>
@@ -161,8 +157,8 @@ export default function PreciosPage() {
 
       {loading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full mb-4"></div>
-          <p className="text-text-secondary">Buscando medicamentos...</p>
+          <Loader />
+          <p className="text-text-secondary mt-4">Buscando medicamentos...</p>
         </div>
       )}
 
