@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { TratamientoForm } from "./TratamientoForm";
 import { toast } from "sonner";
+import { Pencil } from "lucide-react";
 
 interface EditarTratamientoDialogProps {
   tratamiento: Tratamiento;
@@ -17,9 +18,17 @@ interface EditarTratamientoDialogProps {
 export function EditarTratamientoDialog({ tratamiento, onUpdate, medicinas, userId }: EditarTratamientoDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const handleUpdate = async (tratamientoData: Omit<Tratamiento, "id" | "createdAt" | "updatedAt">) => {
+  const handleUpdate = async (tratamientoData: Omit<Tratamiento, "id" | "createdAt" | "updatedAt" | "startDate" | "endDate" | "isActive" | "medication">) => {
     try {
-      await onUpdate(tratamiento.id, tratamientoData);
+      // Convertir el objeto parcial a las propiedades correctas
+      const updateData: Partial<Tratamiento> = {
+        ...tratamientoData,
+        startDate: tratamientoData.frequencyHours ? new Date() : undefined,
+        endDate: tratamientoData.durationDays ? new Date(Date.now() + (tratamientoData.durationDays * 24 * 60 * 60 * 1000)) : undefined,
+        isActive: true
+      };
+
+      await onUpdate(tratamiento.id, updateData);
       setOpen(false);
       toast.success("Tratamiento actualizado exitosamente");
     } catch (error) {
@@ -32,11 +41,14 @@ export function EditarTratamientoDialog({ tratamiento, onUpdate, medicinas, user
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Editar</Button>
+        <Button variant="outline" size="sm" className="gap-2">
+          <Pencil className="h-4 w-4" />
+          Editar
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md md:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Editar Tratamiento</DialogTitle>
+          <DialogTitle className="text-xl">Editar Tratamiento</DialogTitle>
         </DialogHeader>
         <TratamientoForm
           initialData={tratamiento}
