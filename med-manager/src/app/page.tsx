@@ -20,7 +20,8 @@ export default async function Home({
   // Verificar si la sesión ha expirado
   try {
     const session = await decrypt(sessionCookie);
-    if (!session?.userId || (session.expires && new Date(session.expires) < new Date())) {
+    // Comparación de fechas ajustando por zona horaria para evitar errores por offsets
+    if (!session?.userId || (session.expires && new Date(session.expires) < new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000))) {
       redirect('/login');
     }
   } catch {

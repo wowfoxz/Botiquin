@@ -21,10 +21,26 @@ export function EditarTratamientoDialog({ tratamiento, onUpdate, medicinas, user
   const handleUpdate = async (tratamientoData: Omit<Tratamiento, "id" | "createdAt" | "updatedAt" | "startDate" | "endDate" | "isActive" | "medication">) => {
     try {
       // Convertir el objeto parcial a las propiedades correctas
+      // Ajuste para manejar correctamente la zona horaria al crear las fechas
+      const now = new Date();
+      const startDate = tratamientoData.frequencyHours
+        ? new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        : undefined;
+
+      // Calcular endDate en base a startDate (o now) y ajustar por zona horaria local
+      const baseDate = startDate ?? now;
+      let endDate = tratamientoData.durationDays
+        ? new Date(baseDate.getTime() + tratamientoData.durationDays * 24 * 60 * 60 * 1000)
+        : undefined;
+      if (endDate) {
+        // Ajustar endDate a la zona horaria local
+        endDate = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000);
+      }
+
       const updateData: Partial<Tratamiento> = {
         ...tratamientoData,
-        startDate: tratamientoData.frequencyHours ? new Date() : undefined,
-        endDate: tratamientoData.durationDays ? new Date(Date.now() + (tratamientoData.durationDays * 24 * 60 * 60 * 1000)) : undefined,
+        startDate,
+        endDate,
         isActive: true
       };
 

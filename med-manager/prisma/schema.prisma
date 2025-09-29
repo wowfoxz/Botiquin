@@ -71,6 +71,9 @@ model Treatment {
   notifications  Notification[] // Notificaciones asociadas al tratamiento
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  // Nuevos campos para manejar el inicio específico del tratamiento
+  startAtSpecificTime Boolean? @default(false) // Si el tratamiento comienza en una hora específica
+  specificStartTime   DateTime? // Hora específica de inicio del tratamiento
 }
 
 // Modelo para notificaciones de tratamientos
