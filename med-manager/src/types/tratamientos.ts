@@ -1,4 +1,4 @@
-// Tipos para el sistema de tratamientos médicos
+ // Tipos para el sistema de tratamientos médicos
 
 export type Medicamento = {
   id: string;
@@ -32,6 +32,10 @@ export type Tratamiento = {
   createdAt: Date;
   updatedAt: Date;
   medication?: Medicamento;
+  // Nuevo campo para especificar si el tratamiento comienza en una hora específica
+  startAtSpecificTime?: boolean;
+  // Nuevo campo para la hora específica de inicio
+  specificStartTime?: Date;
 };
 
 export type Notificacion = {

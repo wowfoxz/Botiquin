@@ -37,7 +37,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   const [isUnarchiveDialogOpen, setIsUnarchiveDialogOpen] = useState(false);
   const [newExpirationDate, setNewExpirationDate] = useState('');
 
-  const isExpired = new Date() > new Date(expirationDate);
+  const isExpired = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000) > new Date(expirationDate);
   const expirationDateFormatted = new Date(expirationDate).toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',

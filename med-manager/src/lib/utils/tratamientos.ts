@@ -21,12 +21,17 @@ export const calcularDosisTotales = (tratamiento: Tratamiento): number => {
  * @returns Un array de fechas de dosis
  */
 export const generarFechasDosis = (tratamiento: Tratamiento): Date[] => {
+  // Ajustar la fecha de inicio a la zona horaria local
+  const adjustedStartDate = new Date(
+    tratamiento.startDate.getTime() -
+      tratamiento.startDate.getTimezoneOffset() * 60000
+  );
   const dosisTotales = calcularDosisTotales(tratamiento);
   const fechas: Date[] = [];
 
   for (let i = 0; i < dosisTotales; i++) {
     const fechaDosis = new Date(
-      tratamiento.startDate.getTime() +
+      adjustedStartDate.getTime() +
         i * tratamiento.frequencyHours * 60 * 60 * 1000
     );
     fechas.push(fechaDosis);
@@ -101,7 +106,11 @@ export const crearNotificaciones = (
  * @returns String con la fecha formateada
  */
 export const formatearFecha = (fecha: Date): string => {
-  return new Date(fecha).toLocaleString("es-ES", {
+  // Ajustar la fecha a la zona horaria local antes de formatear
+  const adjustedDate = new Date(
+    fecha.getTime() - fecha.getTimezoneOffset() * 60000
+  );
+  return adjustedDate.toLocaleString("es-ES", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

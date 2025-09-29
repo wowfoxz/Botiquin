@@ -75,11 +75,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calcular fecha de finalización
-    const startDate = new Date();
-    const endDate = new Date(
-      startDate.getTime() + body.durationDays * 24 * 60 * 60 * 1000
-    );
+    // Determinar fecha de inicio y corregir por zona horaria
+    let startDate = new Date();
+    // Ajustar startDate a la zona horaria local (normalizar quitando el offset)
+    startDate = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000);
+
+    // Si se proporcionó una hora específica, parsearla y ajustarla también
+    let specificStartDate: Date | null = null;
+    if (body.startAtSpecificTime && body.specificStartTime) {
+      // Normalizar usando el offset de la fecha proporcionada para manejar correctamente zonas horarias
+      specificStartDate = new Date(
+        new Date(body.specificStartTime).getTime() -
+          new Date(body.specificStartTime).getTimezoneOffset() * 60000
+      );
+      startDate = specificStartDate;
+    }
+
+    // Calcular fecha de finalización (manejo de zonas horarias)
+    // Creamos una copia de startDate y sumamos días usando UTC para evitar efectos de offset/DST
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + parseInt(body.durationDays));
 
     // Crear el tratamiento
     const tratamiento = await prisma.treatment.create({
@@ -94,6 +109,13 @@ export async function POST(request: Request) {
         dosage: body.dosage,
         userId: body.userId,
         isActive: true,
+        startAtSpecificTime: body.startAtSpecificTime || false,
+        specificStartTime: body.specificStartTime
+          ? new Date(
+              new Date(body.specificStartTime).getTime() -
+                new Date(body.specificStartTime).getTimezoneOffset() * 60000
+            )
+          : null,
       },
     });
 

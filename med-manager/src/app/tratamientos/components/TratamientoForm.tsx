@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { toast } from "sonner";
 
@@ -24,12 +25,20 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
   const [duracionDias, setDuracionDias] = useState(initialData?.durationDays?.toString() || "7");
   const [paciente, setPaciente] = useState(initialData?.patient || "");
   const [dosis, setDosis] = useState(initialData?.dosage || "");
+  const [startOption, setStartOption] = useState<"now" | "specific">(
+    initialData?.startAtSpecificTime ? "specific" : "now"
+  );
+  const [specificDate, setSpecificDate] = useState<string>(
+    initialData?.specificStartTime
+      ? new Date(initialData.specificStartTime).toISOString().slice(0, 16)
+      : new Date().toISOString().slice(0, 16)
+  );
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     try {
       // Validaciones básicas
       if (!nombre || !medicamentoId || !paciente || !dosis) {
@@ -51,10 +60,27 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
         throw new Error("La dosis debe ser mayor que 0");
       }
 
+      // Validar fecha específica si se seleccionó esa opción
+      if (startOption === "specific") {
+        if (!specificDate) {
+          throw new Error("Por favor, seleccione una fecha y hora de inicio");
+        }
+
+        const selectedDate = new Date(specificDate);
+        // Ajustar la fecha para que sea interpretada en la zona horaria local
+        const now = new Date();
+        // Ajustar now a la zona horaria local para comparación correcta
+        const nowAdjusted = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+        if (selectedDate < nowAdjusted) {
+          throw new Error("La fecha de inicio debe ser en el futuro");
+        }
+      }
+
       // Verificar stock disponible
       const dosisPorTratamiento = Math.ceil(duracionNum * (24 / frecuenciaNum));
       const medicina = medicinas.find(m => m.id === medicamentoId);
-      
+
       if (medicina && medicina.currentQuantity < dosisPorTratamiento) {
         throw new Error(`Stock insuficiente. Se necesitan ${dosisPorTratamiento} unidades pero solo hay ${medicina.currentQuantity} disponibles.`);
       }
@@ -66,7 +92,9 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
         durationDays: duracionNum,
         patient: paciente,
         dosage: dosis,
-        userId: userId
+        userId: userId,
+        startAtSpecificTime: startOption === "specific",
+        specificStartTime: startOption === "specific" ? new Date(specificDate) : undefined
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Error al procesar el formulario";
@@ -89,7 +117,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               {error}
             </div>
           )}
-          
+
           <div className="space-y-2">
             <Label htmlFor="nombre">Nombre del Tratamiento *</Label>
             <Input
@@ -99,7 +127,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               placeholder="Ej: Tratamiento para hipertensión"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="paciente">Paciente *</Label>
             <Input
@@ -109,7 +137,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               placeholder="Nombre del paciente"
             />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="medicamento">Medicamento *</Label>
@@ -128,7 +156,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="dosis">Dosis por toma *</Label>
               <div className="relative">
@@ -146,7 +174,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="frecuencia">Frecuencia (horas) *</Label>
@@ -164,7 +192,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="duracion">Duración (días) *</Label>
               <div className="relative">
@@ -182,7 +210,41 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               </div>
             </div>
           </div>
-          
+
+          <div className="space-y-4">
+            <Label>Inicio del Tratamiento *</Label>
+            <RadioGroup
+              value={startOption}
+              onValueChange={(value: "now" | "specific") => setStartOption(value)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="now" id="now" />
+                <Label htmlFor="now">Iniciar tratamiento ahora</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="specific" id="specific" />
+                <Label htmlFor="specific">Iniciar en una fecha y hora específica</Label>
+              </div>
+            </RadioGroup>
+
+            {startOption === "specific" && (
+              <div className="space-y-2 mt-2">
+                <Label htmlFor="specific-date">Fecha y Hora de Inicio</Label>
+                <Input
+                  id="specific-date"
+                  type="datetime-local"
+                  value={specificDate}
+                  onChange={(e) => setSpecificDate(e.target.value)}
+                  min={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Seleccione la fecha y hora en que desea que comience la primera toma
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="bg-muted p-3 rounded-md">
             <p className="text-sm">
               <span className="font-medium">Dosis totales estimadas:</span> {dosisTotales} unidades
@@ -191,7 +253,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               Basado en {duracionDias} días con una frecuencia cada {frecuenciaHoras} horas
             </p>
           </div>
-          
+
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancelar

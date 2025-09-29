@@ -35,9 +35,20 @@ export async function getNotifications(): Promise<Notification[]> {
     });
   }
 
-  const expirationDateThreshold = new Date();
-  expirationDateThreshold.setDate(
-    expirationDateThreshold.getDate() + settings.daysBeforeExpiration
+  // Calculate expiration threshold adjusted to local timezone to avoid
+  // off-by-one-day issues when comparing dates from the database.
+  const now = new Date();
+  const adjustedExpirationDateThreshold = new Date(
+    now.getTime() - now.getTimezoneOffset() * 60000
+  );
+  adjustedExpirationDateThreshold.setDate(
+    adjustedExpirationDateThreshold.getDate() + settings.daysBeforeExpiration
+  );
+
+  // Also compute an adjusted "today" to use for comparisons against expiration.
+  const today = new Date();
+  const adjustedToday = new Date(
+    today.getTime() - today.getTimezoneOffset() * 60000
   );
 
   const medicationsToNotify = await prisma.medication.findMany({
@@ -47,7 +58,7 @@ export async function getNotifications(): Promise<Notification[]> {
       OR: [
         {
           expirationDate: {
-            lte: expirationDateThreshold,
+            lte: adjustedExpirationDateThreshold,
           },
         },
         {
@@ -62,9 +73,11 @@ export async function getNotifications(): Promise<Notification[]> {
   const notifications: Notification[] = [];
 
   for (const med of medicationsToNotify) {
+    // Use the adjusted expiration threshold and the adjusted "today" so comparisons
+    // are performed in the same timezone baseline and avoid off-by-one-day issues.
     const isExpiringSoon =
-      med.expirationDate <= expirationDateThreshold &&
-      med.expirationDate > new Date();
+      med.expirationDate <= adjustedExpirationDateThreshold &&
+      med.expirationDate > adjustedToday;
     const isLowStock = med.currentQuantity <= settings.lowStockThreshold;
 
     if (isExpiringSoon) {
@@ -73,8 +86,8 @@ export async function getNotifications(): Promise<Notification[]> {
         message: `El medicamento '${med.commercialName}' está a punto de vencer.`,
         type: "expiry",
       });
-    } else if (med.expirationDate <= new Date()) {
-      // Check if already expired
+    } else if (med.expirationDate <= new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)) {
+      // Check if already expired (using an adjusted "today" computed inline to ensure correct timezone handling)
       notifications.push({
         id: `${med.id}-expiry`,
         message: `El medicamento '${med.commercialName}' ha vencido.`,

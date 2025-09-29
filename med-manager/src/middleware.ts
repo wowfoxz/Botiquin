@@ -24,11 +24,20 @@ export async function middleware(request: NextRequest) {
 
     try {
       const session = await decrypt(sessionCookie);
-      if (
-        !session?.userId ||
-        (session.expires && new Date(session.expires) < new Date())
-      ) {
+
+      // Verificar userId
+      if (!session?.userId) {
         return NextResponse.json({ error: "Sesión expirada" }, { status: 401 });
+      }
+
+      // Si existe un expiry, comparar ajustando la hora actual según el offset de zona horaria
+      if (session.expires) {
+        const expiresAt = new Date(session.expires);
+        // Ajustar la hora actual para tener en cuenta la zona horaria local
+        const nowAdjusted = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+        if (expiresAt < nowAdjusted) {
+          return NextResponse.json({ error: "Sesión expirada" }, { status: 401 });
+        }
       }
     } catch {
       return NextResponse.json({ error: "Sesión inválida" }, { status: 401 });

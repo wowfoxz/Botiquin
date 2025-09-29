@@ -65,9 +65,19 @@ export async function PUT(
       body.durationDays &&
       parseInt(body.durationDays) !== tratamientoExistente.durationDays
     ) {
+      // Usar la fecha de inicio existente o la específica si está configurada
       const startDate = new Date(tratamientoExistente.startDate);
+      // Ajustar startDate a la zona horaria local
+      const adjustedStartDate = new Date(
+        startDate.getTime() - startDate.getTimezoneOffset() * 60000
+      );
       endDate = new Date(
-        startDate.getTime() + parseInt(body.durationDays) * 24 * 60 * 60 * 1000
+        adjustedStartDate.getTime() +
+          parseInt(body.durationDays) * 24 * 60 * 60 * 1000
+      );
+      // Ajustar endDate a la zona horaria local
+      endDate = new Date(
+        endDate.getTime() - endDate.getTimezoneOffset() * 60000
       );
     }
 
@@ -87,6 +97,19 @@ export async function PUT(
         dosage: body.dosage,
         isActive: body.isActive,
         endDate: endDate,
+        startAtSpecificTime:
+          body.startAtSpecificTime !== undefined
+            ? body.startAtSpecificTime
+            : undefined,
+        specificStartTime:
+          body.specificStartTime !== undefined
+            ? body.specificStartTime
+              ? new Date(
+                  new Date(body.specificStartTime).getTime() -
+                    new Date(body.specificStartTime).getTimezoneOffset() * 60000
+                )
+              : null
+            : undefined,
       },
     });
 

@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Check if session is expired
-    if (session.expires && new Date(session.expires) < new Date()) {
+    // Check if session is expired (timezone-aware)
+    const nowTimezoneAware = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+    if (session.expires && new Date(session.expires) < nowTimezoneAware) {
       return new Response(JSON.stringify({ error: "Sesión expirada" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },

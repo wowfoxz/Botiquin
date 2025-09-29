@@ -22,7 +22,9 @@ export default async function SettingsPage() {
   let userId: string | null = null;
   try {
     const session = await decrypt(sessionCookie);
-    if (!session?.userId || (session.expires && new Date(session.expires) < new Date())) {
+    // Comparar fechas teniendo en cuenta la zona horaria local
+    const nowLocal = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000);
+    if (!session?.userId || (session.expires && new Date(session.expires) < nowLocal)) {
       redirect('/login');
     }
     userId = session.userId;
