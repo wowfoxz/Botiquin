@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { TratamientoForm } from "./TratamientoForm";
 import { toast } from "sonner";
@@ -31,9 +32,12 @@ export function CrearTratamientoDialog({ onCreate, medicinas, userId }: CrearTra
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Nuevo Tratamiento</Button>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nuevo Tratamiento
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nuevo Tratamiento</DialogTitle>
         </DialogHeader>

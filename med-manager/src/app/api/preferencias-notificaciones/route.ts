@@ -45,7 +45,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/preferencias-notificaciones - Crear o actualizar preferencias de notificaciones
+ // POST /api/preferencias-notificaciones - Crear o actualizar preferencias de notificaciones
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -57,13 +57,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Obtener las preferencias existentes si existen
+    const existingPreferences = await prisma.notificationPreferences.findUnique({
+      where: { userId: body.userId },
+    });
+
     const preferencias = await prisma.notificationPreferences.upsert({
       where: { userId: body.userId },
       update: {
-        push: body.push ?? false,
-        sound: body.sound ?? false,
-        email: body.email ?? false,
-        browser: body.browser ?? false,
+        push: body.push !== undefined ? body.push : existingPreferences?.push ?? false,
+        sound: body.sound !== undefined ? body.sound : existingPreferences?.sound ?? false,
+        email: body.email !== undefined ? body.email : existingPreferences?.email ?? false,
+        browser: body.browser !== undefined ? body.browser : existingPreferences?.browser ?? false,
       },
       create: {
         userId: body.userId,

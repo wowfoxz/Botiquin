@@ -14,6 +14,12 @@ import { TratamientosActivos } from "./components/TratamientosActivos";
 import { TratamientosHistoricos } from "./components/TratamientosHistoricos";
 import { NotificacionesTab } from "./components/NotificacionesTab";
 import { useRouter } from "next/navigation";
+import { 
+  Pill,
+  History,
+  Bell
+} from 'lucide-react';
+import { Dock, DockItem, DockLabel, DockIcon } from '@/components/ui/dock';
 
 export default function TratamientosPage() {
   const [activeTab, setActiveTab] = useState<"activos" | "historicos" | "notificaciones">("activos");
@@ -55,155 +61,122 @@ export default function TratamientosPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Filtrar tratamientos por usuario autenticado
-  const tratamientosUsuario = user ? tratamientos.filter(t => t.userId === user.id) : [];
-  
-  const handleCreateTratamiento = async (tratamientoData: Omit<Tratamiento, "id" | "createdAt" | "updatedAt">) => {
-    if (!user) return;
-    
-    try {
-      await createTratamiento({
-        ...tratamientoData,
-        userId: user.id
-      });
-    } catch (error) {
-      console.error("Error al crear tratamiento:", error);
-    }
-  };
-
-  const handleUpdateTratamiento = async (id: string, tratamientoData: Partial<Tratamiento>) => {
-    try {
-      await updateTratamiento(id, tratamientoData);
-    } catch (error) {
-      console.error("Error al actualizar tratamiento:", error);
-    }
-  };
-
-  const handleDeleteTratamiento = async (id: string) => {
-    try {
-      await deleteTratamiento(id);
-    } catch (error) {
-      console.error("Error al eliminar tratamiento:", error);
-    }
-  };
-
-  const handleFinalizarTratamiento = async (id: string) => {
-    try {
-      await updateTratamiento(id, { isActive: false });
-    } catch (error) {
-      console.error("Error al finalizar tratamiento:", error);
-    }
-  };
-
-  const handleUpdatePreferencias = async (preferenciasData: Partial<PreferenciasNotificaciones>) => {
-    if (!user) return;
-    
-    try {
-      await updatePreferencias({
-        ...preferenciasData,
-        userId: user.id
-      });
-    } catch (error) {
-      console.error("Error al actualizar preferencias:", error);
-    }
-  };
-
-  const obtenerNombreMedicamento = (medicinaId: string) => {
-    const medicina = medicinas.find(m => m.id === medicinaId);
-    return medicina ? medicina.commercialName : "Medicamento desconocido";
-  };
-
-  // Mostrar estado de carga
   if (authLoading || loadingTratamientos || loadingMedicinas || loadingPreferencias) {
+    return <div className="flex justify-center items-center h-64">Cargando...</div>;
+  }
+
+  if (errorTratamientos || errorMedicinas || errorPreferencias) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-error">
+          Error: {errorTratamientos?.toString() || errorMedicinas?.toString() || errorPreferencias?.toString()}
+        </div>
       </div>
     );
   }
 
-  // Verificar autenticación
-  if (!isAuthenticated || !user) {
-    return null; // El efecto redirigirá al login
-  }
+  if (!user) return null;
+
+  // Filtrar tratamientos por usuario
+  const tratamientosUsuario = tratamientos.filter(t => t.userId === user.id);
+  const tratamientosActivos = tratamientosUsuario.filter(t => t.isActive === true);
+  const tratamientosHistoricos = tratamientosUsuario.filter(t => t.isActive === false);
+
+  // Obtener nombre de medicamento por ID
+  const obtenerNombreMedicamento = (id: string) => {
+    const medicina = medicinas.find(m => m.id === id);
+    return medicina ? medicina.commercialName : "Medicamento no encontrado";
+  };
+  // Datos para el dock
+  const dockItems: { title: string; icon: React.ReactNode; id: "activos" | "historicos" | "notificaciones" }[] = [
+    {
+      title: 'Activos',
+      icon: (
+        <Pill className='h-full w-full text-primary-foreground dark:text-primary-foreground' />
+      ),
+      id: 'activos'
+    },
+    {
+      title: 'Historial',
+      icon: (
+        <History className='h-full w-full text-primary-foreground dark:primary-foreground' />
+      ),
+      id: 'historicos'
+    },
+    {
+      title: 'Notificaciones',
+      icon: (
+        <Bell className='h-full w-full text-primary-foreground dark:text-primary-foreground' />
+      ),
+      id: 'notificaciones'
+    }
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto py-15">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Gestión de Tratamientos</h1>
-        <CrearTratamientoDialog 
-          onCreate={handleCreateTratamiento}
-          medicinas={medicinas}
-          userId={user.id}
-        />
+        <h1 className="text-3xl font-bold">Gestión de Tratamientos</h1>
+        {activeTab !== "notificaciones" && (
+          <CrearTratamientoDialog
+            onCreate={createTratamiento}
+            medicinas={medicinas}
+            userId={user.id}
+          />
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab("activos")}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "activos"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Tratamientos Activos
-          </button>
-          <button
-            onClick={() => setActiveTab("historicos")}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "historicos"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Histórico
-          </button>
-          <button
-            onClick={() => setActiveTab("notificaciones")}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "notificaciones"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Notificaciones
-          </button>
-        </nav>
+      {/* Contenido según la pestaña activa */}
+      <div className="mb-24">
+        {activeTab === "activos" && (
+          <TratamientosActivos
+            tratamientos={tratamientosActivos}
+            medicinas={medicinas}
+            userId={user.id}
+            onUpdate={updateTratamiento}
+            onFinalizar={(id) => updateTratamiento(id, { isActive: false })}
+            obtenerNombreMedicamento={obtenerNombreMedicamento}
+          />
+        )}
+
+        {activeTab === "historicos" && (
+          <TratamientosHistoricos
+            tratamientos={tratamientosHistoricos}
+            medicinas={medicinas}
+            userId={user.id}
+            onDelete={deleteTratamiento}
+            obtenerNombreMedicamento={obtenerNombreMedicamento}
+          />
+        )}
+
+        {activeTab === "notificaciones" && (
+          <NotificacionesTab
+            preferencias={preferencias}
+            notificaciones={notificaciones}
+            tratamientos={tratamientosUsuario}
+            onUpdatePreferencias={updatePreferencias}
+          />
+        )}
       </div>
 
-      {/* Contenido de las tabs */}
-      {activeTab === "activos" && (
-        <TratamientosActivos 
-          tratamientos={tratamientosUsuario.filter(t => t.isActive)}
-          medicinas={medicinas}
-          userId={user.id}
-          onUpdate={handleUpdateTratamiento}
-          onFinalizar={handleFinalizarTratamiento}
-          obtenerNombreMedicamento={obtenerNombreMedicamento}
-        />
-      )}
-
-      {activeTab === "historicos" && (
-        <TratamientosHistoricos 
-          tratamientos={tratamientosUsuario.filter(t => !t.isActive)}
-          medicinas={medicinas}
-          userId={user.id}
-          onDelete={handleDeleteTratamiento}
-          obtenerNombreMedicamento={obtenerNombreMedicamento}
-        />
-      )}
-
-      {activeTab === "notificaciones" && (
-        <NotificacionesTab 
-          notificaciones={notificaciones}
-          tratamientos={tratamientosUsuario}
-          preferencias={preferencias}
-          onUpdatePreferencias={handleUpdatePreferencias}
-        />
-      )}
+      {/* Dock de navegación */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <Dock className="items-end pb-3">
+          {dockItems.map((item) => (
+            <DockItem
+              key={item.id}
+              className={`aspect-square rounded-full bg-primary dark:bg-primary cursor-pointer transition-all duration-200 flex items-center justify-center ${
+                activeTab === item.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-info hover:text-accent-foreground text-neutral-foreground dark:text-neutral-foreground'
+              }`}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <DockLabel>{item.title}</DockLabel>
+              <DockIcon className={activeTab === item.id ? 'text-primary-foreground' : 'text-neutral-foreground dark:text-neutral-foreground'}>{item.icon}</DockIcon>
+            </DockItem>
+          ))}
+        </Dock>
+      </div>
     </div>
   );
 }

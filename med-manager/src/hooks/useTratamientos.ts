@@ -19,12 +19,12 @@ export const useTratamientos = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (!isAuthenticated || !user) {
         setTratamientos([]);
         return;
       }
-      
+
       const response = await fetch(`/api/tratamientos?userId=${user.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener tratamientos");
@@ -96,7 +96,8 @@ export const useTratamientos = () => {
       return newTratamiento;
     } catch (err) {
       console.error("Error en createTratamiento:", err);
-      const errorMessage = err instanceof Error ? err.message : "Error desconocido";
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido";
       setError(errorMessage);
       throw err;
     } finally {
@@ -182,12 +183,12 @@ export const useMedicinas = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (!isAuthenticated || !user) {
         setMedicinas([]);
         return;
       }
-      
+
       const response = await fetch(`/api/medicinas?userId=${user.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener medicinas");
@@ -224,7 +225,7 @@ export const useNotificaciones = () => {
         setNotificaciones([]);
         return;
       }
-      
+
       const response = await fetch(`/api/notificaciones?userId=${user.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener notificaciones");
@@ -248,7 +249,8 @@ export const useNotificaciones = () => {
 
 // Hook para manejar preferencias de notificaciones
 export const usePreferenciasNotificaciones = () => {
-  const [preferencias, setPreferencias] = useState<PreferenciasNotificaciones | null>(null);
+  const [preferencias, setPreferencias] =
+    useState<PreferenciasNotificaciones | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
@@ -257,13 +259,15 @@ export const usePreferenciasNotificaciones = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (!isAuthenticated || !user) {
         setPreferencias(null);
         return;
       }
-      
-      const response = await fetch(`/api/preferencias-notificaciones?userId=${user.id}`);
+
+      const response = await fetch(
+        `/api/preferencias-notificaciones?userId=${user.id}`
+      );
       if (!response.ok) {
         throw new Error("Error al obtener preferencias de notificaciones");
       }
@@ -280,12 +284,16 @@ export const usePreferenciasNotificaciones = () => {
     preferenciasData: Partial<PreferenciasNotificaciones>
   ) => {
     try {
+      if (!user) {
+        throw new Error("Usuario no autenticado");
+      }
+
       const response = await fetch("/api/preferencias-notificaciones", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(preferenciasData),
+        body: JSON.stringify({ userId: user.id, ...preferenciasData }),
       });
 
       if (!response.ok) {
