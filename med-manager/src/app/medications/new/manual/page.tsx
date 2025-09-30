@@ -2,7 +2,8 @@
 
 import { addMedication, getDescriptionFromAI, getIntakeRecommendationsFromAI } from '@/app/actions';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,25 +12,38 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { IconArrowLeft, IconRobot, IconLoader2 } from '@tabler/icons-react';
 import BookLoader from '@/components/BookLoader';
 
-export default function ManualMedicationPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
-  const [isDescriptionLoading, setIsDescriptionLoading] = useState(false);
-  const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
+export default function ManualMedicationPage() {
+  const searchParams = useSearchParams();
+
   const [formData, setFormData] = useState({
-    commercialName: searchParams?.nombre_comercial as string ?? '',
-    activeIngredient: searchParams?.principios_activos as string ?? '',
-    initialQuantity: searchParams?.cantidad_inicial as string ?? '',
-    unit: searchParams?.unidad as string ?? '',
-    description: searchParams?.descripcion_uso as string ?? '',
-    intakeRecommendations: searchParams?.recomendaciones_ingesta as string ?? '',
+    commercialName: '',
+    activeIngredient: '',
+    initialQuantity: '',
+    unit: '',
+    description: '',
+    intakeRecommendations: '',
     expirationDate: ''
   });
 
+  useEffect(() => {
+    if (searchParams) {
+      setFormData({
+        commercialName: searchParams.get('nombre_comercial') ?? '',
+        activeIngredient: searchParams.get('principios_activos') ?? '',
+        initialQuantity: searchParams.get('cantidad_inicial') ?? '',
+        unit: searchParams.get('unidad') ?? '',
+        description: searchParams.get('descripcion_uso') ?? '',
+        intakeRecommendations: searchParams.get('recomendaciones_ingesta') ?? '',
+        expirationDate: ''
+      });
+    }
+  }, [searchParams]);
+
+  const [isDescriptionLoading, setIsDescriptionLoading] = useState(false);
+  const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
+
   // Determinar si viene de la IA (si hay parámetros)
-  const isFromAI = searchParams && Object.keys(searchParams).length > 0;
+  const isFromAI = Object.values(formData).some(value => value !== '');
 
   const title = isFromAI
     ? "Agregar Medicamento con IA"
