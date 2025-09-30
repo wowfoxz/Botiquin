@@ -266,3 +266,45 @@ export async function updateNotificationSettings(formData: FormData) {
   revalidatePath("/configuracion");
   redirect("/configuracion");
 }
+
+export async function getDescriptionFromAI(formData: FormData) {
+  const commercialName = formData.get("commercialName") as string;
+  const activeIngredient = formData.get("activeIngredient") as string;
+
+  // Importamos las funciones necesarias
+  const { getDescriptionWithGemini } = await import("@/lib/ai-processor");
+
+  const result = await getDescriptionWithGemini(
+    commercialName,
+    activeIngredient
+  );
+
+  return {
+    success: !result.error,
+    info: result.info,
+    error: result.error,
+  };
+}
+
+export async function getIntakeRecommendationsFromAI(formData: FormData) {
+  const commercialName = formData.get("commercialName") as string;
+  const activeIngredient = formData.get("activeIngredient") as string;
+
+  // Importamos las funciones necesarias
+  const { getIntakeRecommendationsWithGemini } = await import(
+    "@/lib/ai-processor"
+  );
+
+  const result = await getIntakeRecommendationsWithGemini(
+    commercialName,
+    activeIngredient
+  );
+
+  return {
+    success: !result.error,
+    info: result.info,
+    error: result.error,
+  };
+}
+/* Duplicate addMedication function removed. The remaining implementation is kept elsewhere in this file.
+   This prevents having multiple definitions and ensures the file ends correctly with a single revalidatePath/redirect call. */

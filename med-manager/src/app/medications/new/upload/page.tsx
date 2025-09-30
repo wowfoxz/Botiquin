@@ -222,19 +222,6 @@ export default function UploadPage() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Vista previa:</p>
-
-                          {isSubmitting ? (
-                            <div className="w-full flex flex-col items-center py-4">
-                              <BookLoader isVisible={isSubmitting} />
-                            </div>
-                          ) : (
-                            <Button
-                              type="submit"
-                              className="w-full"
-                            >
-                              Analizar Imagen
-                            </Button>
-                          )}
                           <div className="relative rounded-md max-h-48 mx-auto w-full">
                             <Image
                               src={URL.createObjectURL(file)}
