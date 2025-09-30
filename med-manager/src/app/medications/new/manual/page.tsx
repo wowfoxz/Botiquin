@@ -15,6 +15,17 @@ export default async function ManualMedicationPage({
 }) {
   const resolvedSearchParams = await searchParams;
 
+  // Determinar si viene de la IA (si hay parámetros)
+  const isFromAI = resolvedSearchParams && Object.keys(resolvedSearchParams).length > 0;
+
+  const title = isFromAI
+    ? "Agregar Medicamento con IA"
+    : "Agregar Medicamento Manualmente";
+
+  const description = isFromAI
+    ? "Controla que los datos completados por la IA sean correctos, completa la fecha de vencimiento para registrar tu medicamento"
+    : "Completa todos los campos obligatorios para registrar tu medicamento";
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-12" style={{ backgroundColor: 'var(--background)' }}>
       <div className="w-full max-w-2xl">
@@ -29,8 +40,8 @@ export default async function ManualMedicationPage({
 
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-2xl">Agregar Medicamento Manualmente</CardTitle>
-            <CardDescription>Completa todos los campos obligatorios para registrar tu medicamento</CardDescription>
+            <CardTitle className="text-2xl">{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
           </CardHeader>
 
           <form action={addMedication}>
@@ -125,7 +136,7 @@ export default async function ManualMedicationPage({
                   type="date" 
                   required
                 />
-                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Este campo debes rellenarlo manualmente.</p>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}></p>
               </div>
             </CardContent>
             

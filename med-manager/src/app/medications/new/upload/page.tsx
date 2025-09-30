@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { IconArrowLeft } from '@tabler/icons-react';
-
+import BookLoader from '@/components/BookLoader';
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string>('');
@@ -23,6 +23,7 @@ export default function UploadPage() {
   useEffect(() => {
     const errorMessage = searchParams.get('error');
     if (errorMessage) {
+      // Decode once and set to state
       setError(decodeURIComponent(errorMessage));
     }
   }, [searchParams]);
@@ -32,21 +33,24 @@ export default function UploadPage() {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setError('');
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageBase64(reader.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
+    const selectedFile = e.target.files?.[0] ?? null;
+    if (!selectedFile) {
+      return;
     }
+
+    setFile(selectedFile);
+    setError('');
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageBase64(reader.result as string);
+    };
+    reader.readAsDataURL(selectedFile);
   };
 
   const startCamera = async () => {
@@ -62,6 +66,8 @@ export default function UploadPage() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Try to play the video if autoplay is blocked
+        videoRef.current.play().catch(() => {});
       }
     } catch (err) {
       console.error('Error accessing camera:', err);
@@ -72,61 +78,87 @@ export default function UploadPage() {
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (e) {
+          // ignore errors when stopping tracks
+        }
+      });
       streamRef.current = null;
     }
+
+    if (videoRef.current) {
+      // Remove the stream from the video element to release resources
+      try {
+        // Clear srcObject in a type-safe way
+        (videoRef.current as HTMLVideoElement).srcObject = null;
+      } catch (e) {
+        // ignore
+      }
+    }
+
     setIsCameraActive(false);
   };
 
   const captureImage = () => {
-    if (videoRef.current && streamRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+    if (!videoRef.current || !streamRef.current) {
+      setError('La cámara no está activa.');
+      return;
+    }
 
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-            setFile(file);
+    const videoEl = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoEl.videoWidth || 640;
+    canvas.height = videoEl.videoHeight || 480;
 
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setImageBase64(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-          }
-        }, 'image/jpeg', 0.9);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      setError('No se pudo capturar la imagen.');
+      return;
+    }
+
+    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        setError('No se pudo procesar la imagen capturada.');
+        return;
       }
 
-      stopCamera();
-    }
+      const capturedFile = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+      setFile(capturedFile);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageBase64(reader.result as string);
+      };
+      reader.readAsDataURL(capturedFile);
+    }, 'image/jpeg', 0.9);
+
+    stopCamera();
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (!file || !imageBase64) {
-        setError('Por favor, selecciona una imagen.');
-        return;
+      setError('Por favor, selecciona una imagen.');
+      return;
     }
+
     setIsSubmitting(true);
     setError('');
 
     try {
       const pureBase64 = imageBase64.split(',')[1];
-      await processUploadedImage(pureBase64, file.type);
-      // The server action will handle the redirect. If it fails,
-      // it will redirect back here with an error. If it succeeds,
-      // it will redirect to the new medication form.
-      // We might not hit the finally block if redirect happens.
+      // No necesitamos await aquí ya que processUploadedImage manejará la redirección
+      processUploadedImage(pureBase64, file.type);
+      // Si llegamos aquí, significa que processUploadedImage no redirigió,
+      // lo cual podría indicar un problema
     } catch (err) {
-        // This catch block is a safeguard for unexpected client-side errors.
-        setError('Ocurrió un error inesperado al enviar la imagen.');
-        console.error(err);
-    } finally {
-        setIsSubmitting(false);
+      // This catch block is a safeguard for unexpected client-side errors.
+      setError('Ocurrió un error inesperado al enviar la imagen.');
+      console.error(err);
     }
   };
 
@@ -190,6 +222,19 @@ export default function UploadPage() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Vista previa:</p>
+
+                          {isSubmitting ? (
+                            <div className="w-full flex flex-col items-center py-4">
+                              <BookLoader isVisible={isSubmitting} />
+                            </div>
+                          ) : (
+                            <Button
+                              type="submit"
+                              className="w-full"
+                            >
+                              Analizar Imagen
+                            </Button>
+                          )}
                           <div className="relative rounded-md max-h-48 mx-auto w-full">
                             <Image
                               src={URL.createObjectURL(file)}
@@ -258,14 +303,19 @@ export default function UploadPage() {
             </CardContent>
 
             {file && !isCameraActive && (
-              <CardFooter>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? 'Analizando con IA...' : 'Analizar Imagen'}
-                </Button>
+              <CardFooter className="flex flex-col items-center">
+                {isSubmitting ? (
+                  <div className="w-full flex flex-col items-center py-4">
+                    <BookLoader isVisible={isSubmitting} />
+                  </div>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="w-full"
+                  >
+                    Analizar Imagen
+                  </Button>
+                )}
               </CardFooter>
             )}
           </form>
