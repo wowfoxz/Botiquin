@@ -56,17 +56,17 @@ export async function analyzeImageWithGemini(
 
   INFORMACIÓN A EXTRAER:
   1.  "nombre_comercial": El nombre de la marca del medicamento.
-  2.  "cantidad": El número total de unidades en el envase (ej: 20, 30, 100). Debe ser un número. Si no lo ves, pon null.
-  3.  "unidad": La unidad de las cantidades (ej: "comprimidos", "cápsulas", "ml"). Si no lo ves, pon null.
-  4.  "principio_activo": El principio activo y su concentración si está visible (ej: "Paracetamol 500mg").
+  2.  "cantidad": El número total de unidades (si son comprimidos) en el envase (ej: 20, 30, 100), tambien pueden sel mililitros o centimetros cubicos (ej: 10ml , 50cc). Debe ser un número. Si no lo ves, pon "No encontrado en la imagen".
+  3.  "unidad": La unidad de las cantidades (ej: "comprimidos", "cápsulas", "ml"). Si no lo ves, pon "No encontrado en la imagen".
+  4.  "principio_activo": El principio activo y su concentración si está visible (ej: "Paracetamol 500mg") intenta colocar solo la informacion que aparece en la imagen.
 
-  Responde ÚNICAMENTE con el objeto JSON. No incluyas explicaciones ni texto adicional como \`\`\`json. Si un campo no es visible, usa el valor null.
+  Responde ÚNICAMENTE con el objeto JSON. No incluyas explicaciones ni texto adicional como \`\`\`json. Si un campo no es visible, usa el valor "No encontrado en la imagen".
   Ejemplo de respuesta:
   {
-    "nombre_comercial": "Ibuprofeno 600mg",
-    "cantidad": 20,
-    "unidad": "comprimidos",
-    "principio_activo": "Ibuprofeno 600mg"
+    "nombre_comercial": "Actron",
+    "cantidad": 10,
+    "unidad": "Capsulas Blandas",
+    "principio_activo": "Ibuprofeno 400mg"
   }`;
 
   const imagePart = fileToGenerativePart(imageBuffer, mimeType);
@@ -120,7 +120,7 @@ export async function getDrugInfoWithGemini(
 
     1. "principios_activos": El o los principios activos principales y su concentración.
     2. "descripcion_uso": Un resumen breve y claro de para qué se usa el medicamento.
-    3. "recomendaciones_ingesta": Las recomendaciones generales de ingesta, incluyendo DOSIS, FRECUENCIA Y VÍA DE ADMINISTRACIÓN (ej: "1 comprimido cada 8 horas por vía oral"). Si hay varias presentaciones, menciona las más comunes. Sé específico sobre la dosis típica para adultos.
+    3. "recomendaciones_ingesta": Las recomendaciones generales de ingesta, incluyendo DOSIS, FRECUENCIA Y VÍA DE ADMINISTRACIÓN (ej: "1 comprimido cada 8 horas por vía oral"). Si hay varias presentaciones, menciona las más comunes. Sé específico sobre la dosis típica para adultos y niños (espesificando a partir de que edad puede consumir) por separado.
 
     Si no encuentras información, usa "No encontrado" como valor para los campos. No incluyas explicaciones ni texto adicional como \`\`\`json.
     Ejemplo de respuesta:
@@ -152,6 +152,81 @@ export async function getDrugInfoWithGemini(
       descripcion_uso: "No encontrado",
       recomendaciones_ingesta: "Consultar prospecto",
       error: "No se pudo obtener la información del medicamento.",
+    };
+  }
+}
+
+interface SpecificDrugInfoResult {
+  info: string;
+  error?: string;
+}
+
+export async function getDescriptionWithGemini(
+  medicineName: string,
+  activeIngredient: string
+): Promise<SpecificDrugInfoResult> {
+  if (!genAI) {
+    return {
+      error: "La configuración de la API de IA no está disponible.",
+      info: "",
+    };
+  }
+
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = `Eres un experto farmacéutico. Basado en el nombre del medicamento "${medicineName}" y su principio activo "${activeIngredient}", proporciona una descripción breve y clara de para qué se usa este medicamento.
+
+  Responde ÚNICAMENTE con la descripción en texto plano. No incluyas explicaciones ni texto adicional.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+
+    return { info: text };
+  } catch (error) {
+    console.error(
+      "Error al obtener descripción del medicamento con Gemini:",
+      error
+    );
+    return {
+      info: "No se pudo obtener la descripción del medicamento.",
+      error: "No se pudo obtener la descripción del medicamento.",
+    };
+  }
+}
+
+export async function getIntakeRecommendationsWithGemini(
+  medicineName: string,
+  activeIngredient: string
+): Promise<SpecificDrugInfoResult> {
+  if (!genAI) {
+    return {
+      error: "La configuración de la API de IA no está disponible.",
+      info: "",
+    };
+  }
+
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = `Eres un experto farmacéutico. Basado en el nombre del medicamento "${medicineName}" y su principio activo "${activeIngredient}", proporciona recomendaciones generales de ingesta, incluyendo DOSIS, FRECUENCIA Y VÍA DE ADMINISTRACIÓN (ej: "1 comprimido cada 8 horas por vía oral"). Si hay varias presentaciones, menciona las más comunes. Sé específico sobre la dosis típica para adultos y niños (espesificando a partir de que edad puede consumir) por separado.
+
+  Responde ÚNICAMENTE con las recomendaciones en texto plano. No incluyas explicaciones ni texto adicional.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+
+    return { info: text };
+  } catch (error) {
+    console.error(
+      "Error al obtener recomendaciones de ingesta con Gemini:",
+      error
+    );
+    return {
+      info: "Consultar prospecto",
+      error: "No se pudo obtener las recomendaciones de ingesta.",
     };
   }
 }
