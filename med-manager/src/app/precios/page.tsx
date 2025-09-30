@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpDown } from 'lucide-react';
-import Loader from '../../components/Loader';
+import Loader from '../../components/Loader_lupa';
 
 interface Medicamento {
   NOMBRE: string;

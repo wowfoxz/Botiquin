@@ -55,7 +55,7 @@ export async function processUploadedImage(
     }
   });
 
-  redirect(`/medications/new?${params.toString()}`);
+  redirect(`/medications/new/manual?${params.toString()}`);
 }
 
 export async function registerUser(formData: FormData) {
