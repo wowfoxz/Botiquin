@@ -24,6 +24,7 @@ model User {
   notificationSettings NotificationSettings?
   treatments          Treatment[]          // Relación con tratamientos
   notificationPreferences NotificationPreferences? // Relación con preferencias de notificaciones
+  shoppingLists       ShoppingList[]       // Relación con listas de compras
 }
 
 model Medication {
@@ -99,4 +100,31 @@ model NotificationPreferences {
   userId      String   @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Modelo para items de la lista de compras
+model ShoppingItem {
+  id             String       @id @default(cuid())
+  name           String
+  presentation   String?
+  laboratory     String?
+  price          Float
+  quantity       Int          @default(1)
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id])
+  shoppingListId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Modelo para listas de compras
+model ShoppingList {
+  id           String         @id @default(cuid())
+  name         String
+  items        ShoppingItem[]
+  total        Float
+  isArchived   Boolean        @default(false)
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
