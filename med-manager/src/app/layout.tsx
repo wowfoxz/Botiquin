@@ -3,6 +3,7 @@ import './globals.css';
 import Menu from '@/components/menu/menu';
 import { ThemeSwitch } from '@/components/providers/theme-switch';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'MedManager',
@@ -28,6 +29,7 @@ export default function RootLayout({
           </div>
           <Menu />
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
