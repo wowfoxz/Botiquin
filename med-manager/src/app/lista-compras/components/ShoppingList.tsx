@@ -19,6 +19,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Save, Copy, FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ShoppingItem } from '../types';
 
 interface ShoppingListProps {
@@ -180,7 +181,10 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
               </DropdownMenuTrigger>
               <style>{`button.text-destructive:hover{background-color:rgba(239,68,68,0.08);color:#ef4444;transition:background-color 200ms ease;border-radius:6px;}`}</style>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={saveShoppingList}>
+                <DropdownMenuItem onClick={() => {
+                  // Llamar a la función de guardado que maneja las validaciones
+                  saveShoppingList();
+                }}>
                   Guardar Lista
                 </DropdownMenuItem>
                 <DropdownMenuItem
