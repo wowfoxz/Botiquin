@@ -85,22 +85,42 @@ const ListaComprasPage = () => {
   };
 
   // Agregar medicamento a la lista de compras
+  // Agregar medicamento a la lista de compras
   const addToShoppingList = (medicamento: Medicamento) => {
     // Convertir precio a número
     const priceString = medicamento.PRECIO.toString().replace('$', '').replace(/[, ]+/g, '');
     const price = parseFloat(priceString) || 0;
-    
-    const newItem: ShoppingItem = {
-      id: Date.now().toString(),
-      name: medicamento.NOMBRE,
-      presentation: medicamento.PRESENTACION,
-      laboratory: medicamento.LABORATORIO,
-      price: price,
-      quantity: 1
-    };
-    
-    setShoppingItems(prev => [...prev, newItem]);
-    toast.success('Producto agregado a la lista de compras');
+
+    // Verificar si el producto ya existe en la lista
+    const existingItemIndex = shoppingItems.findIndex(item =>
+      item.name === medicamento.NOMBRE &&
+      item.presentation === medicamento.PRESENTACION &&
+      item.laboratory === medicamento.LABORATORIO
+    );
+
+    if (existingItemIndex !== -1) {
+      // Si el producto ya existe, incrementar la cantidad
+      const updatedItems = [...shoppingItems];
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + 1
+      };
+      setShoppingItems(updatedItems);
+      toast.success('Cantidad actualizada en la lista de compras');
+    } else {
+      // Si es un nuevo producto, agregarlo a la lista
+      const newItem: ShoppingItem = {
+        id: Date.now().toString(),
+        name: medicamento.NOMBRE,
+        presentation: medicamento.PRESENTACION,
+        laboratory: medicamento.LABORATORIO,
+        price: price,
+        quantity: 1
+      };
+
+      setShoppingItems(prev => [...prev, newItem]);
+      toast.success('Producto agregado a la lista de compras');
+    }
   };
 
   // Actualizar cantidad de un item

@@ -4,7 +4,6 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import Loader from '@/components/Loader_lupa';
 import { Medicamento } from '../types';
 
 interface SearchMedicationsProps {
@@ -20,8 +19,6 @@ const SearchMedications: React.FC<SearchMedicationsProps> = ({
   searchTerm,
   setSearchTerm,
   loading,
-  error,
-  medicamentos,
   handleSearch
 }) => {
   return (
