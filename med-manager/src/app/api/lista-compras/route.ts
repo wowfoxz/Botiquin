@@ -13,6 +13,14 @@ interface ServerSession {
   user?: SessionUser;
 }
 
+interface ShoppingItemCreate {
+  name: string;
+  presentation?: string;
+  laboratory?: string;
+  price: number;
+  quantity: number;
+}
+
 export async function GET() {
   try {
     // Obtener la sesión del usuario
@@ -63,14 +71,6 @@ export async function GET() {
       }
     );
   }
-}
-
-interface ShoppingItemCreate {
-  name: string;
-  presentation?: string;
-  laboratory?: string;
-  price: number;
-  quantity: number;
 }
 
 export async function POST(request: NextRequest) {
