@@ -19,7 +19,6 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Save, Copy, FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
 import { ShoppingItem } from '../types';
 
 interface ShoppingListProps {

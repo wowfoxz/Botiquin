@@ -14,15 +14,15 @@ const ListaComprasPage = () => {
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Estados para la lista de compras actual
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([]);
   const [listName, setListName] = useState<string>('');
-  
+
   // Estados para el historial de listas
   const [shoppingLists, setShoppingLists] = useState<ShoppingListType[]>([]);
   const [showHistory, setShowHistory] = useState<boolean>(false);
-  
+
   // Estados para ordenamiento
   const [sortField, setSortField] = useState<'precio' | 'presentacion' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -40,7 +40,7 @@ const ListaComprasPage = () => {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setShoppingLists(data);
@@ -85,7 +85,6 @@ const ListaComprasPage = () => {
   };
 
   // Agregar medicamento a la lista de compras
-  // Agregar medicamento a la lista de compras
   const addToShoppingList = (medicamento: Medicamento) => {
     // Convertir precio a número
     const priceString = medicamento.PRECIO.toString().replace('$', '').replace(/[, ]+/g, '');
@@ -126,9 +125,9 @@ const ListaComprasPage = () => {
   // Actualizar cantidad de un item
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) return;
-    
-    setShoppingItems(prev => 
-      prev.map(item => 
+
+    setShoppingItems(prev =>
+      prev.map(item =>
         item.id === id ? { ...item, quantity } : item
       )
     );
@@ -145,12 +144,12 @@ const ListaComprasPage = () => {
       toast.error('La lista de compras está vacía');
       return;
     }
-    
+
     if (!listName.trim()) {
       toast.error('Por favor, ingrese un nombre para la lista');
       return;
     }
-    
+
     try {
       const response = await fetch('/api/lista-compras', {
         method: 'POST',
@@ -163,7 +162,7 @@ const ListaComprasPage = () => {
           total: totalAmount
         }),
       });
-      
+
       if (response.ok) {
         toast.success('Lista de compras guardada exitosamente');
         setShoppingItems([]);
@@ -184,14 +183,14 @@ const ListaComprasPage = () => {
       switch (format) {
         case 'text':
           // Copiar al portapapeles
-          const textContent = `Lista de Compras: ${listName || 'Sin nombre'}\n\n${shoppingItems.map(item => 
+          const textContent = `Lista de Compras: ${listName || 'Sin nombre'}\n\n${shoppingItems.map(item =>
             `${item.quantity} x ${item.name} - $${(item.price * item.quantity).toFixed(2)}`
           ).join('\n')}\n\nTotal: $${totalAmount.toFixed(2)}`;
-          
+
           await navigator.clipboard.writeText(textContent);
           toast.success('Contenido copiado al portapapeles');
           break;
-          
+
         case 'image':
         case 'pdf':
           toast.info(`Exportación a ${format === 'image' ? 'imagen' : 'PDF'} no implementada aún`);
@@ -200,6 +199,53 @@ const ListaComprasPage = () => {
     } catch (err) {
       console.error('Error al exportar lista:', err);
       toast.error('Error al exportar la lista');
+    }
+  };
+
+  // Exportar una lista del historial
+  const exportHistoryList = async (list: ShoppingListType, format: 'image' | 'pdf' | 'text') => {
+    try {
+      switch (format) {
+        case 'text':
+          // Copiar al portapapeles
+          const textContent = `Lista de Compras: ${list.name}\n\n${list.items.map(item =>
+            `${item.quantity} x ${item.name}${item.presentation ? ` (${item.presentation})` : ''} - $${(item.price * item.quantity).toFixed(2)}`
+          ).join('\n')}\n\nTotal: $${list.total.toFixed(2)}`;
+
+          await navigator.clipboard.writeText(textContent);
+          toast.success('Contenido copiado al portapapeles');
+          break;
+
+        case 'image':
+        case 'pdf':
+          toast.info(`Exportación a ${format === 'image' ? 'imagen' : 'PDF'} no implementada aún`);
+          break;
+      }
+    } catch (err) {
+      console.error('Error al exportar lista:', err);
+      toast.error('Error al exportar la lista');
+    }
+  };
+
+  const deleteShoppingList = async (id: string) => {
+    try {
+      const response = await fetch(`/api/lista-compras/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        toast.success('Lista de compras eliminada exitosamente');
+        loadShoppingLists(); // Recargar historial
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Error al eliminar la lista de compras');
+      }
+    } catch (err) {
+      console.error('Error al eliminar lista de compras:', err);
+      toast.error('Error al eliminar la lista de compras');
     }
   };
 
@@ -212,10 +258,33 @@ const ListaComprasPage = () => {
 
       switch (sortField) {
         case 'precio': {
-          const precioA = typeof a.PRECIO === 'string' ? a.PRECIO : String(a.PRECIO);
-          const precioB = typeof b.PRECIO === 'string' ? b.PRECIO : String(b.PRECIO);
-          aValue = parseFloat(precioA.replace('$', '').replace(/[, ]+/g, '')) || 0;
-          bValue = parseFloat(precioB.replace('$', '').replace(/[, ]+/g, '')) || 0;
+          const normalizePrecioRaw = (p: string | number | null | undefined) => {
+            if (p == null) return '0';
+            const s = typeof p === 'string' ? p : String(p);
+            // Remove any currency symbols and letters, keep digits, dots, commas and minus sign
+            return s.replace(/[^0-9.,-]+/g, '').trim();
+          };
+
+          const precioAraw = normalizePrecioRaw(a.PRECIO);
+          const precioBraw = normalizePrecioRaw(b.PRECIO);
+
+          const normalizeDecimal = (s: string) => {
+            // If both dot and comma exist, assume comma is thousands separator: remove commas
+            if (s.includes('.') && s.includes(',')) {
+              return s.replace(/,/g, '');
+            }
+            // If only comma exists, treat comma as decimal separator
+            if (s.includes(',') && !s.includes('.')) {
+              return s.replace(/,/g, '.');
+            }
+            return s;
+          };
+
+          const precioA = normalizeDecimal(precioAraw);
+          const precioB = normalizeDecimal(precioBraw);
+
+          aValue = parseFloat(precioA) || 0;
+          bValue = parseFloat(precioB) || 0;
           break;
         }
         case 'presentacion':
@@ -257,10 +326,12 @@ const ListaComprasPage = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-foreground">Lista de Compras</h1>
         <div className="flex gap-2">
-          <ShoppingHistory 
+          <ShoppingHistory
             shoppingLists={shoppingLists}
             showHistory={showHistory}
             setShowHistory={setShowHistory}
+            exportList={exportHistoryList}
+            onDeleteList={deleteShoppingList}
           />
         </div>
       </div>
@@ -276,7 +347,7 @@ const ListaComprasPage = () => {
             medicamentos={medicamentos}
             handleSearch={handleSearch}
           />
-          
+
           <MedicamentosTable
             loading={loading}
             error={error}
