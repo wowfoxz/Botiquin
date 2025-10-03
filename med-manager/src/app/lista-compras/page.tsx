@@ -185,7 +185,7 @@ const ListaComprasPage = () => {
           // Copiar al portapapeles
           const textContent = `Lista de Compras: ${listName || 'Sin nombre'}\n\n${shoppingItems.map(item =>
             `${item.quantity} x ${item.name} - $${(item.price * item.quantity).toFixed(2)}`
-          ).join('\n')}\n\nTotal: $${totalAmount.toFixed(2)}`;
+          ).join('\n')}\n\nTotal: $${totalAmount.toFixed(2)}\n\nPrecios de referencia: promedio de valores declarados por laboratorios al Vademécum Nacional de Medicamentos (VNM), organismo dependiente de la Administración Nacional de Medicamentos, Alimentos y Tecnología Médica (ANMAT).\nLa farmacia puede cobrar igual, más o menos.\nSolo estimación; no es cotización ni obligación de venta.`;
 
           await navigator.clipboard.writeText(textContent);
           toast.success('Contenido copiado al portapapeles');
@@ -210,7 +210,7 @@ const ListaComprasPage = () => {
           // Copiar al portapapeles
           const textContent = `Lista de Compras: ${list.name}\n\n${list.items.map(item =>
             `${item.quantity} x ${item.name}${item.presentation ? ` (${item.presentation})` : ''} - $${(item.price * item.quantity).toFixed(2)}`
-          ).join('\n')}\n\nTotal: $${list.total.toFixed(2)}`;
+          ).join('\n')}\n\nTotal: $${list.total.toFixed(2)}\n\nPrecios de referencia: promedio de valores declarados por laboratorios al Vademécum Nacional de Medicamentos (VNM), organismo dependiente de la Administración Nacional de Medicamentos, Alimentos y Tecnología Médica (ANMAT).\nLa farmacia puede cobrar igual, más o menos.\nSolo estimación; no es cotización ni obligación de venta.`;
 
           await navigator.clipboard.writeText(textContent);
           toast.success('Contenido copiado al portapapeles');

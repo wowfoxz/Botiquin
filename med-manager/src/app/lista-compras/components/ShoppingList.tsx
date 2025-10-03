@@ -292,6 +292,18 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
                 ${totalAmount.toFixed(2)}
               </span>
             </div>
+            {/* Disclaimer */}
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-xs text-yellow-800">
+              <p className="font-semibold mb-1">Precios de referencia:</p>
+              <p>
+                promedio de valores declarados por laboratorios al Vademécum Nacional de Medicamentos (VNM),
+                organismo dependiente de la Administración Nacional de Medicamentos, Alimentos y Tecnología Médica (ANMAT).
+              </p>
+              <p className="mt-1">
+                La farmacia puede cobrar igual, más o menos.
+                Solo estimación; no es cotización ni obligación de venta.
+              </p>
+            </div>
           </>
         ) : (
           <div className="text-center py-12 border-2 border-dashed rounded-md border-muted-foreground/20">

@@ -269,6 +269,26 @@ export default function PreciosPage() {
           </Card>
         )
       )}
+
+      {/* Disclaimer */}
+      {medicamentos.length > 0 && (
+        <Card className="mt-6 shadow-lg">
+          <CardContent className="p-4">
+            <div className="text-xs text-yellow-200">
+              <p className="font-semibold mb-1">Aviso importante:</p>
+              <p>
+                Los precios mostrados son exclusivamente de referencia y no constituyen un precio de venta obligatorio.
+              </p>
+              <p className="mt-1">
+                Provienen del Vademécum Nacional de Medicamentos (VNM), dependiente de la Administración Nacional de Medicamentos, Alimentos y Tecnología Médica (ANMAT), y son declarados de forma voluntaria por los laboratorios.
+              </p>
+              <p className="mt-1">
+                Cada farmacia es libre de fijar el precio final que considere; verificá el importe directamente con la farmacia antes de comprar.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
