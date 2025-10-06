@@ -7,6 +7,8 @@ import MedicamentosTable from './components/MedicamentosTable';
 import ShoppingList from './components/ShoppingList';
 import ShoppingHistory from './components/ShoppingHistory';
 import { Medicamento, ShoppingItem, ShoppingList as ShoppingListType } from './types';
+import { exportAsImage } from '@/lib/export/exportImage';
+import { exportAsPDF } from '@/lib/export/exportPDF';
 
 const ListaComprasPage = () => {
   // Estados para la búsqueda de medicamentos
@@ -192,8 +194,23 @@ const ListaComprasPage = () => {
           break;
 
         case 'image':
+          await exportAsImage(
+            listName || 'Sin nombre',
+            shoppingItems,
+            totalAmount,
+            `lista-compras-${listName || 'sin-nombre'}.png`
+          );
+          toast.success('Imagen descargada exitosamente');
+          break;
+
         case 'pdf':
-          toast.info(`Exportación a ${format === 'image' ? 'imagen' : 'PDF'} no implementada aún`);
+          await exportAsPDF(
+            listName || 'Sin nombre',
+            shoppingItems,
+            totalAmount,
+            `lista-compras-${listName || 'sin-nombre'}.pdf`
+          );
+          toast.success('PDF descargado exitosamente');
           break;
       }
     } catch (err) {
@@ -217,8 +234,23 @@ const ListaComprasPage = () => {
           break;
 
         case 'image':
+          await exportAsImage(
+            list.name,
+            list.items,
+            list.total,
+            `lista-compras-${list.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`
+          );
+          toast.success('Imagen descargada exitosamente');
+          break;
+
         case 'pdf':
-          toast.info(`Exportación a ${format === 'image' ? 'imagen' : 'PDF'} no implementada aún`);
+          await exportAsPDF(
+            list.name,
+            list.items,
+            list.total,
+            `lista-compras-${list.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`
+          );
+          toast.success('PDF descargado exitosamente');
           break;
       }
     } catch (err) {
@@ -370,7 +402,7 @@ const ListaComprasPage = () => {
             removeItem={removeItem}
             totalAmount={totalAmount}
             saveShoppingList={saveShoppingList}
-            exportList={exportList}
+             exportList={exportList}
           />
         </div>
       </div>
