@@ -3,13 +3,10 @@ import MedicationCard from '@/components/medication-card';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Archive, Home } from 'lucide-react';
+import { Archive } from 'lucide-react';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   Alert,
@@ -17,6 +14,14 @@ import {
   AlertTitle,
 } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const ArchivedMedicationsPage = async () => {
   const medications = await prisma.medication.findMany({
@@ -31,6 +36,23 @@ const ArchivedMedicationsPage = async () => {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
       <div className="w-full max-w-6xl">
+        {/* Breadcrumb */}
+        <div className="mb-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/botiquin">Mi Botiquín</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Medicamentos Archivados</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
           <div>
@@ -40,15 +62,6 @@ const ArchivedMedicationsPage = async () => {
             <p className="text-sm text-muted-foreground mt-1">
               Lista de medicamentos que han sido archivados
             </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Link href="/botiquin">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Home className="h-4 w-4" />
-                <span>Volver al Stock</span>
-              </Button>
-            </Link>
           </div>
         </div>
 

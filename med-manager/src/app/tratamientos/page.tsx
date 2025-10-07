@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  useTratamientos, 
-  useMedicinas, 
+import {
+  useTratamientos,
+  useMedicinas,
   useNotificaciones,
-  usePreferenciasNotificaciones 
+  usePreferenciasNotificaciones
 } from "@/hooks/useTratamientos";
 import { useAuth } from "@/hooks/useAuth";
 import { Tratamiento, PreferenciasNotificaciones } from "@/types/tratamientos";
@@ -14,12 +14,19 @@ import { TratamientosActivos } from "./components/TratamientosActivos";
 import { TratamientosHistoricos } from "./components/TratamientosHistoricos";
 import { NotificacionesTab } from "./components/NotificacionesTab";
 import { useRouter } from "next/navigation";
-import { 
+import {
   Pill,
   History,
   Bell
 } from 'lucide-react';
 import { Dock, DockItem, DockLabel, DockIcon } from '@/components/ui/dock';
+import Link from 'next/link';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 export default function TratamientosPage() {
   const [activeTab, setActiveTab] = useState<"activos" | "historicos" | "notificaciones">("activos");
@@ -114,6 +121,17 @@ export default function TratamientosPage() {
 
   return (
     <div className="container mx-auto py-15">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Gestión de Tratamientos</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Gestión de Tratamientos</h1>
         {activeTab !== "notificaciones" && (

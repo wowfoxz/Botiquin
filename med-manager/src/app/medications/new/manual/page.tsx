@@ -9,8 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { IconArrowLeft, IconRobot, IconLoader2 } from '@tabler/icons-react';
+import { IconRobot, IconLoader2 } from '@tabler/icons-react';
 import Image from 'next/image';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default function ManualMedicationPage() {
   const searchParams = useSearchParams();
@@ -128,13 +136,27 @@ export default function ManualMedicationPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-12" style={{ backgroundColor: 'var(--background)' }}>
       <div className="w-full max-w-2xl">
+        {/* Breadcrumb */}
         <div className="mb-6">
-          <Button asChild variant="ghost" className="pl-0">
-            <Link href="/medications/new" className="flex items-center">
-              <IconArrowLeft size={16} />
-              <span className="ml-2">Volver</span>
-            </Link>
-          </Button>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/botiquin">Mi Botiquín</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/medications/new">Agregar Medicamento</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Formulario Manual</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
 
         <Card className="shadow-md">

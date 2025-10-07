@@ -8,6 +8,12 @@ import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { PackagePlus, Archive } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 export default async function Home({
   searchParams,
@@ -45,6 +51,17 @@ export default async function Home({
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
       <div className="w-full max-w-6xl">
+        {/* Breadcrumb */}
+        <div className="mb-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage>Mi Botiquín</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">

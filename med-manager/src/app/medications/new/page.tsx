@@ -4,6 +4,14 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconCameraPlus, IconBallpen } from '@tabler/icons-react';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default async function NewMedicationPage({
   searchParams,
@@ -15,6 +23,23 @@ export default async function NewMedicationPage({
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-12" style={{ backgroundColor: 'var(--background)' }}>
       <div className="w-full max-w-2xl">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/botiquin">Mi Botiquín</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Agregar Medicamento</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold" style={{ color: 'var(--foreground)' }}>Agregar Nuevo Medicamento</h1>
           <p className="mt-2" style={{ color: 'var(--muted-foreground)' }}>

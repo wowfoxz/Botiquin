@@ -6,10 +6,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Home } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decrypt } from '@/lib/session';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 export default async function SettingsPage() {
   // Verificar si el usuario está autenticado
@@ -46,14 +51,19 @@ export default async function SettingsPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-24">
       <div className="w-full max-w-2xl">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage>Configuración</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         <div className="flex justify-between items-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configuración</h1>
-          <Link href="/">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              <span>Volver al Stock</span>
-            </Button>
-          </Link>
         </div>
 
         <Card className="shadow-sm border border-border bg-card">
