@@ -9,6 +9,8 @@ import {
   analyzeImageWithGemini,
   getDrugInfoWithGemini,
 } from "@/lib/ai-processor";
+import { writeFile } from "fs/promises";
+import path from "path";
 
 export async function processUploadedImage(
   imageBase64: string,
@@ -16,7 +18,6 @@ export async function processUploadedImage(
 ) {
   if (!imageBase64 || !mimeType) {
     redirect("/medications/new/upload?error=No-image");
-    return;
   }
 
   const imageBuffer = Buffer.from(imageBase64, "base64");
@@ -30,7 +31,33 @@ export async function processUploadedImage(
     redirect(
       `/medications/new/upload?error=${encodeURIComponent(errorMessage)}`
     );
-    return;
+  }
+
+  // Guardar la imagen en el servidor
+  let imageUrl = "";
+  try {
+    // Generar nombre único para la imagen
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const extension = mimeType.split("/")[1] || "jpg";
+    const fileName = `medication-${timestamp}-${randomString}.${extension}`;
+
+    // Ruta donde se guardará la imagen
+    const publicPath = path.join(
+      process.cwd(),
+      "public",
+      "medications",
+      fileName
+    );
+
+    // Guardar la imagen
+    await writeFile(publicPath, imageBuffer);
+
+    // URL pública de la imagen
+    imageUrl = `/medications/${fileName}`;
+  } catch (error) {
+    console.error("Error al guardar la imagen:", error);
+    // Continuar sin imagen si hay error
   }
 
   const drugInfo = await getDrugInfoWithGemini(imageAnalysis.nombre_comercial);
@@ -46,6 +73,7 @@ export async function processUploadedImage(
       drugInfo.principios_activos || imageAnalysis.principio_activo || "",
     descripcion_uso: drugInfo.descripcion_uso || "",
     recomendaciones_ingesta: drugInfo.recomendaciones_ingesta || "",
+    image_url: imageUrl, // Agregar la URL de la imagen
   };
 
   const params = new URLSearchParams();
@@ -86,7 +114,7 @@ export async function registerUser(formData: FormData) {
   });
 
   await createSession(newUser.id);
-  redirect("/");
+  redirect("/botiquin");
 }
 
 export async function loginUser(formData: FormData) {
@@ -112,7 +140,7 @@ export async function loginUser(formData: FormData) {
   }
 
   await createSession(user.id);
-  redirect("/");
+  redirect("/botiquin");
 }
 
 export async function logoutUser() {
@@ -135,6 +163,7 @@ export async function addMedication(formData: FormData) {
   const expirationDate = new Date(formData.get("expirationDate") as string);
   const description = formData.get("description") as string;
   const intakeRecommendations = formData.get("intakeRecommendations") as string;
+  const imageUrl = formData.get("imageUrl") as string | null;
 
   await prisma.medication.create({
     data: {
@@ -146,12 +175,13 @@ export async function addMedication(formData: FormData) {
       expirationDate,
       description,
       intakeRecommendations,
+      imageUrl: imageUrl || null, // Guardar la URL de la imagen si existe
       userId: userId,
     },
   });
 
-  revalidatePath("/");
-  redirect("/");
+  revalidatePath("/botiquin");
+  redirect("/botiquin");
 }
 
 export async function updateMedicationQuantity(formData: FormData) {
@@ -169,7 +199,7 @@ export async function updateMedicationQuantity(formData: FormData) {
     },
   });
 
-  revalidatePath("/");
+  revalidatePath("/botiquin");
 }
 
 export async function toggleMedicationArchiveStatus(formData: FormData) {
@@ -191,7 +221,7 @@ export async function toggleMedicationArchiveStatus(formData: FormData) {
     },
   });
 
-  revalidatePath("/");
+  revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
 }
 
@@ -229,7 +259,7 @@ export async function unarchiveMedicationWithNewExpiration(formData: FormData) {
     },
   });
 
-  revalidatePath("/");
+  revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
 }
 
@@ -262,7 +292,7 @@ export async function updateNotificationSettings(formData: FormData) {
     },
   });
 
-  revalidatePath("/");
+  revalidatePath("/botiquin");
   revalidatePath("/configuracion");
   redirect("/configuracion");
 }
@@ -308,3 +338,49 @@ export async function getIntakeRecommendationsFromAI(formData: FormData) {
 }
 /* Duplicate addMedication function removed. The remaining implementation is kept elsewhere in this file.
    This prevents having multiple definitions and ensures the file ends correctly with a single revalidatePath/redirect call. */
+
+// Eliminar un medicamento permanentemente
+export async function deleteMedication(formData: FormData) {
+  const id = formData.get("id") as string;
+
+  if (!id) {
+    return;
+  }
+
+  await prisma.medication.delete({
+    where: { id },
+  });
+
+  revalidatePath("/botiquin");
+  revalidatePath("/medications/archived");
+}
+
+// Actualizar un medicamento archivado (sin cambiar fecha de vencimiento)
+export async function updateArchivedMedication(formData: FormData) {
+  const id = formData.get("id") as string;
+  const commercialName = formData.get("commercialName") as string;
+  const activeIngredient = formData.get("activeIngredient") as string;
+  const initialQuantity = parseFloat(formData.get("initialQuantity") as string);
+  const unit = formData.get("unit") as string;
+  const description = formData.get("description") as string;
+  const intakeRecommendations = formData.get("intakeRecommendations") as string;
+
+  if (!id) {
+    return;
+  }
+
+  await prisma.medication.update({
+    where: { id },
+    data: {
+      commercialName,
+      activeIngredient,
+      initialQuantity,
+      unit,
+      description,
+      intakeRecommendations,
+    },
+  });
+
+  revalidatePath("/botiquin");
+  revalidatePath("/medications/archived");
+}

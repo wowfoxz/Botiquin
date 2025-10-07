@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconArrowLeft, IconRobot, IconLoader2 } from '@tabler/icons-react';
-import BookLoader from '@/components/BookLoader';
+import Image from 'next/image';
 
 export default function ManualMedicationPage() {
   const searchParams = useSearchParams();
@@ -22,7 +22,8 @@ export default function ManualMedicationPage() {
     unit: '',
     description: '',
     intakeRecommendations: '',
-    expirationDate: ''
+    expirationDate: '',
+    imageUrl: '' // Agregar campo para la URL de la imagen
   });
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export default function ManualMedicationPage() {
         unit: searchParams.get('unidad') ?? '',
         description: searchParams.get('descripcion_uso') ?? '',
         intakeRecommendations: searchParams.get('recomendaciones_ingesta') ?? '',
-        expirationDate: ''
+        expirationDate: '',
+        imageUrl: searchParams.get('image_url') ?? '' // Obtener la URL de la imagen de los parámetros
       });
     }
   }, [searchParams]);
@@ -143,6 +145,25 @@ export default function ManualMedicationPage() {
 
           <form action={addMedication}>
             <CardContent className="space-y-6">
+              {/* Mostrar la imagen capturada si existe */}
+              {formData.imageUrl && (
+                <div className="space-y-2">
+                  <Label style={{ color: 'var(--foreground)' }}>
+                    Imagen del Medicamento
+                  </Label>
+                  <div className="relative rounded-md overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+                    <Image
+                      src={formData.imageUrl}
+                      alt="Imagen del medicamento"
+                      width={400}
+                      height={300}
+                      className="w-full h-auto object-contain max-h-64"
+                    />
+                  </div>
+                  <input type="hidden" name="imageUrl" value={formData.imageUrl} />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="commercialName" style={{ color: 'var(--foreground)' }}>
                   Nombre Comercial *

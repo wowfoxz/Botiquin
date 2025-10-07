@@ -59,7 +59,7 @@ const Menu = () => {
     { name: "Inicio", href: "/" },
     { name: "Botiquín", href: "/botiquin" },
     { name: "Tratamientos", href: "/tratamientos" },
-    { name: "Precios", href: "/precios" },
+    { name: "Precios de Medicamentos", href: "/precios" },
     { name: "Lista de Compras", href: "/lista-compras" },
     { name: "Configuración", href: "/configuracion" },
   ];
