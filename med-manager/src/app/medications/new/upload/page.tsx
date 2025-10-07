@@ -7,8 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
-import { IconArrowLeft } from '@tabler/icons-react';
 import BookLoader from '@/components/BookLoader';
+import Link from 'next/link';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string>('');
@@ -165,6 +174,29 @@ export default function UploadPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 lg:p-12" style={{ backgroundColor: 'var(--background)' }}>
       <div className="w-full max-w-md">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/botiquin">Mi Botiquín</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/medications/new">Agregar Medicamento</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Agregar con Foto</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         <Card className="shadow-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Agregar con Foto</CardTitle>

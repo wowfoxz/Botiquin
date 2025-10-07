@@ -9,6 +9,12 @@ import ShoppingHistory from './components/ShoppingHistory';
 import { Medicamento, ShoppingItem, ShoppingList as ShoppingListType } from './types';
 import { exportAsImage } from '@/lib/export/exportImage';
 import { exportAsPDF } from '@/lib/export/exportPDF';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 const ListaComprasPage = () => {
   // Estados para la búsqueda de medicamentos
@@ -355,6 +361,17 @@ const ListaComprasPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-15">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Lista de Compras</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-foreground">Lista de Compras</h1>
         <div className="flex gap-2">

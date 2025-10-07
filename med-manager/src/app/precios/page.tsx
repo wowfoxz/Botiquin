@@ -14,6 +14,12 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpDown } from 'lucide-react';
 import Loader from '../../components/Loader_lupa';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 interface Medicamento {
   NOMBRE: string;
@@ -129,6 +135,17 @@ export default function PreciosPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Consulta de Precios</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <h1 className="text-3xl font-bold mb-6 text-text-primary">Consulta de Precios de Medicamentos</h1>
 
       <Card className="mb-8 shadow-lg transition-all duration-300 hover:shadow-xl">
