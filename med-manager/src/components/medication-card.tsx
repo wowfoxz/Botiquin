@@ -2,16 +2,18 @@
 
 import { Medication } from '@prisma/client';
 import React, { useState } from 'react';
-import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration } from '@/app/actions';
+import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Info, MoreHorizontal, Calendar } from 'lucide-react';
+import { Info, MoreHorizontal, Calendar, Pill, Edit, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import Image from 'next/image';
 
 type MedicationCardProps = {
   medication: Medication;
@@ -30,12 +32,25 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     archived,
     activeIngredient,
     createdAt,
-    updatedAt
+    updatedAt,
+    imageUrl // Agregar imageUrl de la medicación
   } = medication;
 
   const [quantity, setQuantity] = useState(currentQuantity);
   const [isUnarchiveDialogOpen, setIsUnarchiveDialogOpen] = useState(false);
   const [newExpirationDate, setNewExpirationDate] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Estados para el formulario de edición
+  const [editForm, setEditForm] = useState({
+    commercialName: commercialName,
+    activeIngredient: activeIngredient || '',
+    initialQuantity: initialQuantity,
+    unit: unit,
+    description: description || '',
+    intakeRecommendations: intakeRecommendations || '',
+  });
 
   const isExpired = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000) > new Date(expirationDate);
   const expirationDateFormatted = new Date(expirationDate).toLocaleDateString('es-ES', {
@@ -82,19 +97,73 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     }
   };
 
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('commercialName', editForm.commercialName);
+    formData.append('activeIngredient', editForm.activeIngredient);
+    formData.append('initialQuantity', editForm.initialQuantity.toString());
+    formData.append('unit', editForm.unit);
+    formData.append('description', editForm.description);
+    formData.append('intakeRecommendations', editForm.intakeRecommendations);
+
+    try {
+      await updateArchivedMedication(formData);
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating medication:', error);
+      alert('Error al actualizar el medicamento');
+    }
+  };
+
+  const handleDelete = async () => {
+    const formData = new FormData();
+    formData.append('id', id);
+
+    try {
+      await deleteMedication(formData);
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      alert('Error al eliminar el medicamento');
+    }
+  };
+
   return (
     <Card className={`overflow-hidden ${isExpired ? 'border-red-500' : 'border-green-500'} border-l-4`}>
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-bold">{commercialName}</CardTitle>
-          {isExpired && (
-            <Badge variant="destructive" className="text-xs">
-              VENCIDO
-            </Badge>
-          )}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {activeIngredient || 'Sin principio activo'}
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1">
+            <CardTitle className="text-lg font-bold">{commercialName}</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              {activeIngredient || 'Sin principio activo'}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {isExpired && (
+              <Badge variant="destructive" className="text-xs">
+                VENCIDO
+              </Badge>
+            )}
+            {/* Mostrar imagen del medicamento si existe */}
+            {imageUrl ? (
+              <div className="relative w-16 h-16 rounded-md overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+                <Image
+                  src={imageUrl}
+                  alt={commercialName}
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-md flex items-center justify-center" style={{ backgroundColor: 'var(--muted)' }}>
+                <Pill className="h-8 w-8" style={{ color: 'var(--muted-foreground)' }} />
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -154,10 +223,24 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
               <DialogHeader>
                 <DialogTitle>{commercialName}</DialogTitle>
                 <DialogDescription>
-                  Información detellada del medicamento
+                  Información detallada del medicamento
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                {/* Mostrar imagen en el diálogo si existe */}
+                {imageUrl && (
+                  <div className="flex justify-center">
+                    <div className="relative w-full max-w-xs h-48 rounded-md overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+                      <Image
+                        src={imageUrl}
+                        alt={commercialName}
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 384px) 100vw, 384px"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="font-semibold">Nombre comercial:</span>
                   <span className="col-span-2">{commercialName}</span>
@@ -194,11 +277,147 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
         </div>
       </CardContent>
 
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-end gap-2">
         {quantity === 0 && (
           <>
             {archived ? (
               <>
+                {/* Botón de Editar */}
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-6 px-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Editar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Editar Medicamento Archivado</DialogTitle>
+                      <DialogDescription>
+                        Modifica la información del medicamento. La fecha de vencimiento solo se puede cambiar al desarchivarlo.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEdit} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-commercialName">Nombre Comercial *</Label>
+                          <Input
+                            id="edit-commercialName"
+                            value={editForm.commercialName}
+                            onChange={(e) => setEditForm({ ...editForm, commercialName: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-activeIngredient">Principio Activo</Label>
+                          <Input
+                            id="edit-activeIngredient"
+                            value={editForm.activeIngredient}
+                            onChange={(e) => setEditForm({ ...editForm, activeIngredient: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-initialQuantity">Cantidad Inicial *</Label>
+                          <Input
+                            id="edit-initialQuantity"
+                            type="number"
+                            step="0.01"
+                            value={editForm.initialQuantity}
+                            onChange={(e) => setEditForm({ ...editForm, initialQuantity: parseFloat(e.target.value) })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-unit">Unidad *</Label>
+                          <Input
+                            id="edit-unit"
+                            value={editForm.unit}
+                            onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+                            placeholder="ej: comprimidos, ml, mg"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-description">Descripción / Para qué se usa</Label>
+                        <Textarea
+                          id="edit-description"
+                          value={editForm.description}
+                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-intakeRecommendations">Recomendaciones de Ingesta</Label>
+                        <Textarea
+                          id="edit-intakeRecommendations"
+                          value={editForm.intakeRecommendations}
+                          onChange={(e) => setEditForm({ ...editForm, intakeRecommendations: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditDialogOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                          Guardar Cambios
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Botón de Eliminar */}
+                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Eliminar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Eliminar Medicamento</DialogTitle>
+                      <DialogDescription>
+                        ¿Estás seguro de que deseas eliminar permanentemente <strong>{commercialName}</strong>?
+                        Esta acción no se puede deshacer.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDeleteDialogOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDelete}
+                      >
+                        Eliminar Permanentemente
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Botón de Desarchivar */}
                 <Dialog open={isUnarchiveDialogOpen} onOpenChange={setIsUnarchiveDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
