@@ -360,7 +360,7 @@ const ListaComprasPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-15">
+    <div className="container mx-auto px-4 py-16">
       {/* Breadcrumb */}
       <div className="mb-6">
         <Breadcrumb>
@@ -372,8 +372,8 @@ const ListaComprasPage = () => {
         </Breadcrumb>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Lista de Compras</h1>
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="text-3xl font-bold text-foreground"></h1>
         <div className="flex gap-2">
           <ShoppingHistory
             shoppingLists={shoppingLists}

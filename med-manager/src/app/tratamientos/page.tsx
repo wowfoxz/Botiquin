@@ -8,7 +8,6 @@ import {
   usePreferenciasNotificaciones
 } from "@/hooks/useTratamientos";
 import { useAuth } from "@/hooks/useAuth";
-import { Tratamiento, PreferenciasNotificaciones } from "@/types/tratamientos";
 import { CrearTratamientoDialog } from "./components/CrearTratamientoDialog";
 import { TratamientosActivos } from "./components/TratamientosActivos";
 import { TratamientosHistoricos } from "./components/TratamientosHistoricos";
@@ -20,45 +19,46 @@ import {
   Bell
 } from 'lucide-react';
 import { Dock, DockItem, DockLabel, DockIcon } from '@/components/ui/dock';
-import Link from 'next/link';
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
+import { Cardio } from "ldrs/react";
+import 'ldrs/react/Cardio.css'
 
 export default function TratamientosPage() {
   const [activeTab, setActiveTab] = useState<"activos" | "historicos" | "notificaciones">("activos");
   const router = useRouter();
-  
+
   // Obtener el usuario autenticado
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  
-  const { 
-    tratamientos, 
-    loading: loadingTratamientos, 
-    error: errorTratamientos, 
-    createTratamiento, 
-    updateTratamiento, 
-    deleteTratamiento 
+
+  const {
+    tratamientos,
+    loading: loadingTratamientos,
+    error: errorTratamientos,
+    createTratamiento,
+    updateTratamiento,
+    deleteTratamiento
   } = useTratamientos();
-  
-  const { 
-    medicinas, 
-    loading: loadingMedicinas, 
-    error: errorMedicinas 
+
+  const {
+    medicinas,
+    loading: loadingMedicinas,
+    error: errorMedicinas
   } = useMedicinas();
-  
-  const { 
-    notificaciones 
+
+  const {
+    notificaciones
   } = useNotificaciones();
-  
-  const { 
-    preferencias, 
-    loading: loadingPreferencias, 
+
+  const {
+    preferencias,
+    loading: loadingPreferencias,
     error: errorPreferencias,
-    updatePreferencias 
+    updatePreferencias
   } = usePreferenciasNotificaciones();
 
   // Verificar autenticación
@@ -69,7 +69,16 @@ export default function TratamientosPage() {
   }, [authLoading, isAuthenticated, router]);
 
   if (authLoading || loadingTratamientos || loadingMedicinas || loadingPreferencias) {
-    return <div className="flex justify-center items-center h-64">Cargando...</div>;
+    return (
+      <div style={{ display: 'grid', placeContent: 'center', height: '100vh' }}>
+        <Cardio
+          size={70}
+          stroke={5}
+          speed={1}
+          color="var(--color-info)"
+        />
+      </div>
+    );
   }
 
   if (errorTratamientos || errorMedicinas || errorPreferencias) {
