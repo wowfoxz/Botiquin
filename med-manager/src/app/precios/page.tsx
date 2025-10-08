@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +13,10 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpDown } from 'lucide-react';
-import Loader from '../../components/Loader_lupa';
+import { Cardio } from "ldrs/react";
+import 'ldrs/react/Cardio.css';
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -43,6 +46,29 @@ export default function PreciosPage() {
   const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [initialLoading, setInitialLoading] = useState(true);
+  const router = useRouter();
+
+  // Obtener el usuario autenticado
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
+
+  // Verificar autenticación
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  // Controlar el estado de carga inicial
+  useEffect(() => {
+    if (!authLoading) {
+      // Pequeño delay para evitar parpadeos
+      const timer = setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +159,25 @@ export default function PreciosPage() {
     return sortDirection === 'asc' ? '↑' : '↓';
   };
 
+  // Mostrar loader mientras se verifica la autenticación o durante la carga inicial
+  if (authLoading || initialLoading) {
+    return (
+      <div style={{ display: 'grid', placeContent: 'center', height: '100vh' }}>
+        <Cardio
+          size={70}
+          stroke={5}
+          speed={1}
+          color="var(--color-info)"
+        />
+      </div>
+    );
+  }
+
+  // Si no está autenticado, no mostrar nada (se redirigirá)
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
@@ -174,7 +219,14 @@ export default function PreciosPage() {
 
       {loading && (
         <div className="text-center py-12">
-          <Loader />
+          <div style={{ display: 'grid', placeContent: 'center', height: '200px' }}>
+            <Cardio
+              size={50}
+              stroke={4}
+              speed={1}
+              color="var(--color-info)"
+            />
+          </div>
           <p className="text-text-secondary mt-4">Buscando medicamentos...</p>
         </div>
       )}
