@@ -53,8 +53,24 @@ export async function getSession() {
   const sessionCookie = (await cookies()).get("session")?.value;
   if (!sessionCookie) return null;
 
-  const session = await decrypt(sessionCookie);
-  return session;
+  try {
+    const session = await decrypt(sessionCookie);
+    
+    // Verificar si la sesión ha expirado
+    if (session?.expires) {
+      const expiresAt = new Date(session.expires);
+      const now = new Date();
+
+      if (expiresAt < now) {
+        return null;
+      }
+    }
+    
+    return session;
+  } catch (error) {
+    console.error("Error al desencriptar la sesión:", error);
+    return null;
+  }
 }
 
 export async function deleteSession() {

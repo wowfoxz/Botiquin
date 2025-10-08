@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 type MedicationCardProps = {
   medication: Medication;
@@ -69,9 +70,11 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
 
     try {
       await updateMedicationQuantity(formData);
+      toast.success('Cantidad actualizada exitosamente');
     } catch (error) {
       console.error('Error updating quantity:', error);
       setQuantity(quantity); // Revert on error
+      toast.error('Error al actualizar la cantidad');
     }
   };
 
@@ -79,7 +82,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     e.preventDefault();
 
     if (!newExpirationDate) {
-      alert('Por favor ingresa una nueva fecha de vencimiento');
+      toast.error('Por favor ingresa una nueva fecha de vencimiento');
       return;
     }
 
@@ -91,9 +94,10 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       await unarchiveMedicationWithNewExpiration(formData);
       setIsUnarchiveDialogOpen(false);
       setNewExpirationDate('');
+      toast.success('Medicamento desarchivado exitosamente');
     } catch (error) {
       console.error('Error unarchiving medication:', error);
-      alert('Error al desarchivar el medicamento');
+      toast.error('Error al desarchivar el medicamento');
     }
   };
 
@@ -112,9 +116,10 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     try {
       await updateArchivedMedication(formData);
       setIsEditDialogOpen(false);
+      toast.success('Medicamento actualizado exitosamente');
     } catch (error) {
       console.error('Error updating medication:', error);
-      alert('Error al actualizar el medicamento');
+      toast.error('Error al actualizar el medicamento');
     }
   };
 
@@ -125,9 +130,23 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     try {
       await deleteMedication(formData);
       setIsDeleteDialogOpen(false);
+      toast.success('Medicamento eliminado exitosamente');
     } catch (error) {
       console.error('Error deleting medication:', error);
-      alert('Error al eliminar el medicamento');
+      toast.error('Error al eliminar el medicamento');
+    }
+  };
+
+  const handleArchive = async () => {
+    const formData = new FormData();
+    formData.append('id', id);
+
+    try {
+      await toggleMedicationArchiveStatus(formData);
+      toast.success('Medicamento archivado exitosamente');
+    } catch (error) {
+      console.error('Error archiving medication:', error);
+      toast.error('Error al archivar el medicamento');
     }
   };
 
@@ -468,17 +487,14 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                 </Dialog>
               </>
             ) : (
-              <form action={toggleMedicationArchiveStatus}>
-                <input type="hidden" name="id" value={id} />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
-                >
-                  Archivar
-                </Button>
-              </form>
+              <Button
+                onClick={handleArchive}
+                variant="ghost"
+                size="sm"
+                className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                Archivar
+              </Button>
             )}
           </>
         )}

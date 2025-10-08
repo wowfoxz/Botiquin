@@ -30,16 +30,16 @@ export async function middleware(request: NextRequest) {
         return NextResponse.json({ error: "Sesión expirada" }, { status: 401 });
       }
 
-      // Si existe un expiry, comparar ajustando la hora actual según el offset de zona horaria
+      // Si existe un expiry, comparar con la hora actual
       if (session.expires) {
         const expiresAt = new Date(session.expires);
-        // Ajustar la hora actual para tener en cuenta la zona horaria local
-        const nowAdjusted = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
-        if (expiresAt < nowAdjusted) {
+        const now = new Date();
+        if (expiresAt < now) {
           return NextResponse.json({ error: "Sesión expirada" }, { status: 401 });
         }
       }
-    } catch {
+    } catch (error) {
+      console.error("Error al verificar la sesión:", error);
       return NextResponse.json({ error: "Sesión inválida" }, { status: 401 });
     }
   }

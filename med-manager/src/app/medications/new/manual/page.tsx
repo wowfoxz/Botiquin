@@ -1,6 +1,6 @@
 'use client';
 
-import { addMedication, getDescriptionFromAI, getIntakeRecommendationsFromAI } from '@/app/actions';
+import { getDescriptionFromAI, getIntakeRecommendationsFromAI } from '@/app/actions';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconRobot, IconLoader2 } from '@tabler/icons-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
+import MedicationForm from '@/components/medication-form';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -73,7 +75,7 @@ export default function ManualMedicationPage() {
 
   const handleGetDescriptionFromAI = async () => {
     if (!formData.commercialName && !formData.activeIngredient) {
-      alert('Por favor, completa al menos el nombre comercial o el principio activo');
+      toast.error('Por favor, completa al menos el nombre comercial o el principio activo');
       return;
     }
 
@@ -91,12 +93,13 @@ export default function ManualMedicationPage() {
           ...prev,
           description: result.info
         }));
+        toast.success('Descripción obtenida exitosamente');
       } else {
-        alert(result.error || 'Error al obtener la descripción');
+        toast.error(result.error || 'Error al obtener la descripción');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al obtener la descripción');
+      toast.error('Error al obtener la descripción');
     } finally {
       setIsDescriptionLoading(false);
     }
@@ -104,7 +107,7 @@ export default function ManualMedicationPage() {
 
   const handleGetRecommendationsFromAI = async () => {
     if (!formData.commercialName && !formData.activeIngredient) {
-      alert('Por favor, completa al menos el nombre comercial o el principio activo');
+      toast.error('Por favor, completa al menos el nombre comercial o el principio activo');
       return;
     }
 
@@ -122,12 +125,13 @@ export default function ManualMedicationPage() {
           ...prev,
           intakeRecommendations: result.info
         }));
+        toast.success('Recomendaciones obtenidas exitosamente');
       } else {
-        alert(result.error || 'Error al obtener las recomendaciones');
+        toast.error(result.error || 'Error al obtener las recomendaciones');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al obtener las recomendaciones');
+      toast.error('Error al obtener las recomendaciones');
     } finally {
       setIsRecommendationsLoading(false);
     }
@@ -165,7 +169,7 @@ export default function ManualMedicationPage() {
             <CardDescription>{description}</CardDescription>
           </CardHeader>
 
-          <form action={addMedication}>
+          <MedicationForm>
             <CardContent className="space-y-6">
               {/* Mostrar la imagen capturada si existe */}
               {formData.imageUrl && (
@@ -340,7 +344,7 @@ export default function ManualMedicationPage() {
                 Guardar Medicamento
               </Button>
             </CardFooter>
-          </form>
+          </MedicationForm>
         </Card>
       </div>
     </main>

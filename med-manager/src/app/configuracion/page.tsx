@@ -16,6 +16,7 @@ import {
   BreadcrumbItem,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
+import UrlNotifications from "@/components/url-notifications";
 
 export default async function SettingsPage() {
   // Verificar si el usuario está autenticado
@@ -51,6 +52,7 @@ export default async function SettingsPage() {
 
   return (
     <AuthWrapper>
+      <UrlNotifications />
       <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-24">
         <div className="w-full max-w-2xl">
           {/* Breadcrumb */}
