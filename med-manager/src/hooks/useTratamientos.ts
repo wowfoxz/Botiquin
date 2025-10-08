@@ -6,6 +6,7 @@ import {
   PreferenciasNotificaciones,
 } from "@/types/tratamientos";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from 'sonner';
 
 // Hook para manejar tratamientos
 export const useTratamientos = () => {
@@ -93,12 +94,14 @@ export const useTratamientos = () => {
       console.log("Tratamiento creado exitosamente:", newTratamiento);
       // Usar el callback para evitar problemas con estado desactualizado
       setTratamientos((prev) => [...prev, newTratamiento]);
+      toast.success('Tratamiento creado exitosamente');
       return newTratamiento;
     } catch (err) {
       console.error("Error en createTratamiento:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Error desconocido";
       setError(errorMessage);
+      toast.error('Error al crear el tratamiento');
       throw err;
     } finally {
       setLoading(false);
@@ -127,9 +130,11 @@ export const useTratamientos = () => {
       setTratamientos(
         tratamientos.map((t) => (t.id === id ? updatedTratamiento : t))
       );
+      toast.success('Tratamiento actualizado exitosamente');
       return updatedTratamiento;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
+      toast.error('Error al actualizar el tratamiento');
       throw err;
     }
   };
@@ -150,9 +155,11 @@ export const useTratamientos = () => {
       }
 
       setTratamientos((prev) => prev.filter((t) => t.id !== id));
+      toast.success('Tratamiento eliminado exitosamente');
     } catch (err) {
       console.error("Error en deleteTratamiento:", err);
       setError(err instanceof Error ? err.message : "Error desconocido");
+      toast.error('Error al eliminar el tratamiento');
       throw err;
     }
   };

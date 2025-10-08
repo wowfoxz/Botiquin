@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import BookLoader from '@/components/BookLoader';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -33,7 +34,9 @@ export default function UploadPage() {
     const errorMessage = searchParams.get('error');
     if (errorMessage) {
       // Decode once and set to state
-      setError(decodeURIComponent(errorMessage));
+      const decodedError = decodeURIComponent(errorMessage);
+      setError(decodedError);
+      toast.error(decodedError);
     }
   }, [searchParams]);
 

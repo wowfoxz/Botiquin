@@ -165,23 +165,29 @@ export async function addMedication(formData: FormData) {
   const intakeRecommendations = formData.get("intakeRecommendations") as string;
   const imageUrl = formData.get("imageUrl") as string | null;
 
-  await prisma.medication.create({
-    data: {
-      commercialName,
-      activeIngredient,
-      initialQuantity,
-      currentQuantity: initialQuantity,
-      unit,
-      expirationDate,
-      description,
-      intakeRecommendations,
-      imageUrl: imageUrl || null, // Guardar la URL de la imagen si existe
-      userId: userId,
-    },
-  });
+  try {
+    await prisma.medication.create({
+      data: {
+        commercialName,
+        activeIngredient,
+        initialQuantity,
+        currentQuantity: initialQuantity,
+        unit,
+        expirationDate,
+        description,
+        intakeRecommendations,
+        imageUrl: imageUrl || null, // Guardar la URL de la imagen si existe
+        userId: userId,
+      },
+    });
 
-  revalidatePath("/botiquin");
-  redirect("/botiquin");
+    revalidatePath("/botiquin");
+  } catch (error) {
+    console.error("Error al agregar medicamento:", error);
+    throw error;
+  }
+  
+  redirect("/botiquin?success=Medicamento agregado exitosamente");
 }
 
 export async function updateMedicationQuantity(formData: FormData) {
@@ -279,22 +285,28 @@ export async function updateNotificationSettings(formData: FormData) {
     formData.get("lowStockThreshold") as string
   );
 
-  await prisma.notificationSettings.upsert({
-    where: { userId: userId },
-    update: {
-      daysBeforeExpiration,
-      lowStockThreshold,
-    },
-    create: {
-      userId: userId,
-      daysBeforeExpiration,
-      lowStockThreshold,
-    },
-  });
+  try {
+    await prisma.notificationSettings.upsert({
+      where: { userId: userId },
+      update: {
+        daysBeforeExpiration,
+        lowStockThreshold,
+      },
+      create: {
+        userId: userId,
+        daysBeforeExpiration,
+        lowStockThreshold,
+      },
+    });
 
-  revalidatePath("/botiquin");
-  revalidatePath("/configuracion");
-  redirect("/configuracion");
+    revalidatePath("/botiquin");
+    revalidatePath("/configuracion");
+  } catch (error) {
+    console.error("Error al actualizar configuración:", error);
+    throw error;
+  }
+  
+  redirect("/configuracion?success=Configuracion actualizada exitosamente");
 }
 
 export async function getDescriptionFromAI(formData: FormData) {

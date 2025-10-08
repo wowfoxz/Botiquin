@@ -15,6 +15,7 @@ import {
   BreadcrumbItem,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
+import UrlNotifications from "@/components/url-notifications";
 
 export default async function Home({
   searchParams,
@@ -52,6 +53,7 @@ export default async function Home({
 
   return (
     <AuthWrapper>
+      <UrlNotifications />
       <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
         <div className="w-full max-w-6xl">
           {/* Breadcrumb */}
