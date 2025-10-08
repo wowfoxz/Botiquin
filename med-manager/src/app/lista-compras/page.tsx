@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { Cardio } from "ldrs/react";
+import 'ldrs/react/Cardio.css';
 import SearchMedications from './components/SearchMedications';
 import MedicamentosTable from './components/MedicamentosTable';
 import ShoppingList from './components/ShoppingList';
@@ -35,10 +39,37 @@ const ListaComprasPage = () => {
   const [sortField, setSortField] = useState<'precio' | 'presentacion' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Estados para autenticación y carga inicial
+  const [initialLoading, setInitialLoading] = useState(true);
+  const router = useRouter();
+
+  // Obtener el usuario autenticado
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
+
+  // Verificar autenticación
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  // Controlar el estado de carga inicial
+  useEffect(() => {
+    if (!authLoading) {
+      // Pequeño delay para evitar parpadeos
+      const timer = setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
+
   // Cargar historial de listas desde la API
   useEffect(() => {
-    loadShoppingLists();
-  }, []);
+    if (isAuthenticated && user) {
+      loadShoppingLists();
+    }
+  }, [isAuthenticated, user]);
 
   const loadShoppingLists = async () => {
     try {
@@ -358,6 +389,25 @@ const ListaComprasPage = () => {
       setSortDirection('asc');
     }
   };
+
+  // Mostrar loader mientras se verifica la autenticación o durante la carga inicial
+  if (authLoading || initialLoading) {
+    return (
+      <div style={{ display: 'grid', placeContent: 'center', height: '100vh' }}>
+        <Cardio
+          size={70}
+          stroke={5}
+          speed={1}
+          color="var(--color-info)"
+        />
+      </div>
+    );
+  }
+
+  // Si no está autenticado, no mostrar nada (se redirigirá)
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-16">

@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { PackagePlus, Archive } from "lucide-react";
+import AuthWrapper from "./components/AuthWrapper";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -50,55 +51,57 @@ export default async function Home({
   const notifications = await getNotifications();
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
-      <div className="w-full max-w-6xl">
-        {/* Breadcrumb */}
-        <div className="mb-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbPage>Mi Botiquín</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            Mi Botiquín
-          </h1>
-          <div className="flex gap-2">
-            <Link href="/medications/archived">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Archive className="h-4 w-4" />
-                <span className="hidden sm:inline">Ver Archivados</span>
-                <span className="sm:hidden">Archivados</span>
-              </Button>
-            </Link>
-            <Link href="/medications/new">
-              <Button className="flex items-center gap-2">
-                <PackagePlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Agregar Medicamento</span>
-                <span className="sm:hidden">Agregar</span>
-              </Button>
-            </Link>
+    <AuthWrapper>
+      <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
+        <div className="w-full max-w-6xl">
+          {/* Breadcrumb */}
+          <div className="mb-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Mi Botiquín</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-        </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <Search placeholder="Buscar medicamentos..." />
-        </div>
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              Mi Botiquín
+            </h1>
+            <div className="flex gap-2">
+              <Link href="/medications/archived">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Archive className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ver Archivados</span>
+                  <span className="sm:hidden">Archivados</span>
+                </Button>
+              </Link>
+              <Link href="/medications/new">
+                <Button className="flex items-center gap-2">
+                  <PackagePlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Agregar Medicamento</span>
+                  <span className="sm:hidden">Agregar</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
 
-        {/* Notifications Panel */}
-        <div className="mb-6">
-          <NotificationPanel notifications={notifications} />
-        </div>
+          {/* Search */}
+          <div className="mb-6">
+            <Search placeholder="Buscar medicamentos..." />
+          </div>
 
-        {/* Medication List */}
-        <MedicationList query={query} />
-      </div>
-    </main>
+          {/* Notifications Panel */}
+          <div className="mb-6">
+            <NotificationPanel notifications={notifications} />
+          </div>
+
+          {/* Medication List */}
+          <MedicationList query={query} />
+        </div>
+      </main>
+    </AuthWrapper>
   );
 }

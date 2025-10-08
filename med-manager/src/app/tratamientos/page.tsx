@@ -30,6 +30,7 @@ import 'ldrs/react/Cardio.css'
 
 export default function TratamientosPage() {
   const [activeTab, setActiveTab] = useState<"activos" | "historicos" | "notificaciones">("activos");
+  const [initialLoading, setInitialLoading] = useState(true);
   const router = useRouter();
 
   // Obtener el usuario autenticado
@@ -68,7 +69,18 @@ export default function TratamientosPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  if (authLoading || loadingTratamientos || loadingMedicinas || loadingPreferencias) {
+  // Controlar el estado de carga inicial
+  useEffect(() => {
+    if (!authLoading && !loadingTratamientos && !loadingMedicinas && !loadingPreferencias) {
+      // Pequeño delay para evitar parpadeos
+      const timer = setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, loadingTratamientos, loadingMedicinas, loadingPreferencias]);
+
+  if (authLoading || loadingTratamientos || loadingMedicinas || loadingPreferencias || initialLoading) {
     return (
       <div style={{ display: 'grid', placeContent: 'center', height: '100vh' }}>
         <Cardio
