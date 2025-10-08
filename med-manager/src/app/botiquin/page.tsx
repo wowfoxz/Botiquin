@@ -46,6 +46,7 @@ export default async function Home({
     redirect("/login");
   }
 
+  // Obtener notificaciones (asegurarse de que exista antes de renderizar)
   const notifications = await getNotifications();
 
   return (

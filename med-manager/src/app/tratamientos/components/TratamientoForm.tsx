@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { toast } from "sonner";
+import { Cardio } from "ldrs/react";
+import 'ldrs/react/Cardio.css';
 
 interface TratamientoFormProps {
   onSubmit: (tratamiento: Omit<Tratamiento, "id" | "createdAt" | "updatedAt" | "startDate" | "endDate" | "isActive" | "medication">) => Promise<void>;
@@ -34,10 +36,15 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
       : new Date().toISOString().slice(0, 16)
   );
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Evitar envíos duplicados
+    if (isSubmitting) return;
+
     setError(null);
+    setIsSubmitting(true);
 
     try {
       // Validaciones básicas
@@ -100,6 +107,8 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
       const errorMessage = error instanceof Error ? error.message : "Error al procesar el formulario";
       setError(errorMessage);
       toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -255,11 +264,18 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit">
-              {initialData ? "Actualizar Tratamiento" : "Crear Tratamiento"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Cardio size={20} stroke={3} speed={1.5} color="var(--color-info)" />
+                  <span>Procesando...</span>
+                </div>
+              ) : (
+                initialData ? "Actualizar Tratamiento" : "Crear Tratamiento"
+              )}
             </Button>
           </div>
         </form>
