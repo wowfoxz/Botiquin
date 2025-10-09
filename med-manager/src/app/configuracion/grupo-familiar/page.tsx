@@ -7,6 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Users, UserCheck, User } from "lucide-react";
 import Link from "next/link";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 export default async function GrupoFamiliarPage() {
   const session = await getServerSession();
@@ -52,6 +59,20 @@ export default async function GrupoFamiliarPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/configuracion">Configuración</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Grupo Familiar</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Grupo Familiar</h1>
@@ -60,13 +81,13 @@ export default async function GrupoFamiliarPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/grupo-familiar/agregar-adulto">
+          <Link href="/configuracion/grupo-familiar/agregar-adulto">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Agregar Adulto
             </Button>
           </Link>
-          <Link href="/grupo-familiar/agregar-menor">
+          <Link href="/configuracion/grupo-familiar/agregar-menor">
             <Button variant="outline">
               <Plus className="w-4 h-4 mr-2" />
               Agregar Menor

@@ -492,8 +492,8 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
     },
   });
 
-  revalidatePath("/grupo-familiar");
-  redirect("/grupo-familiar?success=Adulto agregado exitosamente");
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Adulto agregado exitosamente");
 }
 
 export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
@@ -553,8 +553,8 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
     },
   });
 
-  revalidatePath("/grupo-familiar");
-  redirect("/grupo-familiar?success=Menor con cuenta agregado exitosamente");
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Menor con cuenta agregado exitosamente");
 }
 
 export async function agregarPerfilMenorAlGrupo(formData: FormData) {
@@ -607,8 +607,8 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
     },
   });
 
-  revalidatePath("/grupo-familiar");
-  redirect("/grupo-familiar?success=Perfil de menor agregado exitosamente");
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Perfil de menor agregado exitosamente");
 }
 
 export async function registrarTomaMedicamento(formData: FormData) {

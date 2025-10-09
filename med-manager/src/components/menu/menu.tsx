@@ -6,6 +6,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { logoutUser } from "@/app/actions";
 import { usePathname } from "next/navigation";
+import { 
+  Home, 
+  Package, 
+  Calendar, 
+  ShoppingCart, 
+  Settings, 
+  LogOut 
+} from "lucide-react";
 
 const Menu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -56,13 +64,11 @@ const Menu = () => {
   };
 
   const menuItems = [
-    { name: "Inicio", href: "/" },
-    { name: "Botiquín", href: "/botiquin" },
-    { name: "Grupo Familiar", href: "/grupo-familiar" },
-    { name: "Tratamientos", href: "/tratamientos" },
-    { name: "Precios de Medicamentos", href: "/precios" },
-    { name: "Lista de Compras", href: "/lista-compras" },
-    { name: "Configuración", href: "/configuracion" },
+    { name: "Inicio", href: "/", icon: Home },
+    { name: "Botiquín", href: "/botiquin", icon: Package },
+    { name: "Tratamientos", href: "/tratamientos", icon: Calendar },
+    { name: "Lista de Compras", href: "/lista-compras", icon: ShoppingCart },
+    { name: "Configuración", href: "/configuracion", icon: Settings },
   ];
 
   return (
@@ -145,7 +151,7 @@ const Menu = () => {
                     >
                       <Link
                         href={item.href}
-                        className="block py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
+                        className="flex items-center gap-3 py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
                         style={{ color: "var(--foreground)" }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor =
@@ -159,7 +165,8 @@ const Menu = () => {
                         }}
                         onClick={handleNavigation}
                       >
-                        {item.name}
+                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                        <span>{item.name}</span>
                       </Link>
                     </motion.li>
                   ))}
@@ -173,7 +180,7 @@ const Menu = () => {
                     <form action={logoutUser} className="w-full">
                       <button
                         type="submit"
-                        className="w-full text-left py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
+                        className="flex items-center gap-3 w-full text-left py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
                         style={{ color: "var(--foreground)" }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor =
@@ -186,7 +193,8 @@ const Menu = () => {
                           e.currentTarget.style.color = "var(--foreground)";
                         }}
                       >
-                        Cerrar Sesión
+                        <LogOut className="w-5 h-5 flex-shrink-0" />
+                        <span>Cerrar Sesión</span>
                       </button>
                     </form>
                   </motion.li>

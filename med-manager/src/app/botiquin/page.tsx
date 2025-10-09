@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/session";
 import { Button } from "@/components/ui/button";
-import { PackagePlus, Archive } from "lucide-react";
+import { PackagePlus, Archive, DollarSign } from "lucide-react";
 import AuthWrapper from "./components/AuthWrapper";
 import {
   Breadcrumb,
@@ -73,6 +73,13 @@ export default async function Home({
               Mi Botiquín
             </h1>
             <div className="flex gap-2">
+              <Link href="/botiquin/precios">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="hidden sm:inline">Precios</span>
+                  <span className="sm:hidden">Precios</span>
+                </Button>
+              </Link>
               <Link href="/medications/archived">
                 <Button variant="outline" className="flex items-center gap-2">
                   <Archive className="h-4 w-4" />
