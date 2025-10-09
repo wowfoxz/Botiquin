@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { registrarAccionCRUD, TipoAccion, TipoEntidad, extraerMetadataRequest } from "@/lib/auditoria";
 
 interface SessionUser {
   userId: string;
@@ -120,6 +121,29 @@ export async function POST(request: NextRequest) {
         items: true,
       },
     });
+
+    // Registrar creación de lista de compras
+    const metadata = extraerMetadataRequest(request);
+    await registrarAccionCRUD(
+      userId,
+      TipoAccion.CREATE,
+      TipoEntidad.LISTA_COMPRA,
+      shoppingList.id,
+      undefined,
+      {
+        name: shoppingList.name,
+        total: shoppingList.total,
+        itemsCount: shoppingList.items.length,
+        items: shoppingList.items.map(item => ({
+          name: item.name,
+          presentation: item.presentation,
+          laboratory: item.laboratory,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      },
+      metadata
+    );
 
     return new Response(JSON.stringify(shoppingList), {
       status: 201,

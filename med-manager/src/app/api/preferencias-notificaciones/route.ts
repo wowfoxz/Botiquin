@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { registrarAccionCRUD, TipoAccion, TipoEntidad, extraerMetadataRequest } from "@/lib/auditoria";
 
 // GET /api/preferencias-notificaciones - Obtener preferencias de notificaciones (opcionalmente filtrar por userId)
 export async function GET(request: Request) {
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
 }
 
  // POST /api/preferencias-notificaciones - Crear o actualizar preferencias de notificaciones
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -57,6 +58,14 @@ export async function POST(request: Request) {
     const existingPreferences = await prisma.notificationPreferences.findUnique({
       where: { userId: body.userId },
     });
+
+    const isUpdate = !!existingPreferences;
+    const datosPrevios = existingPreferences ? {
+      push: existingPreferences.push,
+      sound: existingPreferences.sound,
+      email: existingPreferences.email,
+      browser: existingPreferences.browser,
+    } : undefined;
 
     const preferencias = await prisma.notificationPreferences.upsert({
       where: { userId: body.userId },
@@ -74,6 +83,25 @@ export async function POST(request: Request) {
         browser: body.browser ?? false,
       },
     });
+
+    const datosPosteriores = {
+      push: preferencias.push,
+      sound: preferencias.sound,
+      email: preferencias.email,
+      browser: preferencias.browser,
+    };
+
+    // Registrar creación/actualización de preferencias
+    const metadata = extraerMetadataRequest(request);
+    await registrarAccionCRUD(
+      body.userId,
+      isUpdate ? TipoAccion.UPDATE : TipoAccion.CREATE,
+      TipoEntidad.NOTIFICACION,
+      preferencias.id,
+      datosPrevios,
+      datosPosteriores,
+      metadata
+    );
 
     return NextResponse.json(preferencias);
   } catch (error) {

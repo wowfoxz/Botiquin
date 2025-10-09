@@ -12,7 +12,8 @@ import {
   Calendar, 
   ShoppingCart, 
   Settings, 
-  LogOut 
+  LogOut,
+  History
 } from "lucide-react";
 
 const Menu = () => {
@@ -68,6 +69,7 @@ const Menu = () => {
     { name: "Botiquín", href: "/botiquin", icon: Package },
     { name: "Tratamientos", href: "/tratamientos", icon: Calendar },
     { name: "Lista de Compras", href: "/lista-compras", icon: ShoppingCart },
+    { name: "Historial", href: "/historial", icon: History },
     { name: "Configuración", href: "/configuracion", icon: Settings },
   ];
 

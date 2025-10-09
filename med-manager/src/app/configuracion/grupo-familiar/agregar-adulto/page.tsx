@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { PhotoUpload } from "@/components/ui/photo-upload";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Cardio } from "ldrs/react";
@@ -17,6 +18,7 @@ import "ldrs/react/Cardio.css";
 export default function AgregarAdultoPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [foto, setFoto] = useState<string | null>(null);
 
   const form = useForm<AgregarAdultoFormData>({
     resolver: zodResolver(agregarAdultoSchema),
@@ -38,6 +40,9 @@ export default function AgregarAdultoPage() {
       formData.append("email", data.email);
       formData.append("dni", data.dni);
       formData.append("fechaNacimiento", data.fechaNacimiento);
+      if (foto) {
+        formData.append("foto", foto);
+      }
 
       await agregarAdultoAlGrupo(formData);
     } catch (err: unknown) {
@@ -76,6 +81,13 @@ export default function AgregarAdultoPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Foto de perfil */}
+              <PhotoUpload
+                currentPhoto={foto}
+                onPhotoChange={setFoto}
+                disabled={isLoading}
+              />
+              
               <FormField
                 control={form.control}
                 name="name"

@@ -236,13 +236,22 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       <CardContent className="pb-2">
         <div className="flex justify-between items-center mb-3">
           <div className="text-sm">
-            <span className="font-semibold">Cantidad:</span> {quantity} {unit}
+            <span className="font-semibold">Cantidad:</span> 
+            <span className={quantity < 0 ? "text-red-500 font-bold" : ""}>
+              {quantity} {unit}
+            </span>
+            {quantity < 0 && (
+              <Badge variant="destructive" className="ml-2 text-xs">
+                STOCK NEGATIVO
+              </Badge>
+            )}
           </div>
           <Dialog open={isUseDialogOpen} onOpenChange={setIsUseDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 size="sm"
                 className="bg-blue-500 hover:bg-blue-600"
+                disabled={quantity <= 0}
               >
                 Usar
               </Button>
@@ -390,7 +399,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       </CardContent>
 
       <CardFooter className="flex justify-end gap-2">
-        {quantity === 0 && (
+        {quantity <= 0 && (
           <>
             {archived ? (
               <>
