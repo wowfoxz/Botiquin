@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { PhotoUpload } from "@/components/ui/photo-upload";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Cardio } from "ldrs/react";
@@ -20,6 +21,8 @@ export default function AgregarMenorPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [tipoMenor, setTipoMenor] = useState<"con-cuenta" | "sin-cuenta">("con-cuenta");
+  const [fotoConCuenta, setFotoConCuenta] = useState<string | null>(null);
+  const [fotoSinCuenta, setFotoSinCuenta] = useState<string | null>(null);
 
   const formConCuenta = useForm<AgregarMenorConCuentaFormData>({
     resolver: zodResolver(agregarMenorConCuentaSchema),
@@ -50,6 +53,9 @@ export default function AgregarMenorPage() {
       formData.append("email", data.email);
       formData.append("dni", data.dni);
       formData.append("fechaNacimiento", data.fechaNacimiento);
+      if (fotoConCuenta) {
+        formData.append("foto", fotoConCuenta);
+      }
 
       await agregarMenorConCuentaAlGrupo(formData);
     } catch (err: unknown) {
@@ -72,6 +78,9 @@ export default function AgregarMenorPage() {
       formData.append("name", data.name);
       formData.append("dni", data.dni);
       formData.append("fechaNacimiento", data.fechaNacimiento);
+      if (fotoSinCuenta) {
+        formData.append("foto", fotoSinCuenta);
+      }
 
       await agregarPerfilMenorAlGrupo(formData);
     } catch (err: unknown) {
@@ -143,6 +152,13 @@ export default function AgregarMenorPage() {
           {tipoMenor === "con-cuenta" ? (
             <Form {...formConCuenta} key="con-cuenta">
               <form onSubmit={formConCuenta.handleSubmit(onSubmitConCuenta)} className="space-y-4">
+                {/* Foto de perfil */}
+                <PhotoUpload
+                  currentPhoto={fotoConCuenta}
+                  onPhotoChange={setFotoConCuenta}
+                  disabled={isLoading}
+                />
+                
                 <FormField
                   control={formConCuenta.control}
                   name="name"
@@ -244,6 +260,13 @@ export default function AgregarMenorPage() {
           ) : (
             <Form {...formSinCuenta} key="sin-cuenta">
               <form onSubmit={formSinCuenta.handleSubmit(onSubmitSinCuenta)} className="space-y-4">
+                {/* Foto de perfil */}
+                <PhotoUpload
+                  currentPhoto={fotoSinCuenta}
+                  onPhotoChange={setFotoSinCuenta}
+                  disabled={isLoading}
+                />
+                
                 <FormField
                   control={formSinCuenta.control}
                   name="name"

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { registrarAccionCRUD, TipoAccion, TipoEntidad, extraerMetadataRequest } from "@/lib/auditoria";
+import { getServerSession } from "@/lib/auth";
 
 // GET /api/tratamientos/[id] - Obtener un tratamiento por ID
 export async function GET(
@@ -36,12 +38,18 @@ export async function GET(
 
 // PUT /api/tratamientos/[id] - Actualizar un tratamiento
 export async function PUT(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verificar autenticación
+    const session = await getServerSession();
+    if (!session?.userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { id } = await params;
-    const body = await _request.json();
+    const body = await request.json();
 
     // Verificar si el tratamiento existe
     const tratamientoExistente = await prisma.treatment.findUnique({
@@ -77,37 +85,65 @@ export async function PUT(
       );
     }
 
+    // Preparar datos para actualización
+    const datosUpdate: any = {
+      name: body.name,
+      medicationId: body.medicationId,
+      patient: body.patient,
+      dosage: body.dosage,
+      isActive: body.isActive,
+      endDate: endDate,
+    };
+
+    if (body.frequencyHours) {
+      datosUpdate.frequencyHours = parseInt(body.frequencyHours);
+    }
+    if (body.durationDays) {
+      datosUpdate.durationDays = parseInt(body.durationDays);
+    }
+    if (body.startAtSpecificTime !== undefined) {
+      datosUpdate.startAtSpecificTime = body.startAtSpecificTime;
+    }
+    if (body.specificStartTime !== undefined) {
+      datosUpdate.specificStartTime = body.specificStartTime
+        ? new Date(
+            new Date(body.specificStartTime).getTime() -
+              new Date(body.specificStartTime).getTimezoneOffset() * 60000
+          )
+        : null;
+    }
+
     // Actualizar el tratamiento
     const tratamiento = await prisma.treatment.update({
       where: { id: id },
-      data: {
-        name: body.name,
-        medicationId: body.medicationId,
-        frequencyHours: body.frequencyHours
-          ? parseInt(body.frequencyHours)
-          : undefined,
-        durationDays: body.durationDays
-          ? parseInt(body.durationDays)
-          : undefined,
-        patient: body.patient,
-        dosage: body.dosage,
-        isActive: body.isActive,
-        endDate: endDate,
-        startAtSpecificTime:
-          body.startAtSpecificTime !== undefined
-            ? body.startAtSpecificTime
-            : undefined,
-        specificStartTime:
-          body.specificStartTime !== undefined
-            ? body.specificStartTime
-              ? new Date(
-                  new Date(body.specificStartTime).getTime() -
-                    new Date(body.specificStartTime).getTimezoneOffset() * 60000
-                )
-              : null
-            : undefined,
-      },
+      data: datosUpdate,
     });
+
+    // Registrar actualización de tratamiento
+    const metadata = extraerMetadataRequest(request);
+    await registrarAccionCRUD(
+      session.userId,
+      TipoAccion.UPDATE,
+      TipoEntidad.TRATAMIENTO,
+      id,
+      {
+        name: tratamientoExistente.name,
+        frequencyHours: tratamientoExistente.frequencyHours,
+        durationDays: tratamientoExistente.durationDays,
+        patient: tratamientoExistente.patient,
+        dosage: tratamientoExistente.dosage,
+        isActive: tratamientoExistente.isActive,
+      },
+      {
+        name: tratamiento.name,
+        frequencyHours: tratamiento.frequencyHours,
+        durationDays: tratamiento.durationDays,
+        patient: tratamiento.patient,
+        dosage: tratamiento.dosage,
+        isActive: tratamiento.isActive,
+      },
+      metadata
+    );
 
     return NextResponse.json(tratamiento);
   } catch (error) {
@@ -121,14 +157,29 @@ export async function PUT(
 
 // DELETE /api/tratamientos/[id] - Eliminar un tratamiento
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verificar autenticación
+    const session = await getServerSession();
+    if (!session?.userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { id } = await params;
     // Verificar si el tratamiento existe
     const tratamientoExistente = await prisma.treatment.findUnique({
       where: { id: id },
+      select: {
+        id: true,
+        name: true,
+        patient: true,
+        dosage: true,
+        frequencyHours: true,
+        durationDays: true,
+        isActive: true,
+      },
     });
 
     if (!tratamientoExistente) {
@@ -147,6 +198,18 @@ export async function DELETE(
     await prisma.treatment.delete({
       where: { id: id },
     });
+
+    // Registrar eliminación de tratamiento
+    const metadata = extraerMetadataRequest(request);
+    await registrarAccionCRUD(
+      session.userId,
+      TipoAccion.DELETE,
+      TipoEntidad.TRATAMIENTO,
+      id,
+      tratamientoExistente,
+      undefined,
+      metadata
+    );
 
     return NextResponse.json({
       message: "Tratamiento eliminado correctamente",

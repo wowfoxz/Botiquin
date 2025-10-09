@@ -1,12 +1,18 @@
-import { getServerSession } from "@/lib/auth";
-import prisma from "@/lib/prisma";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Users, UserCheck, User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Plus, Users, UserCheck, User, Edit } from "lucide-react";
 import Link from "next/link";
+import { eliminarUsuarioGrupo, eliminarPerfilMenor } from "@/app/actions";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { ActionFeedback } from "@/components/ui/action-feedback";
+import { Cardio } from "ldrs/react";
+import "ldrs/react/Cardio.css";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -15,50 +21,84 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
-export default async function GrupoFamiliarPage() {
-  const session = await getServerSession();
-  
-  if (!session?.userId) {
-    redirect("/login");
+interface Usuario {
+  id: string;
+  name: string;
+  email: string;
+  dni: string;
+  rol: string;
+  fechaNacimiento: Date;
+}
+
+interface Perfil {
+  id: string;
+  nombre: string;
+  dni: string;
+  fechaNacimiento: Date;
+}
+
+interface Grupo {
+  id: string;
+  nombre: string;
+  integrantes: Usuario[];
+  perfilesMenores: Perfil[];
+}
+
+interface GrupoFamiliarData {
+  grupo: Grupo;
+  usuarioActual: Usuario;
+}
+
+export default function GrupoFamiliarPage() {
+  const [data, setData] = useState<GrupoFamiliarData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('/api/grupo-familiar');
+      if (response.ok) {
+        const grupoData = await response.json();
+        setData(grupoData);
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del grupo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Cardio size={40} stroke={3} speed={1.5} color="var(--color-primary)" className="mx-auto mb-4" />
+            <p className="text-muted-foreground">Cargando grupo familiar...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // Obtener el usuario con su grupo familiar y todos los integrantes
-  const usuario = await prisma.user.findUnique({
-    where: { id: session.userId },
-    include: {
-      grupo: {
-        include: {
-          integrantes: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              dni: true,
-              rol: true,
-              fechaNacimiento: true,
-            },
-          },
-          perfilesMenores: {
-            select: {
-              id: true,
-              nombre: true,
-              dni: true,
-              fechaNacimiento: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!usuario?.grupo) {
-    redirect("/botiquin");
+  if (!data) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="text-center">
+          <p className="text-destructive">Error al cargar los datos del grupo familiar.</p>
+        </div>
+      </div>
+    );
   }
 
-  const { grupo } = usuario;
+  const { grupo, usuarioActual } = data;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <ActionFeedback />
       {/* Breadcrumb */}
       <div className="mb-6">
         <Breadcrumb>
@@ -117,9 +157,18 @@ export default async function GrupoFamiliarPage() {
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-primary" />
-                    </div>
+                    <Avatar className="w-10 h-10">
+                      {integrante.foto && (
+                        <AvatarImage 
+                          src={integrante.foto} 
+                          alt={integrante.name || integrante.email}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        <User className="w-5 h-5" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="font-medium">{integrante.name}</p>
                       <p className="text-sm text-muted-foreground">
@@ -134,8 +183,37 @@ export default async function GrupoFamiliarPage() {
                     <Badge variant={integrante.rol === "ADULTO" ? "default" : "secondary"}>
                       {integrante.rol === "ADULTO" ? "Adulto" : "Menor"}
                     </Badge>
-                    {integrante.id === usuario.id && (
-                      <Badge variant="outline">Tú</Badge>
+                    {integrante.id === usuarioActual.id && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">Tú</Badge>
+                        <Link href={`/configuracion/grupo-familiar/editar-usuario/${integrante.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                    {integrante.id !== usuarioActual.id && (
+                      <div className="flex gap-1">
+                        <Link href={`/configuracion/grupo-familiar/editar-usuario/${integrante.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        </Link>
+                        <DeleteConfirmationDialog
+                          title="Eliminar Usuario"
+                          description={`¿Estás seguro de que quieres eliminar al usuario "${integrante.name}" del grupo familiar? Esta acción eliminará su cuenta y todos sus datos asociados.`}
+                          itemName={integrante.name}
+                          onConfirm={async () => {
+                            const formData = new FormData();
+                            formData.append('usuarioId', integrante.id);
+                            formData.append('confirmacion', 'ELIMINAR');
+                            await eliminarUsuarioGrupo(formData);
+                            // Recargar los datos después de eliminar
+                            await fetchData();
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -158,9 +236,18 @@ export default async function GrupoFamiliarPage() {
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-secondary-foreground" />
-                    </div>
+                    <Avatar className="w-10 h-10">
+                      {perfil.foto && (
+                        <AvatarImage 
+                          src={perfil.foto} 
+                          alt={perfil.nombre}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="bg-secondary/10 text-secondary-foreground">
+                        <User className="w-5 h-5" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="font-medium">{perfil.nombre}</p>
                       <p className="text-xs text-muted-foreground">
@@ -168,7 +255,29 @@ export default async function GrupoFamiliarPage() {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline">Perfil</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Perfil</Badge>
+                    <div className="flex gap-1">
+                      <Link href={`/configuracion/grupo-familiar/editar-perfil/${perfil.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                      </Link>
+                      <DeleteConfirmationDialog
+                        title="Eliminar Perfil"
+                        description={`¿Estás seguro de que quieres eliminar el perfil de "${perfil.nombre}"? Esta acción eliminará el perfil y todos los datos asociados.`}
+                        itemName={perfil.nombre}
+                        onConfirm={async () => {
+                          const formData = new FormData();
+                          formData.append('perfilId', perfil.id);
+                          formData.append('confirmacion', 'ELIMINAR');
+                          await eliminarPerfilMenor(formData);
+                          // Recargar los datos después de eliminar
+                          await fetchData();
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

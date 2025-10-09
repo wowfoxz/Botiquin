@@ -1,7 +1,23 @@
 import { NextRequest } from "next/server";
+import { registrarBusqueda, extraerMetadataRequest } from "@/lib/auditoria";
+import { getServerSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar autenticación
+    const session = await getServerSession();
+    if (!session?.userId) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const { searchdata } = body;
 
@@ -31,6 +47,24 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
+
+    // Determinar cantidad de resultados
+    let cantidadResultados = 0;
+    if (Array.isArray(data)) {
+      cantidadResultados = data.length;
+    } else if (data.medicamentos && Array.isArray(data.medicamentos)) {
+      cantidadResultados = data.medicamentos.length;
+    }
+
+    // Registrar búsqueda
+    const metadata = extraerMetadataRequest(request);
+    await registrarBusqueda(
+      session.userId,
+      searchdata,
+      "medicamento",
+      cantidadResultados,
+      metadata
+    );
 
     // Verificar si la respuesta contiene medicamentos o la estructura es inesperada
     if (

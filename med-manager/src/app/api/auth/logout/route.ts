@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
-import { deleteSession } from "@/lib/session";
+import { deleteSession, getSession } from "@/lib/session";
+import { registrarAccionAuth, TipoAccion } from "@/lib/auditoria";
 
 export async function POST() {
   try {
+    // Obtener el usuario antes de eliminar la sesión
+    const session = await getSession();
+    const userId = session?.userId;
+    
     await deleteSession();
+    
+    // Registrar logout si había una sesión activa
+    if (userId) {
+      await registrarAccionAuth(userId, TipoAccion.LOGOUT);
+    }
     
     // Crear respuesta con cookie limpiada
     const response = NextResponse.json({ message: "Sesión cerrada correctamente" });

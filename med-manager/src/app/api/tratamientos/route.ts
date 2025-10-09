@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { registrarAccionCRUD, TipoAccion, TipoEntidad, extraerMetadataRequest } from "@/lib/auditoria";
 
 // GET /api/tratamientos - Obtener todos los tratamientos (opcionalmente filtrar por userId)
 export async function GET(request: Request) {
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
 }
 
 // POST /api/tratamientos - Crear un nuevo tratamiento
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -114,6 +115,26 @@ export async function POST(request: Request) {
           : null,
       },
     });
+
+    // Registrar creación de tratamiento
+    const metadata = extraerMetadataRequest(request);
+    await registrarAccionCRUD(
+      body.userId,
+      TipoAccion.CREATE,
+      TipoEntidad.TRATAMIENTO,
+      tratamiento.id,
+      undefined,
+      {
+        name: body.name,
+        medicationId: body.medicationId,
+        frequencyHours: parseInt(body.frequencyHours),
+        durationDays: parseInt(body.durationDays),
+        patient: body.patient,
+        dosage: body.dosage,
+        isActive: true,
+      },
+      metadata
+    );
 
     return NextResponse.json(tratamiento);
   } catch (error) {

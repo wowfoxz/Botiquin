@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest) {
     "/api/preferencias-notificaciones",
     "/api/medicamentos-grupo",
     "/api/consumidores-grupo",
+    "/api/historial",
   ];
 
   const isProtectedPath = protectedPaths.some((path) =>
@@ -57,5 +58,6 @@ export const config = {
     "/api/preferencias-notificaciones/:path*",
     "/api/medicamentos-grupo/:path*",
     "/api/consumidores-grupo/:path*",
+    "/api/historial/:path*",
   ],
 };

@@ -34,6 +34,7 @@ model User {
   tomasRegistradas    Toma[]               @relation("TomaRegistrante")
   tomasConsumidas     Toma[]               @relation("TomaConsumidorUsuario")
   grupoCreado         GrupoFamiliar[]      @relation("GrupoCreador")
+  historial           Historial[]          // Relación con historial de auditoría
 }
 
 enum UserRole {
@@ -187,4 +188,23 @@ model Toma {
   grupo                 GrupoFamiliar  @relation(fields: [grupoId], references: [id])
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+}
+
+// Modelo para historial de auditoría
+model Historial {
+  id                  String    @id @default(cuid())
+  usuarioId           String    // Usuario que realizó la acción
+  usuario             User      @relation(fields: [usuarioId], references: [id])
+  tipoAccion          String    // Tipo de acción: login, create, update, delete, search, etc.
+  entidadTipo         String    // Tipo de entidad: usuario, perfil, medicamento, toma, lista_compra, tratamiento, etc.
+  entidadId           String?   // ID del registro afectado (nullable si no aplica, ej: login)
+  datosPrevios        String?   // JSON con el estado anterior (opcional)
+  datosPosteriores    String?   // JSON con el estado posterior (opcional)
+  metadata            String?   // JSON con metadata adicional (IP, user-agent, etc.)
+  createdAt           DateTime  @default(now())
+  
+  @@index([usuarioId])
+  @@index([tipoAccion])
+  @@index([entidadTipo, entidadId])
+  @@index([createdAt])
 }

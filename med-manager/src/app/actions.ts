@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { createSession, getSession, deleteSession } from "@/lib/session";
+import { registrarAccionAuth, registrarAccionCRUD, TipoAccion, TipoEntidad } from "@/lib/auditoria";
 import {
   analyzeImageWithGemini,
   getDrugInfoWithGemini,
@@ -146,10 +147,38 @@ export async function registerUser(formData: FormData) {
       data: { grupoId: grupo.id },
     });
 
-    return updatedUser;
+    return { updatedUser, grupo };
   });
 
-  await createSession(result.id);
+  // Registrar creación de usuario
+  await registrarAccionCRUD(
+    result.updatedUser.id,
+    TipoAccion.CREATE,
+    TipoEntidad.USUARIO,
+    result.updatedUser.id,
+    undefined,
+    {
+      name,
+      email,
+      dni,
+      rol: "ADULTO",
+    }
+  );
+
+  // Registrar creación de grupo familiar
+  await registrarAccionCRUD(
+    result.updatedUser.id,
+    TipoAccion.CREATE,
+    TipoEntidad.GRUPO_FAMILIAR,
+    result.grupo.id,
+    undefined,
+    {
+      nombre: grupoNombre,
+      creadorId: result.updatedUser.id,
+    }
+  );
+
+  await createSession(result.updatedUser.id);
   redirect("/botiquin");
 }
 
@@ -166,21 +195,45 @@ export async function loginUser(formData: FormData) {
   });
 
   if (!user) {
+    // Registrar intento de login fallido
+    await registrarAccionAuth(null, TipoAccion.LOGIN_FALLIDO, {
+      email,
+      motivo: "Usuario no encontrado",
+    });
     throw new Error("Credenciales no válidas.");
   }
 
   const passwordsMatch = await bcrypt.compare(password, user.password);
 
   if (!passwordsMatch) {
+    // Registrar intento de login fallido
+    await registrarAccionAuth(null, TipoAccion.LOGIN_FALLIDO, {
+      email,
+      motivo: "Contraseña incorrecta",
+    });
     throw new Error("Credenciales no válidas.");
   }
 
   await createSession(user.id);
+  
+  // Registrar login exitoso
+  await registrarAccionAuth(user.id, TipoAccion.LOGIN);
+  
   redirect("/botiquin");
 }
 
 export async function logoutUser() {
+  // Obtener el usuario antes de eliminar la sesión
+  const session = await getSession();
+  const userId = session?.userId;
+  
   await deleteSession();
+  
+  // Registrar logout si había una sesión activa
+  if (userId) {
+    await registrarAccionAuth(userId, TipoAccion.LOGOUT);
+  }
+  
   redirect("/login");
 }
 
@@ -202,7 +255,7 @@ export async function addMedication(formData: FormData) {
   const imageUrl = formData.get("imageUrl") as string | null;
 
   try {
-    await prisma.medication.create({
+    const medicamento = await prisma.medication.create({
       data: {
         commercialName,
         activeIngredient,
@@ -217,6 +270,22 @@ export async function addMedication(formData: FormData) {
       },
     });
 
+    // Registrar creación de medicamento
+    await registrarAccionCRUD(
+      userId,
+      TipoAccion.CREATE,
+      TipoEntidad.MEDICAMENTO,
+      medicamento.id,
+      undefined,
+      {
+        commercialName,
+        activeIngredient,
+        initialQuantity,
+        unit,
+        expirationDate,
+      }
+    );
+
     revalidatePath("/botiquin");
   } catch (error) {
     console.error("Error al agregar medicamento:", error);
@@ -227,6 +296,12 @@ export async function addMedication(formData: FormData) {
 }
 
 export async function updateMedicationQuantity(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return;
+  }
+
   const id = formData.get("id") as string;
   const newQuantity = parseFloat(formData.get("newQuantity") as string);
 
@@ -234,40 +309,83 @@ export async function updateMedicationQuantity(formData: FormData) {
     return;
   }
 
-  await prisma.medication.update({
+  // Obtener datos previos
+  const medicamentoAnterior = await prisma.medication.findUnique({
+    where: { id },
+    select: { currentQuantity: true, commercialName: true },
+  });
+
+  if (!medicamentoAnterior) {
+    return;
+  }
+
+  const medicamentoActualizado = await prisma.medication.update({
     where: { id },
     data: {
       currentQuantity: newQuantity,
     },
   });
 
+  // Registrar actualización de cantidad
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.UPDATE,
+    TipoEntidad.MEDICAMENTO,
+    id,
+    { currentQuantity: medicamentoAnterior.currentQuantity },
+    { currentQuantity: newQuantity }
+  );
+
   revalidatePath("/botiquin");
 }
 
 export async function toggleMedicationArchiveStatus(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return;
+  }
+
   const id = formData.get("id") as string;
 
   const medication = await prisma.medication.findUnique({
     where: { id },
-    select: { archived: true },
+    select: { archived: true, commercialName: true },
   });
 
   if (!medication) {
     return;
   }
 
+  const nuevoEstado = !medication.archived;
   await prisma.medication.update({
     where: { id },
     data: {
-      archived: !medication.archived,
+      archived: nuevoEstado,
     },
   });
+
+  // Registrar archivado/desarchivado
+  await registrarAccionCRUD(
+    session.userId,
+    nuevoEstado ? TipoAccion.ARCHIVE : TipoAccion.UNARCHIVE,
+    TipoEntidad.MEDICAMENTO,
+    id,
+    { archived: medication.archived },
+    { archived: nuevoEstado }
+  );
 
   revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
 }
 
 export async function unarchiveMedicationWithNewExpiration(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return;
+  }
+
   const id = formData.get("id") as string;
   const newExpirationRaw = formData.get("newExpirationDate") as string | null;
 
@@ -281,10 +399,16 @@ export async function unarchiveMedicationWithNewExpiration(formData: FormData) {
     return;
   }
 
-  // Obtener el medicamento para acceder a initialQuantity
+  // Obtener el medicamento para acceder a initialQuantity y datos previos
   const medication = await prisma.medication.findUnique({
     where: { id },
-    select: { initialQuantity: true },
+    select: { 
+      initialQuantity: true, 
+      archived: true, 
+      currentQuantity: true, 
+      expirationDate: true,
+      commercialName: true 
+    },
   });
 
   if (!medication) {
@@ -300,6 +424,24 @@ export async function unarchiveMedicationWithNewExpiration(formData: FormData) {
       expirationDate: newExpirationDate,
     },
   });
+
+  // Registrar desarchivado con nueva fecha de vencimiento
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.UNARCHIVE,
+    TipoEntidad.MEDICAMENTO,
+    id,
+    { 
+      archived: medication.archived, 
+      currentQuantity: medication.currentQuantity,
+      expirationDate: medication.expirationDate 
+    },
+    { 
+      archived: false, 
+      currentQuantity: medication.initialQuantity,
+      expirationDate: newExpirationDate 
+    }
+  );
 
   revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
@@ -322,7 +464,12 @@ export async function updateNotificationSettings(formData: FormData) {
   );
 
   try {
-    await prisma.notificationSettings.upsert({
+    // Obtener configuración actual para el historial
+    const configuracionActual = await prisma.notificationSettings.findUnique({
+      where: { userId: userId },
+    });
+
+    const configuracionActualizada = await prisma.notificationSettings.upsert({
       where: { userId: userId },
       update: {
         daysBeforeExpiration,
@@ -335,17 +482,38 @@ export async function updateNotificationSettings(formData: FormData) {
       },
     });
 
+    // Registrar actualización de configuración de notificaciones
+    const esCreacion = !configuracionActual;
+    await registrarAccionCRUD(
+      userId,
+      esCreacion ? TipoAccion.CREATE : TipoAccion.UPDATE,
+      TipoEntidad.NOTIFICACION,
+      configuracionActualizada.id,
+      configuracionActual ? {
+        daysBeforeExpiration: configuracionActual.daysBeforeExpiration,
+        lowStockThreshold: configuracionActual.lowStockThreshold,
+      } : undefined,
+      {
+        daysBeforeExpiration: configuracionActualizada.daysBeforeExpiration,
+        lowStockThreshold: configuracionActualizada.lowStockThreshold,
+      }
+    );
+
     revalidatePath("/botiquin");
     revalidatePath("/configuracion");
   } catch (error) {
     console.error("Error al actualizar configuración:", error);
     throw error;
   }
-  
-  redirect("/configuracion?success=Configuracion actualizada exitosamente");
 }
 
 export async function getDescriptionFromAI(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return { success: false, error: "No autenticado" };
+  }
+
   const commercialName = formData.get("commercialName") as string;
   const activeIngredient = formData.get("activeIngredient") as string;
 
@@ -357,6 +525,22 @@ export async function getDescriptionFromAI(formData: FormData) {
     activeIngredient
   );
 
+  // Registrar uso de IA
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.SEARCH, // Usar SEARCH para búsquedas de IA
+    TipoEntidad.MEDICAMENTO,
+    undefined, // No hay ID específico para búsquedas de IA
+    undefined,
+    undefined,
+    {
+      tipoOperacion: "descripcion_ia",
+      medicamento: commercialName,
+      ingrediente: activeIngredient,
+      exito: !result.error,
+    }
+  );
+
   return {
     success: !result.error,
     info: result.info,
@@ -365,6 +549,12 @@ export async function getDescriptionFromAI(formData: FormData) {
 }
 
 export async function getIntakeRecommendationsFromAI(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return { success: false, error: "No autenticado" };
+  }
+
   const commercialName = formData.get("commercialName") as string;
   const activeIngredient = formData.get("activeIngredient") as string;
 
@@ -378,6 +568,22 @@ export async function getIntakeRecommendationsFromAI(formData: FormData) {
     activeIngredient
   );
 
+  // Registrar uso de IA
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.SEARCH, // Usar SEARCH para búsquedas de IA
+    TipoEntidad.MEDICAMENTO,
+    undefined, // No hay ID específico para búsquedas de IA
+    undefined,
+    undefined,
+    {
+      tipoOperacion: "recomendaciones_ia",
+      medicamento: commercialName,
+      ingrediente: activeIngredient,
+      exito: !result.error,
+    }
+  );
+
   return {
     success: !result.error,
     info: result.info,
@@ -389,9 +595,31 @@ export async function getIntakeRecommendationsFromAI(formData: FormData) {
 
 // Eliminar un medicamento permanentemente
 export async function deleteMedication(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return;
+  }
+
   const id = formData.get("id") as string;
 
   if (!id) {
+    return;
+  }
+
+  // Obtener datos del medicamento antes de eliminarlo
+  const medicamento = await prisma.medication.findUnique({
+    where: { id },
+    select: {
+      commercialName: true,
+      activeIngredient: true,
+      currentQuantity: true,
+      unit: true,
+      expirationDate: true,
+    },
+  });
+
+  if (!medicamento) {
     return;
   }
 
@@ -399,12 +627,28 @@ export async function deleteMedication(formData: FormData) {
     where: { id },
   });
 
+  // Registrar eliminación
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.DELETE,
+    TipoEntidad.MEDICAMENTO,
+    id,
+    medicamento,
+    undefined
+  );
+
   revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
 }
 
 // Actualizar un medicamento archivado (sin cambiar fecha de vencimiento)
 export async function updateArchivedMedication(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    console.error("No autenticado. Inicie sesión para continuar.");
+    return;
+  }
+
   const id = formData.get("id") as string;
   const commercialName = formData.get("commercialName") as string;
   const activeIngredient = formData.get("activeIngredient") as string;
@@ -417,17 +661,46 @@ export async function updateArchivedMedication(formData: FormData) {
     return;
   }
 
-  await prisma.medication.update({
+  // Obtener datos previos
+  const medicamentoAnterior = await prisma.medication.findUnique({
     where: { id },
-    data: {
-      commercialName,
-      activeIngredient,
-      initialQuantity,
-      unit,
-      description,
-      intakeRecommendations,
+    select: {
+      commercialName: true,
+      activeIngredient: true,
+      initialQuantity: true,
+      unit: true,
+      description: true,
+      intakeRecommendations: true,
     },
   });
+
+  if (!medicamentoAnterior) {
+    return;
+  }
+
+  const datosPosteriores = {
+    commercialName,
+    activeIngredient,
+    initialQuantity,
+    unit,
+    description,
+    intakeRecommendations,
+  };
+
+  await prisma.medication.update({
+    where: { id },
+    data: datosPosteriores,
+  });
+
+  // Registrar actualización
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.UPDATE,
+    TipoEntidad.MEDICAMENTO,
+    id,
+    medicamentoAnterior,
+    datosPosteriores
+  );
 
   revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
@@ -445,6 +718,7 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
   const email = formData.get("email") as string;
   const dni = formData.get("dni") as string;
   const fechaNacimiento = formData.get("fechaNacimiento") as string;
+  const foto = formData.get("foto") as string | null;
 
   if (!name || !email || !dni || !fechaNacimiento) {
     throw new Error("Todos los campos son requeridos.");
@@ -480,17 +754,42 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
 
   const hashedPassword = await bcrypt.hash(dni, 10); // Contraseña por defecto es el DNI
 
-  await prisma.user.create({
-    data: {
+  // Preparar datos de creación
+  const createData: any = {
+    name,
+    email,
+    dni,
+    fechaNacimiento: new Date(fechaNacimiento),
+    password: hashedPassword,
+    rol: "ADULTO",
+    grupoId: usuarioActual.grupo.id,
+  };
+
+  // Solo agregar la foto si se proporciona
+  if (foto) {
+    createData.foto = foto;
+  }
+
+  const nuevoUsuario = await prisma.user.create({
+    data: createData,
+  });
+
+  // Registrar agregado de adulto al grupo
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.CREATE,
+    TipoEntidad.USUARIO,
+    nuevoUsuario.id,
+    undefined,
+    {
       name,
       email,
       dni,
-      fechaNacimiento: new Date(fechaNacimiento),
-      password: hashedPassword,
       rol: "ADULTO",
       grupoId: usuarioActual.grupo.id,
-    },
-  });
+      foto: nuevoUsuario.foto,
+    }
+  );
 
   revalidatePath("/configuracion/grupo-familiar");
   redirect("/configuracion/grupo-familiar?success=Adulto agregado exitosamente");
@@ -506,6 +805,7 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
   const email = formData.get("email") as string;
   const dni = formData.get("dni") as string;
   const fechaNacimiento = formData.get("fechaNacimiento") as string;
+  const foto = formData.get("foto") as string | null;
 
   if (!name || !email || !dni || !fechaNacimiento) {
     throw new Error("Todos los campos son requeridos.");
@@ -541,17 +841,42 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
 
   const hashedPassword = await bcrypt.hash(dni, 10); // Contraseña por defecto es el DNI
 
-  await prisma.user.create({
-    data: {
+  // Preparar datos de creación
+  const createData: any = {
+    name,
+    email,
+    dni,
+    fechaNacimiento: new Date(fechaNacimiento),
+    password: hashedPassword,
+    rol: "MENOR",
+    grupoId: usuarioActual.grupo.id,
+  };
+
+  // Solo agregar la foto si se proporciona
+  if (foto) {
+    createData.foto = foto;
+  }
+
+  const nuevoUsuario = await prisma.user.create({
+    data: createData,
+  });
+
+  // Registrar creación de menor con cuenta
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.CREATE,
+    TipoEntidad.USUARIO,
+    nuevoUsuario.id,
+    undefined,
+    {
       name,
       email,
       dni,
-      fechaNacimiento: new Date(fechaNacimiento),
-      password: hashedPassword,
       rol: "MENOR",
       grupoId: usuarioActual.grupo.id,
-    },
-  });
+      foto: nuevoUsuario.foto,
+    }
+  );
 
   revalidatePath("/configuracion/grupo-familiar");
   redirect("/configuracion/grupo-familiar?success=Menor con cuenta agregado exitosamente");
@@ -566,6 +891,7 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
   const name = formData.get("name") as string;
   const dni = formData.get("dni") as string;
   const fechaNacimiento = formData.get("fechaNacimiento") as string;
+  const foto = formData.get("foto") as string | null;
 
   if (!name || !dni || !fechaNacimiento) {
     throw new Error("Todos los campos son requeridos.");
@@ -598,14 +924,38 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
     throw new Error("El DNI ya está registrado en el sistema.");
   }
 
-  await prisma.perfilMenor.create({
-    data: {
+  // Preparar datos de creación
+  const createData: any = {
+    nombre: name,
+    dni,
+    fechaNacimiento: new Date(fechaNacimiento),
+    grupoId: usuarioActual.grupo.id,
+  };
+
+  // Solo agregar la foto si se proporciona
+  if (foto) {
+    createData.foto = foto;
+  }
+
+  const nuevoPerfil = await prisma.perfilMenor.create({
+    data: createData,
+  });
+
+  // Registrar creación de perfil menor
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.CREATE,
+    TipoEntidad.PERFIL,
+    nuevoPerfil.id,
+    undefined,
+    {
       nombre: name,
       dni,
       fechaNacimiento: new Date(fechaNacimiento),
       grupoId: usuarioActual.grupo.id,
-    },
-  });
+      foto: nuevoPerfil.foto,
+    }
+  );
 
   revalidatePath("/configuracion/grupo-familiar");
   redirect("/configuracion/grupo-familiar?success=Perfil de menor agregado exitosamente");
@@ -650,8 +1000,34 @@ export async function registrarTomaMedicamento(formData: FormData) {
     throw new Error("Medicamento no encontrado o no pertenece al grupo familiar.");
   }
 
+  // Verificar que hay suficiente cantidad disponible
+  if (medicamento.currentQuantity <= 0) {
+    throw new Error("No hay medicamento disponible. El stock se ha agotado.");
+  }
+
+  // Obtener cantidad anterior del medicamento
+  const cantidadAnterior = medicamento.currentQuantity;
+
+  // Obtener información del consumidor para el historial
+  let nombreConsumidor = "";
+  if (consumidorTipo === "usuario") {
+    const consumidorUsuario = await prisma.user.findFirst({
+      where: { id: consumidorId, grupoId: usuarioActual.grupo.id },
+      select: { name: true, email: true },
+    });
+    nombreConsumidor = consumidorUsuario?.name || consumidorUsuario?.email || "Usuario desconocido";
+  } else if (consumidorTipo === "perfil") {
+    const consumidorPerfil = await prisma.perfilMenor.findFirst({
+      where: { id: consumidorId, grupoId: usuarioActual.grupo.id },
+      select: { nombre: true },
+    });
+    nombreConsumidor = consumidorPerfil?.nombre || "Perfil desconocido";
+  }
+
   // Crear la toma y actualizar la cantidad del medicamento en una transacción
-  await prisma.$transaction(async (tx) => {
+  const resultado = await prisma.$transaction(async (tx) => {
+    let tomaCreada;
+
     // Crear la toma según el tipo de consumidor
     if (consumidorTipo === "usuario") {
       // Verificar que el usuario consumidor pertenece al grupo
@@ -666,7 +1042,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
         throw new Error("Usuario consumidor no encontrado o no pertenece al grupo familiar.");
       }
 
-      await tx.toma.create({
+      tomaCreada = await tx.toma.create({
         data: {
           medicamentoId,
           consumidorUsuarioId: consumidorId,
@@ -688,7 +1064,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
         throw new Error("Perfil consumidor no encontrado o no pertenece al grupo familiar.");
       }
 
-      await tx.toma.create({
+      tomaCreada = await tx.toma.create({
         data: {
           medicamentoId,
           consumidorPerfilId: consumidorId,
@@ -708,8 +1084,256 @@ export async function registrarTomaMedicamento(formData: FormData) {
         },
       },
     });
+
+    return tomaCreada;
   });
+
+  // Registrar toma de medicamento
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.CREATE,
+    TipoEntidad.TOMA,
+    resultado.id,
+    undefined,
+    {
+      medicamentoId,
+      medicamentoNombre: medicamento.commercialName,
+      consumidorTipo,
+      consumidorId,
+      consumidorNombre: nombreConsumidor,
+      fechaHora,
+      registranteId: session.userId,
+      cantidadAnterior,
+      cantidadNueva: cantidadAnterior - 1,
+    }
+  );
 
   revalidatePath("/botiquin");
   redirect("/botiquin?success=Toma registrada exitosamente");
+}
+
+export async function actualizarUsuarioGrupo(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const usuarioId = formData.get("usuarioId") as string;
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const dni = formData.get("dni") as string;
+  const fechaNacimiento = formData.get("fechaNacimiento") as string;
+  const foto = formData.get("foto") as string | null;
+
+  if (!usuarioId || !name || !email || !dni || !fechaNacimiento) {
+    throw new Error("Todos los campos son requeridos.");
+  }
+
+  // Obtener usuario actual para el historial
+  const usuarioActual = await prisma.user.findUnique({
+    where: { id: usuarioId },
+    select: { name: true, email: true, dni: true, fechaNacimiento: true, foto: true },
+  });
+
+  if (!usuarioActual) {
+    throw new Error("Usuario no encontrado.");
+  }
+
+  // Preparar datos de actualización
+  const updateData: any = {
+    name,
+    email,
+    dni,
+    fechaNacimiento: new Date(fechaNacimiento),
+  };
+
+  // Solo actualizar la foto si se proporciona
+  if (foto) {
+    updateData.foto = foto;
+  }
+
+  // Actualizar usuario
+  const usuarioActualizado = await prisma.user.update({
+    where: { id: usuarioId },
+    data: updateData,
+  });
+
+  // Registrar actualización de usuario
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.UPDATE,
+    TipoEntidad.USUARIO,
+    usuarioId,
+    usuarioActual,
+    {
+      name: usuarioActualizado.name,
+      email: usuarioActualizado.email,
+      dni: usuarioActualizado.dni,
+      fechaNacimiento: usuarioActualizado.fechaNacimiento,
+      foto: usuarioActualizado.foto,
+    }
+  );
+
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Usuario actualizado exitosamente");
+}
+
+export async function eliminarUsuarioGrupo(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const usuarioId = formData.get("usuarioId") as string;
+  const confirmacion = formData.get("confirmacion") as string;
+
+  if (!usuarioId) {
+    throw new Error("ID de usuario requerido.");
+  }
+
+  if (confirmacion !== "ELIMINAR") {
+    throw new Error("Debe escribir 'ELIMINAR' para confirmar.");
+  }
+
+  // No permitir eliminar al usuario actual
+  if (usuarioId === session.userId) {
+    throw new Error("No puede eliminar su propia cuenta desde aquí.");
+  }
+
+  // Obtener usuario para el historial
+  const usuario = await prisma.user.findUnique({
+    where: { id: usuarioId },
+    select: { name: true, email: true, dni: true, fechaNacimiento: true },
+  });
+
+  if (!usuario) {
+    throw new Error("Usuario no encontrado.");
+  }
+
+  // Eliminar usuario (esto eliminará automáticamente las relaciones)
+  await prisma.user.delete({
+    where: { id: usuarioId },
+  });
+
+  // Registrar eliminación de usuario
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.DELETE,
+    TipoEntidad.USUARIO,
+    usuarioId,
+    usuario,
+    undefined
+  );
+
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Usuario eliminado exitosamente");
+}
+
+export async function actualizarPerfilMenor(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const perfilId = formData.get("perfilId") as string;
+  const nombre = formData.get("nombre") as string;
+  const dni = formData.get("dni") as string;
+  const fechaNacimiento = formData.get("fechaNacimiento") as string;
+  const foto = formData.get("foto") as string | null;
+
+  if (!perfilId || !nombre || !dni || !fechaNacimiento) {
+    throw new Error("Todos los campos son requeridos.");
+  }
+
+  // Obtener perfil actual para el historial
+  const perfilActual = await prisma.perfilMenor.findUnique({
+    where: { id: perfilId },
+    select: { nombre: true, dni: true, fechaNacimiento: true, foto: true },
+  });
+
+  if (!perfilActual) {
+    throw new Error("Perfil no encontrado.");
+  }
+
+  // Preparar datos de actualización
+  const updateData: any = {
+    nombre,
+    dni,
+    fechaNacimiento: new Date(fechaNacimiento),
+  };
+
+  // Solo actualizar la foto si se proporciona
+  if (foto) {
+    updateData.foto = foto;
+  }
+
+  // Actualizar perfil
+  const perfilActualizado = await prisma.perfilMenor.update({
+    where: { id: perfilId },
+    data: updateData,
+  });
+
+  // Registrar actualización de perfil
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.UPDATE,
+    TipoEntidad.PERFIL,
+    perfilId,
+    perfilActual,
+    {
+      nombre: perfilActualizado.nombre,
+      dni: perfilActualizado.dni,
+      fechaNacimiento: perfilActualizado.fechaNacimiento,
+      foto: perfilActualizado.foto,
+    }
+  );
+
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Perfil actualizado exitosamente");
+}
+
+export async function eliminarPerfilMenor(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const perfilId = formData.get("perfilId") as string;
+  const confirmacion = formData.get("confirmacion") as string;
+
+  if (!perfilId) {
+    throw new Error("ID de perfil requerido.");
+  }
+
+  if (confirmacion !== "ELIMINAR") {
+    throw new Error("Debe escribir 'ELIMINAR' para confirmar.");
+  }
+
+  // Obtener perfil para el historial
+  const perfil = await prisma.perfilMenor.findUnique({
+    where: { id: perfilId },
+    select: { nombre: true, dni: true, fechaNacimiento: true },
+  });
+
+  if (!perfil) {
+    throw new Error("Perfil no encontrado.");
+  }
+
+  // Eliminar perfil
+  await prisma.perfilMenor.delete({
+    where: { id: perfilId },
+  });
+
+  // Registrar eliminación de perfil
+  await registrarAccionCRUD(
+    session.userId,
+    TipoAccion.DELETE,
+    TipoEntidad.PERFIL,
+    perfilId,
+    perfil,
+    undefined
+  );
+
+  revalidatePath("/configuracion/grupo-familiar");
+  redirect("/configuracion/grupo-familiar?success=Perfil eliminado exitosamente");
 }
