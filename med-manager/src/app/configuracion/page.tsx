@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/breadcrumb";
 import UrlNotifications from "@/components/url-notifications";
 import NotificationSettingsForm from './components/NotificationSettingsForm';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Users, Settings } from "lucide-react";
+import Link from "next/link";
 
 export default async function SettingsPage() {
   // Verificar si el usuario está autenticado
@@ -65,10 +69,45 @@ export default async function SettingsPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configuración</h1>
           </div>
 
-          <NotificationSettingsForm 
-            daysBeforeExpiration={daysBeforeExpiration}
-            lowStockThreshold={lowStockThreshold}
-          />
+          {/* Secciones de configuración */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Configuración de notificaciones */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Notificaciones
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <NotificationSettingsForm 
+                  daysBeforeExpiration={daysBeforeExpiration}
+                  lowStockThreshold={lowStockThreshold}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Grupo familiar */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Grupo Familiar
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Gestiona los integrantes de tu familia y sus medicamentos.
+                </p>
+                <Link href="/configuracion/grupo-familiar">
+                  <Button className="w-full">
+                    <Users className="w-4 h-4 mr-2" />
+                    Administrar Grupo Familiar
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </AuthWrapper>

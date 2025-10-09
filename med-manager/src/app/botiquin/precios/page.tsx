@@ -21,6 +21,7 @@ import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
@@ -184,6 +185,9 @@ export default function PreciosPage() {
       <div className="mb-6">
         <Breadcrumb>
           <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/botiquin">Mi Botiquín</BreadcrumbLink>
+            </BreadcrumbItem>
             <BreadcrumbItem>
               <BreadcrumbPage>Consulta de Precios</BreadcrumbPage>
             </BreadcrumbItem>

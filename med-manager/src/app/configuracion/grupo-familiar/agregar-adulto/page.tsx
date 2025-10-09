@@ -55,7 +55,7 @@ export default function AgregarAdultoPage() {
     <div className="container mx-auto p-6 max-w-2xl">
       <div className="mb-6">
         <Link
-          href="/grupo-familiar"
+          href="/configuracion/grupo-familiar"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
