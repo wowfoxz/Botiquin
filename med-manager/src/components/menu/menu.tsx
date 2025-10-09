@@ -58,6 +58,7 @@ const Menu = () => {
   const menuItems = [
     { name: "Inicio", href: "/" },
     { name: "Botiquín", href: "/botiquin" },
+    { name: "Grupo Familiar", href: "/grupo-familiar" },
     { name: "Tratamientos", href: "/tratamientos" },
     { name: "Precios de Medicamentos", href: "/precios" },
     { name: "Lista de Compras", href: "/lista-compras" },

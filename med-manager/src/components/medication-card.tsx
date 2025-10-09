@@ -1,8 +1,9 @@
 'use client';
 
 import { Medication } from '@prisma/client';
-import React, { useState } from 'react';
-import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication } from '@/app/actions';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication, registrarTomaMedicamento } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ type MedicationCardProps = {
 };
 
 const MedicationCard = ({ medication }: MedicationCardProps) => {
+  const router = useRouter();
   const {
     id,
     commercialName,
@@ -42,6 +44,14 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   const [newExpirationDate, setNewExpirationDate] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isUseDialogOpen, setIsUseDialogOpen] = useState(false);
+  const [consumidores, setConsumidores] = useState<any[]>([]);
+  const [selectedConsumidor, setSelectedConsumidor] = useState<string>('');
+
+  // Sincronizar el estado local con los props cuando cambien
+  useEffect(() => {
+    setQuantity(currentQuantity);
+  }, [currentQuantity]);
 
   // Estados para el formulario de edición
   const [editForm, setEditForm] = useState({
@@ -60,21 +70,58 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     day: 'numeric',
   });
 
-  const handleDecrement = async () => {
-    const newQuantity = Math.max(0, quantity - 1);
-    setQuantity(newQuantity);
+  // Cargar consumidores del grupo familiar
+  useEffect(() => {
+    const fetchConsumidores = async () => {
+      try {
+        const response = await fetch('/api/consumidores-grupo');
+        if (response.ok) {
+          const data = await response.json();
+          // La API devuelve { consumidores: [...] }, extraer el array
+          const consumidoresArray = data.consumidores || [];
+          setConsumidores(Array.isArray(consumidoresArray) ? consumidoresArray : []);
+        } else {
+          console.error('Error en la respuesta:', response.status);
+          setConsumidores([]);
+        }
+      } catch (error) {
+        console.error('Error al cargar consumidores:', error);
+        setConsumidores([]);
+      }
+    };
 
-    const formData = new FormData();
-    formData.append('id', id);
-    formData.append('newQuantity', newQuantity.toString());
+    fetchConsumidores();
+  }, []);
+
+  const handleUseMedication = async () => {
+    if (!selectedConsumidor) {
+      toast.error('Por favor selecciona quién va a tomar el medicamento');
+      return;
+    }
 
     try {
-      await updateMedicationQuantity(formData);
-      toast.success('Cantidad actualizada exitosamente');
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-      setQuantity(quantity); // Revert on error
-      toast.error('Error al actualizar la cantidad');
+      const formData = new FormData();
+      formData.append('medicamentoId', id);
+      formData.append('consumidorId', selectedConsumidor);
+      // Determinar el tipo basado en si es usuario o perfil menor
+      const consumidor = consumidores.find(c => c.id === selectedConsumidor);
+      const tipo = consumidor?.tipo || 'usuario'; // Por defecto usuario
+      formData.append('consumidorTipo', tipo);
+      formData.append('fechaHora', new Date().toISOString());
+
+      await registrarTomaMedicamento(formData);
+      
+      setIsUseDialogOpen(false);
+      setSelectedConsumidor('');
+      
+      // No hacer router.refresh() aquí porque la acción del servidor ya redirige
+      // y el router.refresh() interfiere con la limpieza de URL
+    } catch (error: any) {
+      console.error('Error al registrar toma:', error);
+      // Solo mostrar error si no es una redirección de Next.js
+      if (!error?.digest?.includes('NEXT_REDIRECT')) {
+        toast.error('Error al registrar la toma');
+      }
     }
   };
 
@@ -191,13 +238,59 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
           <div className="text-sm">
             <span className="font-semibold">Cantidad:</span> {quantity} {unit}
           </div>
-          <Button
-            size="sm"
-            onClick={handleDecrement}
-            className="bg-blue-500 hover:bg-blue-600"
-          >
-            Usar
-          </Button>
+          <Dialog open={isUseDialogOpen} onOpenChange={setIsUseDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                Usar
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Registrar Toma de Medicamento</DialogTitle>
+                <DialogDescription>
+                  Selecciona quién va a tomar {commercialName}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="consumidor">Consumidor</Label>
+                  <select
+                    id="consumidor"
+                    value={selectedConsumidor}
+                    onChange={(e) => setSelectedConsumidor(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="">Selecciona una persona</option>
+                    {Array.isArray(consumidores) && consumidores.map((consumidor) => (
+                      <option key={consumidor.id} value={consumidor.id}>
+                        {consumidor.name} {consumidor.rol && `(${consumidor.rol})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsUseDialogOpen(false);
+                      setSelectedConsumidor('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleUseMedication}
+                    disabled={!selectedConsumidor}
+                  >
+                    Registrar Toma
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Separator className="my-2" />

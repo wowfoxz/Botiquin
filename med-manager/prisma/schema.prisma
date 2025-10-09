@@ -17,7 +17,13 @@ model User {
   id                  String               @id @default(cuid())
   email               String               @unique
   name                String?
+  dni                 String               @unique
+  fechaNacimiento     DateTime
+  foto                String?
   password            String
+  rol                 UserRole             @default(ADULTO)
+  grupoId             String?
+  grupo               GrupoFamiliar?       @relation(fields: [grupoId], references: [id])
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   medications         Medication[]
@@ -25,6 +31,14 @@ model User {
   treatments          Treatment[]          // Relación con tratamientos
   notificationPreferences NotificationPreferences? // Relación con preferencias de notificaciones
   shoppingLists       ShoppingList[]       // Relación con listas de compras
+  tomasRegistradas    Toma[]               @relation("TomaRegistrante")
+  tomasConsumidas     Toma[]               @relation("TomaConsumidorUsuario")
+  grupoCreado         GrupoFamiliar[]      @relation("GrupoCreador")
+}
+
+enum UserRole {
+  ADULTO
+  MENOR
 }
 
 model Medication {
@@ -44,6 +58,7 @@ model Medication {
   user                User        @relation(fields: [userId], references: [id])
   userId              String
   treatments          Treatment[] // Relación con tratamientos que usan esta medicina
+  tomas               Toma[]      // Relación con tomas de este medicamento
 }
 
 model NotificationSettings {
@@ -127,4 +142,49 @@ model ShoppingList {
   userId       String
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+// Modelo para grupos familiares
+model GrupoFamiliar {
+  id           String         @id @default(cuid())
+  nombre       String
+  creadorId    String
+  creador      User           @relation("GrupoCreador", fields: [creadorId], references: [id])
+  integrantes  User[]         // Usuarios adultos y menores con cuenta
+  perfilesMenores PerfilMenor[] // Perfiles de menores sin cuenta
+  tomas        Toma[]         // Todas las tomas del grupo
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// Modelo para perfiles de menores sin cuenta
+model PerfilMenor {
+  id              String         @id @default(cuid())
+  nombre          String
+  dni             String         @unique
+  fechaNacimiento DateTime
+  foto            String?
+  grupoId         String
+  grupo           GrupoFamiliar  @relation(fields: [grupoId], references: [id])
+  tomas           Toma[]         @relation("TomaPerfilMenor")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// Modelo para tomas de medicamentos
+model Toma {
+  id                    String         @id @default(cuid())
+  medicamentoId         String
+  medicamento           Medication     @relation(fields: [medicamentoId], references: [id])
+  consumidorUsuarioId   String?        // Usuario que tomó el medicamento (adulto o menor con cuenta)
+  consumidorUsuario     User?          @relation("TomaConsumidorUsuario", fields: [consumidorUsuarioId], references: [id])
+  consumidorPerfilId    String?        // Perfil de menor sin cuenta que tomó el medicamento
+  consumidorPerfil      PerfilMenor?   @relation("TomaPerfilMenor", fields: [consumidorPerfilId], references: [id])
+  registranteId         String         // Usuario que registró la toma
+  registrante           User           @relation("TomaRegistrante", fields: [registranteId], references: [id])
+  fechaHora             DateTime       @default(now())
+  grupoId               String
+  grupo                 GrupoFamiliar  @relation(fields: [grupoId], references: [id])
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 }

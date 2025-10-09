@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 // GET /api/preferencias-notificaciones/[userId] - Obtener preferencias de notificaciones de un usuario
 export async function GET(
@@ -55,7 +53,5 @@ export async function GET(
       { error: "Error al obtener preferencias de notificaciones" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

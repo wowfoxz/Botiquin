@@ -1,29 +1,49 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export default function UrlNotifications() {
   const searchParams = useSearchParams();
-  const hasShownNotification = useRef(false);
+  const router = useRouter();
+  const lastProcessedUrl = useRef<string>('');
 
   useEffect(() => {
-    // Solo mostrar notificaciones una vez por carga de página
-    if (hasShownNotification.current) return;
+    const currentUrl = window.location.href;
+    
+    // Solo procesar si la URL ha cambiado
+    if (currentUrl === lastProcessedUrl.current) return;
+    
+    lastProcessedUrl.current = currentUrl;
 
     const success = searchParams.get('success');
     const error = searchParams.get('error');
 
     if (success) {
       toast.success(decodeURIComponent(success));
-      hasShownNotification.current = true;
+      
+      // Limpiar la URL después de mostrar el mensaje
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('success');
+        router.replace(url.pathname);
+        lastProcessedUrl.current = url.pathname; // Actualizar la referencia
+      }, 100);
     }
+    
     if (error) {
       toast.error(decodeURIComponent(error));
-      hasShownNotification.current = true;
+      
+      // Limpiar la URL después de mostrar el mensaje
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('error');
+        router.replace(url.pathname);
+        lastProcessedUrl.current = url.pathname; // Actualizar la referencia
+      }, 100);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   return null;
 }
