@@ -120,14 +120,14 @@ export async function getDrugInfoWithGemini(
 
     1. "principios_activos": El o los principios activos principales y su concentración.
     2. "descripcion_uso": Un resumen breve y claro de para qué se usa el medicamento.
-    3. "recomendaciones_ingesta": Las recomendaciones generales de ingesta, incluyendo DOSIS, FRECUENCIA Y VÍA DE ADMINISTRACIÓN (ej: "1 comprimido cada 8 horas por vía oral"). Si hay varias presentaciones, menciona las más comunes. Sé específico sobre la dosis típica para adultos y niños (espesificando a partir de que edad puede consumir) por separado.
+    3. "recomendaciones_ingesta": Solo dosis específicas, frecuencia y vía de administración. Sin asteriscos, negritas, advertencias ni disclaimers. Máximo 200 palabras. Solo para adultos y niños (especifica edad mínima).
 
     Si no encuentras información, usa "No encontrado" como valor para los campos. No incluyas explicaciones ni texto adicional como \`\`\`json.
     Ejemplo de respuesta:
     {
         "principios_activos": "Omeprazol 20mg",
         "descripcion_uso": "Inhibidor de la bomba de protones indicado para el tratamiento de úlceras gástricas y duodenales, esofagitis por reflujo y otros problemas relacionados con el exceso de acidez gástrica.",
-        "recomendaciones_ingesta": "Tomar 1 cápsula de 20mg una vez al día por la mañana, 30 minutos antes del desayuno, por vía oral. En casos de úlceras duodenales, el tratamiento dura 2-4 semanas."
+        "recomendaciones_ingesta": "Adultos: 1 cápsula de 20mg una vez al día por la mañana, 30 minutos antes del desayuno, por vía oral. Niños mayores de 12 años: 1 cápsula de 20mg una vez al día. Tratamiento de 2-4 semanas para úlceras duodenales."
     }`;
 
   try {
@@ -198,7 +198,8 @@ export async function getDescriptionWithGemini(
 
 export async function getIntakeRecommendationsWithGemini(
   medicineName: string,
-  activeIngredient: string
+  activeIngredient: string,
+  unidad?: string
 ): Promise<SpecificDrugInfoResult> {
   if (!genAI) {
     return {
@@ -209,9 +210,23 @@ export async function getIntakeRecommendationsWithGemini(
 
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-  const prompt = `Eres un experto farmacéutico. Basado en el nombre del medicamento "${medicineName}" y su principio activo "${activeIngredient}", proporciona recomendaciones generales de ingesta, incluyendo DOSIS, FRECUENCIA Y VÍA DE ADMINISTRACIÓN (ej: "1 comprimido cada 8 horas por vía oral"). Si hay varias presentaciones, menciona las más comunes. Sé específico sobre la dosis típica para adultos y niños (espesificando a partir de que edad puede consumir) por separado.
+  const unidadText = unidad ? ` (presentación: ${unidad})` : "";
+  const prompt = `Eres un experto farmacéutico. Basado en el nombre del medicamento "${medicineName}" y su principio activo "${activeIngredient}"${unidadText}, proporciona ÚNICAMENTE las recomendaciones de dosis, frecuencia y vía de administración.
 
-  Responde ÚNICAMENTE con las recomendaciones en texto plano. No incluyas explicaciones ni texto adicional.`;
+FORMATO REQUERIDO:
+- Solo dosis específicas, frecuencia y vía de administración
+- Sin asteriscos, negritas ni advertencias
+- Sin disclaimers ni recomendaciones de consultar médico
+- Máximo 200 palabras
+- Ejemplo: "Adultos: 1 comprimido cada 8 horas por vía oral. Niños mayores de 12 años: 1 comprimido cada 12 horas."
+
+NO incluyas:
+- Advertencias sobre consultar médico
+- Disclaimers sobre dosis individuales
+- Texto como "importante", "consulte", "puede variar"
+- Cualquier texto adicional o explicativo
+
+Responde ÚNICAMENTE con las recomendaciones de dosis en texto plano simple.`;
 
   try {
     const result = await model.generateContent(prompt);

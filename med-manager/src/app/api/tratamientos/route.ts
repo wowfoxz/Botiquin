@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 // GET /api/tratamientos - Obtener todos los tratamientos (opcionalmente filtrar por userId)
 export async function GET(request: Request) {
@@ -25,8 +23,6 @@ export async function GET(request: Request) {
       { error: "Error al obtener tratamientos" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -126,7 +122,5 @@ export async function POST(request: Request) {
       { error: "Error al crear tratamiento" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

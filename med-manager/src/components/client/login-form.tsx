@@ -6,24 +6,37 @@ import { loginUser } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Image from 'next/image';
 import { Cardio } from 'ldrs/react';
 import 'ldrs/react/Cardio.css';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, type LoginFormData } from '@/lib/validations';
 
 export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
     // Limpiar error anterior
     setError(null);
     setIsLoading(true);
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
     try {
+      // Crear FormData para mantener compatibilidad con la acción del servidor
+      const formData = new FormData();
+      formData.append('email', data.email);
+      formData.append('password', data.password);
+
       // Llamar a la acción del servidor para iniciar sesión
       await loginUser(formData);
 
@@ -83,43 +96,55 @@ export default function LoginForm() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Correo Electrónico
-                </label>
-                <Input
-                  id="email"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
                   name="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  required
-                  disabled={isLoading}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo Electrónico</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="tu@email.com"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Contraseña
-                </label>
-                <Input
-                  id="password"
+                <FormField
+                  control={form.control}
                   name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                Ingresar
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  Ingresar
+                </Button>
+              </form>
+            </Form>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2">

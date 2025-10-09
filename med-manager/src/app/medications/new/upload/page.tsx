@@ -163,12 +163,15 @@ export default function UploadPage() {
 
     try {
       const pureBase64 = imageBase64.split(',')[1];
-      // No necesitamos await aquí ya que processUploadedImage manejará la redirección
-      processUploadedImage(pureBase64, file.type);
-      // Si llegamos aquí, significa que processUploadedImage no redirigió,
-      // lo cual podría indicar un problema
-    } catch (err) {
-      // This catch block is a safeguard for unexpected client-side errors.
+      // Usar await para esperar la respuesta del servidor
+      await processUploadedImage(pureBase64, file.type);
+    } catch (err: any) {
+      // Verificar si es una redirección de Next.js (comportamiento normal)
+      if (err?.digest?.includes('NEXT_REDIRECT')) {
+        // Es una redirección normal, no un error real
+        return;
+      }
+      // Solo manejar errores reales
       setError('Ocurrió un error inesperado al enviar la imagen.');
       console.error(err);
     }

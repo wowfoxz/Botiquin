@@ -89,31 +89,67 @@ export async function processUploadedImage(
 export async function registerUser(formData: FormData) {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
+  const dni = formData.get("dni") as string;
+  const fechaNacimiento = formData.get("fechaNacimiento") as string;
   const password = formData.get("password") as string;
+  const grupoNombre = formData.get("grupoNombre") as string;
 
-  if (!name || !email || !password) {
+  if (!name || !email || !dni || !fechaNacimiento || !password || !grupoNombre) {
     throw new Error("Todos los campos son requeridos.");
   }
 
-  const existingUser = await prisma.user.findUnique({
+  // Verificar si el email ya existe
+  const existingUserByEmail = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (existingUser) {
+  if (existingUserByEmail) {
     throw new Error("El correo electrónico ya está en uso.");
+  }
+
+  // Verificar si el DNI ya existe
+  const existingUserByDni = await prisma.user.findUnique({
+    where: { dni },
+  });
+
+  if (existingUserByDni) {
+    throw new Error("El DNI ya está registrado en el sistema.");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const newUser = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
+  // Crear el grupo familiar y el usuario en una transacción
+  const result = await prisma.$transaction(async (tx) => {
+    // Primero crear el usuario sin grupo
+    const newUser = await tx.user.create({
+      data: {
+        name,
+        email,
+        dni,
+        fechaNacimiento: new Date(fechaNacimiento),
+        password: hashedPassword,
+        rol: "ADULTO",
+      },
+    });
+
+    // Luego crear el grupo familiar con el usuario como creador
+    const grupo = await tx.grupoFamiliar.create({
+      data: {
+        nombre: grupoNombre,
+        creadorId: newUser.id,
+      },
+    });
+
+    // Finalmente actualizar el usuario con el grupo
+    const updatedUser = await tx.user.update({
+      where: { id: newUser.id },
+      data: { grupoId: grupo.id },
+    });
+
+    return updatedUser;
   });
 
-  await createSession(newUser.id);
+  await createSession(result.id);
   redirect("/botiquin");
 }
 
@@ -395,4 +431,285 @@ export async function updateArchivedMedication(formData: FormData) {
 
   revalidatePath("/botiquin");
   revalidatePath("/medications/archived");
+}
+
+// Acciones para gestión del grupo familiar
+
+export async function agregarAdultoAlGrupo(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const dni = formData.get("dni") as string;
+  const fechaNacimiento = formData.get("fechaNacimiento") as string;
+
+  if (!name || !email || !dni || !fechaNacimiento) {
+    throw new Error("Todos los campos son requeridos.");
+  }
+
+  // Obtener el grupo del usuario actual
+  const usuarioActual = await prisma.user.findUnique({
+    where: { id: session.userId },
+    include: { grupo: true },
+  });
+
+  if (!usuarioActual?.grupo) {
+    throw new Error("Usuario no pertenece a ningún grupo familiar.");
+  }
+
+  // Verificar si el email ya existe
+  const existingUserByEmail = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUserByEmail) {
+    throw new Error("El correo electrónico ya está en uso.");
+  }
+
+  // Verificar si el DNI ya existe
+  const existingUserByDni = await prisma.user.findUnique({
+    where: { dni },
+  });
+
+  if (existingUserByDni) {
+    throw new Error("El DNI ya está registrado en el sistema.");
+  }
+
+  const hashedPassword = await bcrypt.hash(dni, 10); // Contraseña por defecto es el DNI
+
+  await prisma.user.create({
+    data: {
+      name,
+      email,
+      dni,
+      fechaNacimiento: new Date(fechaNacimiento),
+      password: hashedPassword,
+      rol: "ADULTO",
+      grupoId: usuarioActual.grupo.id,
+    },
+  });
+
+  revalidatePath("/grupo-familiar");
+  redirect("/grupo-familiar?success=Adulto agregado exitosamente");
+}
+
+export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const dni = formData.get("dni") as string;
+  const fechaNacimiento = formData.get("fechaNacimiento") as string;
+
+  if (!name || !email || !dni || !fechaNacimiento) {
+    throw new Error("Todos los campos son requeridos.");
+  }
+
+  // Obtener el grupo del usuario actual
+  const usuarioActual = await prisma.user.findUnique({
+    where: { id: session.userId },
+    include: { grupo: true },
+  });
+
+  if (!usuarioActual?.grupo) {
+    throw new Error("Usuario no pertenece a ningún grupo familiar.");
+  }
+
+  // Verificar si el email ya existe
+  const existingUserByEmail = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUserByEmail) {
+    throw new Error("El correo electrónico ya está en uso.");
+  }
+
+  // Verificar si el DNI ya existe
+  const existingUserByDni = await prisma.user.findUnique({
+    where: { dni },
+  });
+
+  if (existingUserByDni) {
+    throw new Error("El DNI ya está registrado en el sistema.");
+  }
+
+  const hashedPassword = await bcrypt.hash(dni, 10); // Contraseña por defecto es el DNI
+
+  await prisma.user.create({
+    data: {
+      name,
+      email,
+      dni,
+      fechaNacimiento: new Date(fechaNacimiento),
+      password: hashedPassword,
+      rol: "MENOR",
+      grupoId: usuarioActual.grupo.id,
+    },
+  });
+
+  revalidatePath("/grupo-familiar");
+  redirect("/grupo-familiar?success=Menor con cuenta agregado exitosamente");
+}
+
+export async function agregarPerfilMenorAlGrupo(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const name = formData.get("name") as string;
+  const dni = formData.get("dni") as string;
+  const fechaNacimiento = formData.get("fechaNacimiento") as string;
+
+  if (!name || !dni || !fechaNacimiento) {
+    throw new Error("Todos los campos son requeridos.");
+  }
+
+  // Obtener el grupo del usuario actual
+  const usuarioActual = await prisma.user.findUnique({
+    where: { id: session.userId },
+    include: { grupo: true },
+  });
+
+  if (!usuarioActual?.grupo) {
+    throw new Error("Usuario no pertenece a ningún grupo familiar.");
+  }
+
+  // Verificar si el DNI ya existe en usuarios o perfiles
+  const existingUserByDni = await prisma.user.findUnique({
+    where: { dni },
+  });
+
+  if (existingUserByDni) {
+    throw new Error("El DNI ya está registrado en el sistema.");
+  }
+
+  const existingPerfilByDni = await prisma.perfilMenor.findUnique({
+    where: { dni },
+  });
+
+  if (existingPerfilByDni) {
+    throw new Error("El DNI ya está registrado en el sistema.");
+  }
+
+  await prisma.perfilMenor.create({
+    data: {
+      nombre: name,
+      dni,
+      fechaNacimiento: new Date(fechaNacimiento),
+      grupoId: usuarioActual.grupo.id,
+    },
+  });
+
+  revalidatePath("/grupo-familiar");
+  redirect("/grupo-familiar?success=Perfil de menor agregado exitosamente");
+}
+
+export async function registrarTomaMedicamento(formData: FormData) {
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("No autenticado. Inicie sesión para continuar.");
+  }
+
+  const medicamentoId = formData.get("medicamentoId") as string;
+  const consumidorTipo = formData.get("consumidorTipo") as string;
+  const consumidorId = formData.get("consumidorId") as string;
+  const fechaHora = formData.get("fechaHora") as string;
+
+  if (!medicamentoId || !consumidorTipo || !consumidorId || !fechaHora) {
+    throw new Error("Todos los campos son requeridos.");
+  }
+
+  // Obtener el grupo del usuario actual
+  const usuarioActual = await prisma.user.findUnique({
+    where: { id: session.userId },
+    include: { grupo: true },
+  });
+
+  if (!usuarioActual?.grupo) {
+    throw new Error("Usuario no pertenece a ningún grupo familiar.");
+  }
+
+  // Verificar que el medicamento pertenece al grupo
+  const medicamento = await prisma.medication.findFirst({
+    where: {
+      id: medicamentoId,
+      user: {
+        grupoId: usuarioActual.grupo.id,
+      },
+    },
+  });
+
+  if (!medicamento) {
+    throw new Error("Medicamento no encontrado o no pertenece al grupo familiar.");
+  }
+
+  // Crear la toma y actualizar la cantidad del medicamento en una transacción
+  await prisma.$transaction(async (tx) => {
+    // Crear la toma según el tipo de consumidor
+    if (consumidorTipo === "usuario") {
+      // Verificar que el usuario consumidor pertenece al grupo
+      const consumidorUsuario = await tx.user.findFirst({
+        where: {
+          id: consumidorId,
+          grupoId: usuarioActual.grupo.id,
+        },
+      });
+
+      if (!consumidorUsuario) {
+        throw new Error("Usuario consumidor no encontrado o no pertenece al grupo familiar.");
+      }
+
+      await tx.toma.create({
+        data: {
+          medicamentoId,
+          consumidorUsuarioId: consumidorId,
+          registranteId: session.userId,
+          fechaHora: new Date(fechaHora),
+          grupoId: usuarioActual.grupo.id,
+        },
+      });
+    } else if (consumidorTipo === "perfil") {
+      // Verificar que el perfil consumidor pertenece al grupo
+      const consumidorPerfil = await tx.perfilMenor.findFirst({
+        where: {
+          id: consumidorId,
+          grupoId: usuarioActual.grupo.id,
+        },
+      });
+
+      if (!consumidorPerfil) {
+        throw new Error("Perfil consumidor no encontrado o no pertenece al grupo familiar.");
+      }
+
+      await tx.toma.create({
+        data: {
+          medicamentoId,
+          consumidorPerfilId: consumidorId,
+          registranteId: session.userId,
+          fechaHora: new Date(fechaHora),
+          grupoId: usuarioActual.grupo.id,
+        },
+      });
+    }
+
+    // Actualizar la cantidad del medicamento (decrementar en 1)
+    await tx.medication.update({
+      where: { id: medicamentoId },
+      data: {
+        currentQuantity: {
+          decrement: 1,
+        },
+      },
+    });
+  });
+
+  revalidatePath("/botiquin");
+  redirect("/botiquin?success=Toma registrada exitosamente");
 }

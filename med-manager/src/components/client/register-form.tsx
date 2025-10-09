@@ -6,24 +6,45 @@ import { registerUser } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Image from 'next/image';
 import { Cardio } from "ldrs/react";
 import 'ldrs/react/Cardio.css';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema, type RegisterFormData } from '@/lib/validations';
 
 export default function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      dni: '',
+      fechaNacimiento: '',
+      password: '',
+      grupoNombre: '',
+    },
+  });
+
+  const onSubmit = async (data: RegisterFormData) => {
     // Limpiar error anterior
     setError(null);
     setIsLoading(true);
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
     try {
+      // Crear FormData para mantener compatibilidad con la acción del servidor
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('dni', data.dni);
+      formData.append('fechaNacimiento', data.fechaNacimiento);
+      formData.append('password', data.password);
+      formData.append('grupoNombre', data.grupoNombre);
+
       // Llamar a la acción del servidor para registrar al usuario
       await registerUser(formData);
 
@@ -64,61 +85,137 @@ export default function RegisterForm() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Nombre
-                </label>
-                <Input
-                  id="name"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
                   name="name"
-                  type="text"
-                  placeholder="Tu nombre completo"
-                  required
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Tu nombre completo"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Correo Electrónico
-                </label>
-                <Input
-                  id="email"
+                <FormField
+                  control={form.control}
                   name="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  required
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo Electrónico</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="tu@email.com"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Contraseña
-                </label>
-                <Input
-                  id="password"
+                <FormField
+                  control={form.control}
+                  name="dni"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DNI</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="12345678"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fechaNacimiento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de Nacimiento</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <Cardio size={20} stroke={3} speed={1.5} color="var(--color-info)" />
-                    <span>Registrando...</span>
-                  </div>
-                ) : (
-                  'Registrarse'
-                )}
-              </Button>
-            </form>
+                <FormField
+                  control={form.control}
+                  name="grupoNombre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre del Grupo Familiar</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Familia García"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Cardio size={20} stroke={3} speed={1.5} color="var(--color-info)" />
+                      <span>Registrando...</span>
+                    </div>
+                  ) : (
+                    'Registrarse'
+                  )}
+                </Button>
+              </form>
+            </Form>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2">

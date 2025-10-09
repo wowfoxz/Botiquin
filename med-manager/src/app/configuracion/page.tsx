@@ -1,11 +1,5 @@
-import { updateNotificationSettings } from '@/app/actions';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decrypt } from '@/lib/session';
@@ -17,6 +11,7 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import UrlNotifications from "@/components/url-notifications";
+import NotificationSettingsForm from './components/NotificationSettingsForm';
 
 export default async function SettingsPage() {
   // Verificar si el usuario está autenticado
@@ -70,54 +65,10 @@ export default async function SettingsPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configuración</h1>
           </div>
 
-          <Card className="shadow-sm border border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-xl md:text-2xl font-bold text-foreground">Notificaciones</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Configura cuándo deseas recibir alertas sobre tus medicamentos
-              </CardDescription>
-            </CardHeader>
-
-            <form action={updateNotificationSettings}>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="daysBeforeExpiration" className="text-foreground">
-                    Avisar de vencimiento (días antes)
-                  </Label>
-                  <Input
-                    id="daysBeforeExpiration"
-                    name="daysBeforeExpiration"
-                    type="number"
-                    min="1"
-                    max="365"
-                    defaultValue={daysBeforeExpiration}
-                    className="bg-background border-input"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="lowStockThreshold" className="text-foreground">
-                    Avisar de stock bajo (cantidad)
-                  </Label>
-                  <Input
-                    id="lowStockThreshold"
-                    name="lowStockThreshold"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    defaultValue={lowStockThreshold}
-                    className="bg-background border-input"
-                  />
-                </div>
-              </CardContent>
-
-              <CardFooter>
-                <Button type="submit" className="w-full md:w-auto">
-                  Guardar Cambios
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
+          <NotificationSettingsForm 
+            daysBeforeExpiration={daysBeforeExpiration}
+            lowStockThreshold={lowStockThreshold}
+          />
         </div>
       </main>
     </AuthWrapper>
