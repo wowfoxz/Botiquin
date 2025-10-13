@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
       name: string;
       tipo: "usuario" | "perfil";
       rol?: string;
+      foto?: string;
     }> = [];
 
     // Agregar usuarios del grupo
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         rol: true,
+        foto: true,
       },
     });
 
@@ -44,6 +46,7 @@ export async function GET(request: NextRequest) {
         name: usuario.name || "Sin nombre",
         tipo: "usuario",
         rol: usuario.rol,
+        foto: usuario.foto,
       });
     });
 
@@ -53,6 +56,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         nombre: true,
+        foto: true,
       },
     });
 
@@ -61,6 +65,7 @@ export async function GET(request: NextRequest) {
         id: perfil.id,
         name: perfil.nombre,
         tipo: "perfil",
+        foto: perfil.foto,
       });
     });
 

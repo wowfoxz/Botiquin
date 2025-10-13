@@ -10,7 +10,7 @@ import { Plus, Users, UserCheck, User, Edit } from "lucide-react";
 import Link from "next/link";
 import { eliminarUsuarioGrupo, eliminarPerfilMenor } from "@/app/actions";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
-import { ActionFeedback } from "@/components/ui/action-feedback";
+import UrlNotifications from "@/components/url-notifications";
 import { Cardio } from "ldrs/react";
 import "ldrs/react/Cardio.css";
 import {
@@ -98,7 +98,7 @@ export default function GrupoFamiliarPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <ActionFeedback />
+      <UrlNotifications />
       {/* Breadcrumb */}
       <div className="mb-6">
         <Breadcrumb>
@@ -205,12 +205,18 @@ export default function GrupoFamiliarPage() {
                           description={`¿Estás seguro de que quieres eliminar al usuario "${integrante.name}" del grupo familiar? Esta acción eliminará su cuenta y todos sus datos asociados.`}
                           itemName={integrante.name}
                           onConfirm={async () => {
-                            const formData = new FormData();
-                            formData.append('usuarioId', integrante.id);
-                            formData.append('confirmacion', 'ELIMINAR');
-                            await eliminarUsuarioGrupo(formData);
-                            // Recargar los datos después de eliminar
-                            await fetchData();
+                            try {
+                              const formData = new FormData();
+                              formData.append('usuarioId', integrante.id);
+                              formData.append('confirmacion', 'ELIMINAR');
+                              await eliminarUsuarioGrupo(formData);
+                              // Recargar los datos después de eliminar
+                              await fetchData();
+                            } catch (error) {
+                              console.error('Error al eliminar usuario:', error);
+                              // Recargar los datos de todas formas para asegurar consistencia
+                              await fetchData();
+                            }
                           }}
                         />
                       </div>
@@ -268,12 +274,18 @@ export default function GrupoFamiliarPage() {
                         description={`¿Estás seguro de que quieres eliminar el perfil de "${perfil.nombre}"? Esta acción eliminará el perfil y todos los datos asociados.`}
                         itemName={perfil.nombre}
                         onConfirm={async () => {
-                          const formData = new FormData();
-                          formData.append('perfilId', perfil.id);
-                          formData.append('confirmacion', 'ELIMINAR');
-                          await eliminarPerfilMenor(formData);
-                          // Recargar los datos después de eliminar
-                          await fetchData();
+                          try {
+                            const formData = new FormData();
+                            formData.append('perfilId', perfil.id);
+                            formData.append('confirmacion', 'ELIMINAR');
+                            await eliminarPerfilMenor(formData);
+                            // Recargar los datos después de eliminar
+                            await fetchData();
+                          } catch (error) {
+                            console.error('Error al eliminar perfil:', error);
+                            // Recargar los datos de todas formas para asegurar consistencia
+                            await fetchData();
+                          }
                         }}
                       />
                     </div>

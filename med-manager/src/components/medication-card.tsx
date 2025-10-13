@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import PressButton from '@/components/press-button';
+import RadialAvatarSelector from '@/components/radial-avatar-selector';
 
 type MedicationCardProps = {
   medication: Medication;
@@ -47,6 +49,10 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   const [isUseDialogOpen, setIsUseDialogOpen] = useState(false);
   const [consumidores, setConsumidores] = useState<any[]>([]);
   const [selectedConsumidor, setSelectedConsumidor] = useState<string>('');
+  
+  // Estados para el selector radial
+  const [isRadialSelectorOpen, setIsRadialSelectorOpen] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
 
   // Sincronizar el estado local con los props cuando cambien
   useEffect(() => {
@@ -93,8 +99,10 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     fetchConsumidores();
   }, []);
 
-  const handleUseMedication = async () => {
-    if (!selectedConsumidor) {
+  const handleUseMedication = async (consumidorId?: string) => {
+    const targetConsumidor = consumidorId || selectedConsumidor;
+    
+    if (!targetConsumidor) {
       toast.error('Por favor selecciona quién va a tomar el medicamento');
       return;
     }
@@ -102,9 +110,9 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     try {
       const formData = new FormData();
       formData.append('medicamentoId', id);
-      formData.append('consumidorId', selectedConsumidor);
+      formData.append('consumidorId', targetConsumidor);
       // Determinar el tipo basado en si es usuario o perfil menor
-      const consumidor = consumidores.find(c => c.id === selectedConsumidor);
+      const consumidor = consumidores.find(c => c.id === targetConsumidor);
       const tipo = consumidor?.tipo || 'usuario'; // Por defecto usuario
       formData.append('consumidorTipo', tipo);
       formData.append('fechaHora', new Date().toISOString());
@@ -112,7 +120,10 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       await registrarTomaMedicamento(formData);
       
       setIsUseDialogOpen(false);
+      setIsRadialSelectorOpen(false);
       setSelectedConsumidor('');
+      
+      toast.success(`Toma registrada para ${consumidor?.name}`);
       
       // No hacer router.refresh() aquí porque la acción del servidor ya redirige
       // y el router.refresh() interfiere con la limpieza de URL
@@ -123,6 +134,40 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
         toast.error('Error al registrar la toma');
       }
     }
+  };
+
+  const handlePressButton = (event: React.MouseEvent & { buttonPosition?: { x: number; y: number } }) => {
+    console.log('handlePressButton llamado', { consumidores: consumidores.length, event });
+    
+    if (consumidores.length === 0) {
+      toast.error('No hay miembros del grupo familiar disponibles');
+      return;
+    }
+    
+    // Usar la posición del botón que viene del evento
+    if (event.buttonPosition) {
+      console.log('Usando posición del evento:', event.buttonPosition);
+      setButtonPosition(event.buttonPosition);
+    } else {
+      // Fallback: calcular posición manualmente si no viene en el evento
+      const rect = (event.target as HTMLElement).getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const fallbackPosition = { x: centerX, y: centerY };
+      console.log('Usando posición calculada:', fallbackPosition);
+      setButtonPosition(fallbackPosition);
+    }
+    
+    console.log('Abriendo selector radial...');
+    setIsRadialSelectorOpen(true);
+  };
+
+  const handleRadialSelectorClose = () => {
+    setIsRadialSelectorOpen(false);
+  };
+
+  const handleAvatarSelect = (consumidorId: string) => {
+    handleUseMedication(consumidorId);
   };
 
   const handleUnarchive = async (e: React.FormEvent) => {
@@ -246,60 +291,15 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
               </Badge>
             )}
           </div>
-          <Dialog open={isUseDialogOpen} onOpenChange={setIsUseDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                className="bg-blue-500 hover:bg-blue-600"
-                disabled={quantity <= 0}
-              >
-                Usar
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Registrar Toma de Medicamento</DialogTitle>
-                <DialogDescription>
-                  Selecciona quién va a tomar {commercialName}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="consumidor">Consumidor</Label>
-                  <select
-                    id="consumidor"
-                    value={selectedConsumidor}
-                    onChange={(e) => setSelectedConsumidor(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">Selecciona una persona</option>
-                    {Array.isArray(consumidores) && consumidores.map((consumidor) => (
-                      <option key={consumidor.id} value={consumidor.id}>
-                        {consumidor.name} {consumidor.rol && `(${consumidor.rol})`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsUseDialogOpen(false);
-                      setSelectedConsumidor('');
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleUseMedication}
-                    disabled={!selectedConsumidor}
-                  >
-                    Registrar Toma
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <PressButton
+            onPress={handlePressButton}
+            disabled={quantity <= 0}
+            variant="default"
+            size="sm"
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            Usar
+          </PressButton>
         </div>
 
         <Separator className="my-2" />
@@ -601,6 +601,15 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
           </>
         )}
       </CardFooter>
+      
+      {/* Selector radial de avatares */}
+      <RadialAvatarSelector
+        consumidores={consumidores}
+        onSelect={handleAvatarSelect}
+        isOpen={isRadialSelectorOpen}
+        onClose={handleRadialSelectorClose}
+        buttonPosition={buttonPosition}
+      />
     </Card>
   );
 };

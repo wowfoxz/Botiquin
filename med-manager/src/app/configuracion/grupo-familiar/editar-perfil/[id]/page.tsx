@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, User } from "lucide-react";
 import Link from "next/link";
 import { actualizarPerfilMenor } from "@/app/actions";
-import { ActionFeedback } from "@/components/ui/action-feedback";
+import UrlNotifications from "@/components/url-notifications";
 import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Cardio } from "ldrs/react";
 import "ldrs/react/Cardio.css";
@@ -122,7 +122,7 @@ export default function EditProfilePage({ params }: EditProfilePageProps) {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <ActionFeedback />
+      <UrlNotifications />
       {/* Breadcrumb */}
       <div className="mb-6">
         <Breadcrumb>

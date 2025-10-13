@@ -1226,7 +1226,7 @@ export async function eliminarUsuarioGrupo(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Usuario eliminado exitosamente");
+  return { success: true, message: "Usuario eliminado exitosamente" };
 }
 
 export async function actualizarPerfilMenor(formData: FormData) {
@@ -1335,5 +1335,5 @@ export async function eliminarPerfilMenor(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Perfil eliminado exitosamente");
+  return { success: true, message: "Perfil eliminado exitosamente" };
 }
