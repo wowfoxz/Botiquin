@@ -36,6 +36,43 @@ interface ImageAnalysisResult {
   error?: string;
 }
 
+// Función auxiliar para manejar reintentos con backoff exponencial
+async function ejecutarConReintentos<T>(
+  operacion: () => Promise<T>,
+  maxReintentos: number = 3,
+  delayInicial: number = 1000
+): Promise<T> {
+  let ultimoError: any;
+  
+  for (let intento = 0; intento <= maxReintentos; intento++) {
+    try {
+      return await operacion();
+    } catch (error: any) {
+      ultimoError = error;
+      
+      // Verificar si es un error recuperable (503, 429, timeout)
+      const esErrorRecuperable = 
+        error?.status === 503 || 
+        error?.status === 429 ||
+        error?.message?.includes('overloaded') ||
+        error?.message?.includes('timeout') ||
+        error?.message?.includes('network');
+      
+      if (!esErrorRecuperable || intento === maxReintentos) {
+        throw error;
+      }
+      
+      // Calcular delay con backoff exponencial
+      const delay = delayInicial * Math.pow(2, intento);
+      console.log(`Intento ${intento + 1} falló, reintentando en ${delay}ms...`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw ultimoError;
+}
+
 export async function analyzeImageWithGemini(
   imageBuffer: Buffer,
   mimeType: string
@@ -49,6 +86,7 @@ export async function analyzeImageWithGemini(
       principio_activo: null,
     };
   }
+  
   // Usar el modelo multimodal actualizado
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
@@ -72,25 +110,41 @@ export async function analyzeImageWithGemini(
   const imagePart = fileToGenerativePart(imageBuffer, mimeType);
 
   try {
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    let text = response.text();
+    const resultado = await ejecutarConReintentos(async () => {
+      const result = await model.generateContent([prompt, imagePart]);
+      const response = await result.response;
+      let text = response.text();
 
-    // Limpiar la respuesta de cualquier formato de código markdown
-    text = text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+      // Limpiar la respuesta de cualquier formato de código markdown
+      text = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-    return JSON.parse(text);
-  } catch (error) {
+      return JSON.parse(text);
+    });
+
+    return resultado;
+  } catch (error: any) {
     console.error("Error al analizar la imagen con Gemini:", error);
+    
+    // Determinar el mensaje de error apropiado
+    let mensajeError = "No se pudo analizar la imagen.";
+    
+    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+      mensajeError = "El servicio de análisis de imágenes está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
+    } else if (error?.status === 429) {
+      mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
+    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+      mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
+    }
+    
     return {
       nombre_comercial: null,
       cantidad: null,
       unidad: null,
       principio_activo: null,
-      error: "No se pudo analizar la imagen.",
+      error: mensajeError,
     };
   }
 }
@@ -113,6 +167,7 @@ export async function getDrugInfoWithGemini(
       recomendaciones_ingesta: "",
     };
   }
+  
   // Usar el modelo de texto actualizado
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
@@ -131,27 +186,43 @@ export async function getDrugInfoWithGemini(
     }`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    const resultado = await ejecutarConReintentos(async () => {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text();
 
-    // Limpiar la respuesta de cualquier formato de código markdown
-    text = text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+      // Limpiar la respuesta de cualquier formato de código markdown
+      text = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-    return JSON.parse(text);
-  } catch (error) {
+      return JSON.parse(text);
+    });
+
+    return resultado;
+  } catch (error: any) {
     console.error(
       "Error al obtener información del medicamento con Gemini:",
       error
     );
+    
+    // Determinar el mensaje de error apropiado
+    let mensajeError = "No se pudo obtener la información del medicamento.";
+    
+    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+      mensajeError = "El servicio de información farmacéutica está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
+    } else if (error?.status === 429) {
+      mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
+    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+      mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
+    }
+    
     return {
       principios_activos: "No encontrado",
       descripcion_uso: "No encontrado",
       recomendaciones_ingesta: "Consultar prospecto",
-      error: "No se pudo obtener la información del medicamento.",
+      error: mensajeError,
     };
   }
 }
@@ -179,19 +250,35 @@ export async function getDescriptionWithGemini(
   Responde ÚNICAMENTE con la descripción en texto plano. No incluyas explicaciones ni texto adicional.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text().trim();
+    const resultado = await ejecutarConReintentos(async () => {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text().trim();
 
-    return { info: text };
-  } catch (error) {
+      return { info: text };
+    });
+
+    return resultado;
+  } catch (error: any) {
     console.error(
       "Error al obtener descripción del medicamento con Gemini:",
       error
     );
+    
+    // Determinar el mensaje de error apropiado
+    let mensajeError = "No se pudo obtener la descripción del medicamento.";
+    
+    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+      mensajeError = "El servicio de información farmacéutica está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
+    } else if (error?.status === 429) {
+      mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
+    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+      mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
+    }
+    
     return {
       info: "No se pudo obtener la descripción del medicamento.",
-      error: "No se pudo obtener la descripción del medicamento.",
+      error: mensajeError,
     };
   }
 }
@@ -229,19 +316,161 @@ NO incluyas:
 Responde ÚNICAMENTE con las recomendaciones de dosis en texto plano simple.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text().trim();
+    const resultado = await ejecutarConReintentos(async () => {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text().trim();
 
-    return { info: text };
-  } catch (error) {
+      return { info: text };
+    });
+
+    return resultado;
+  } catch (error: any) {
     console.error(
       "Error al obtener recomendaciones de ingesta con Gemini:",
       error
     );
+    
+    // Determinar el mensaje de error apropiado
+    let mensajeError = "No se pudo obtener las recomendaciones de ingesta.";
+    
+    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+      mensajeError = "El servicio de información farmacéutica está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
+    } else if (error?.status === 429) {
+      mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
+    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+      mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
+    }
+    
     return {
       info: "Consultar prospecto",
-      error: "No se pudo obtener las recomendaciones de ingesta.",
+      error: mensajeError,
+    };
+  }
+}
+
+interface TreatmentImageAnalysisResult {
+  extractedText: string;
+  aiAnalysis: string;
+  error?: string;
+}
+
+export async function analyzeTreatmentImageWithGemini(
+  imageBuffer: Buffer,
+  mimeType: string,
+  imageType: "receta" | "instrucciones"
+): Promise<TreatmentImageAnalysisResult> {
+  if (!genAI) {
+    return {
+      extractedText: "",
+      aiAnalysis: "",
+      error: "La configuración de la API de IA no está disponible.",
+    };
+  }
+
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = `Eres un experto en reconocimiento de caligrafía médica. Analiza esta imagen de ${imageType === "receta" ? "receta médica" : "instrucciones de medicación"} con máxima precisión.
+
+TIPO DE IMAGEN: ${imageType === "receta" ? "Receta Médica" : "Instrucciones de Medicación"}
+
+TÉCNICAS DE RECONOCIMIENTO:
+- Lee palabra por palabra, letra por letra si es necesario
+- Identifica patrones comunes en caligrafía médica
+- Reconoce abreviaciones médicas (ej: "c/8h" = cada 8 horas, "1c/8h" = 1 comprimido cada 8 horas)
+- Identifica símbolos médicos (+, -, x, /, números, etc.)
+- Distingue entre texto impreso y manuscrito
+
+INFORMACIÓN A EXTRAER:
+
+1. TEXTO EXTRAÍDO COMPLETO:
+   - Transcribe TODO el texto visible, incluyendo:
+   * Encabezados impresos de la receta/clínica
+   * Nombres de medicamentos (tanto impresos como manuscritos)
+   * Dosis y cantidades (números y unidades)
+   * Frecuencias (cada X horas, veces al día)
+   * Duración del tratamiento
+   * Instrucciones especiales del médico
+   * Firmas y sellos
+
+2. ANÁLISIS ESTRUCTURADO:
+   - Lista de medicamentos con dosis exactas
+   - Frecuencia de administración detallada
+   - Duración total del tratamiento
+   - Instrucciones específicas (con/sin comida, horarios, etc.)
+   - Observaciones y recomendaciones del médico
+   - Contraindicaciones o advertencias
+
+IMPORTANTE PARA CALIGRAFÍA MÉDICA:
+- Si la letra es difícil de leer, intenta varias interpretaciones
+- Usa el contexto para inferir palabras (ej: si aparece "cada 8 horas" después de un medicamento)
+- Reconoce abreviaciones comunes: "c/8h", "1c/8h", "2x1", "3x1", "durante 7 días"
+- Si algo es completamente ilegible, usa "[texto ilegible]"
+- Mantén la estructura original del documento
+
+IMPORTANTE: Responde SIEMPRE en ESPAÑOL. Todos los textos deben estar en español.
+
+Responde ÚNICAMENTE con un objeto JSON válido:
+{
+  "extractedText": "texto completo extraído de la imagen tal como aparece",
+  "aiAnalysis": "análisis estructurado y organizado de la información médica extraída EN ESPAÑOL"
+}`;
+
+  const imagePart = fileToGenerativePart(imageBuffer, mimeType);
+
+  try {
+    const resultado = await ejecutarConReintentos(async () => {
+      const result = await model.generateContent([prompt, imagePart]);
+      const response = await result.response;
+      let text = response.text();
+
+      console.log('Respuesta cruda de Gemini:', text);
+
+      // Limpiar la respuesta de cualquier formato de código markdown
+      text = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      try {
+        const parsed = JSON.parse(text);
+        console.log('JSON parseado:', parsed);
+        
+        return {
+          extractedText: String(parsed.extractedText || ""),
+          aiAnalysis: String(parsed.aiAnalysis || ""),
+        };
+      } catch (parseError) {
+        console.error('Error al parsear JSON:', parseError);
+        console.error('Texto que causó el error:', text);
+        
+        // Si falla el parseo, intentar extraer información manualmente
+        return {
+          extractedText: text,
+          aiAnalysis: "Error al procesar el análisis estructurado. Ver texto extraído.",
+        };
+      }
+    });
+
+    return resultado;
+  } catch (error: any) {
+    console.error("Error al analizar imagen de tratamiento con Gemini:", error);
+    
+    // Determinar el mensaje de error apropiado
+    let mensajeError = "No se pudo analizar la imagen.";
+    
+    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+      mensajeError = "El servicio de análisis de imágenes está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
+    } else if (error?.status === 429) {
+      mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
+    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+      mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
+    }
+    
+    return {
+      extractedText: "",
+      aiAnalysis: "",
+      error: mensajeError,
     };
   }
 }

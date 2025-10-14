@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { registrarAccionCRUD, TipoAccion, TipoEntidad, extraerMetadataRequest } from "@/lib/auditoria";
 import { getServerSession } from "@/lib/auth";
@@ -13,7 +13,6 @@ export async function GET(
     const tratamiento = await prisma.treatment.findUnique({
       where: { id: id },
       include: {
-        medication: true,
         user: true,
         notifications: true,
       },
@@ -26,7 +25,44 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(tratamiento);
+    // Obtener medicamentos e imágenes usando SQL raw
+    try {
+      // Obtener medicamentos
+      const medications = await prisma.$queryRaw`
+        SELECT tm.*, 
+               m."commercialName", 
+               m."activeIngredient",
+               m.unit,
+               m.description,
+               m."intakeRecommendations"
+        FROM "TreatmentMedication" tm
+        LEFT JOIN "Medication" m ON tm."medicationId" = m.id
+        WHERE tm."treatmentId" = ${id}
+      ` as any[];
+
+      // Obtener imágenes
+      const images = await prisma.$queryRaw`
+        SELECT *
+        FROM "TreatmentImage"
+        WHERE "treatmentId" = ${id}
+      ` as any[];
+
+      const tratamientoCompleto = {
+        ...tratamiento,
+        medications: medications || [],
+        images: images || [],
+      };
+
+      return NextResponse.json(tratamientoCompleto);
+    } catch (error) {
+      console.error(`Error al obtener datos para tratamiento ${id}:`, error);
+      const tratamientoCompleto = {
+        ...tratamiento,
+        medications: [],
+        images: [],
+      };
+      return NextResponse.json(tratamientoCompleto);
+    }
   } catch (error) {
     console.error("Error al obtener tratamiento:", error);
     return NextResponse.json(
@@ -38,7 +74,7 @@ export async function GET(
 
 // PUT /api/tratamientos/[id] - Actualizar un tratamiento
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -85,39 +121,24 @@ export async function PUT(
       );
     }
 
-    // Preparar datos para actualización
+    // Preparar datos para actualización con la nueva estructura
     const datosUpdate: any = {
       name: body.name,
-      medicationId: body.medicationId,
       patient: body.patient,
-      dosage: body.dosage,
-      isActive: body.isActive,
-      endDate: endDate,
+      patientId: body.patientId,
+      patientType: body.patientType,
+      symptoms: body.symptoms,
+      isActive: body.isActive !== undefined ? body.isActive : undefined,
     };
-
-    if (body.frequencyHours) {
-      datosUpdate.frequencyHours = parseInt(body.frequencyHours);
-    }
-    if (body.durationDays) {
-      datosUpdate.durationDays = parseInt(body.durationDays);
-    }
-    if (body.startAtSpecificTime !== undefined) {
-      datosUpdate.startAtSpecificTime = body.startAtSpecificTime;
-    }
-    if (body.specificStartTime !== undefined) {
-      datosUpdate.specificStartTime = body.specificStartTime
-        ? new Date(
-            new Date(body.specificStartTime).getTime() -
-              new Date(body.specificStartTime).getTimezoneOffset() * 60000
-          )
-        : null;
-    }
 
     // Actualizar el tratamiento
     const tratamiento = await prisma.treatment.update({
       where: { id: id },
       data: datosUpdate,
     });
+
+    // TODO: Implementar actualización de medicamentos e imágenes
+    // Por ahora solo actualizamos los campos básicos del tratamiento
 
     // Registrar actualización de tratamiento
     const metadata = extraerMetadataRequest(request);
@@ -128,19 +149,15 @@ export async function PUT(
       id,
       {
         name: tratamientoExistente.name,
-        frequencyHours: tratamientoExistente.frequencyHours,
-        durationDays: tratamientoExistente.durationDays,
         patient: tratamientoExistente.patient,
-        dosage: tratamientoExistente.dosage,
         isActive: tratamientoExistente.isActive,
       },
       {
         name: tratamiento.name,
-        frequencyHours: tratamiento.frequencyHours,
-        durationDays: tratamiento.durationDays,
         patient: tratamiento.patient,
-        dosage: tratamiento.dosage,
         isActive: tratamiento.isActive,
+        medicationsCount: body.medications?.length || 0,
+        imagesCount: body.images?.length || 0,
       },
       metadata
     );
@@ -157,7 +174,7 @@ export async function PUT(
 
 // DELETE /api/tratamientos/[id] - Eliminar un tratamiento
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -175,10 +192,12 @@ export async function DELETE(
         id: true,
         name: true,
         patient: true,
-        dosage: true,
-        frequencyHours: true,
-        durationDays: true,
         isActive: true,
+        startDate: true,
+        endDate: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -189,12 +208,24 @@ export async function DELETE(
       );
     }
 
-    // Eliminar notificaciones asociadas primero
+    // Eliminar relaciones asociadas en orden
+    // 1. Eliminar notificaciones
     await prisma.notification.deleteMany({
       where: { treatmentId: id },
     });
 
-    // Eliminar el tratamiento
+    // TODO: Eliminar medicamentos e imágenes cuando los modelos estén disponibles
+    // 2. Eliminar medicamentos del tratamiento
+    // await prisma.treatmentMedication.deleteMany({
+    //   where: { treatmentId: id },
+    // });
+
+    // 3. Eliminar imágenes del tratamiento
+    // await prisma.treatmentImage.deleteMany({
+    //   where: { treatmentId: id },
+    // });
+
+    // 4. Eliminar el tratamiento
     await prisma.treatment.delete({
       where: { id: id },
     });

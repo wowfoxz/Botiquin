@@ -156,11 +156,7 @@ export default function TratamientosPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Gestión de Tratamientos</h1>
         {activeTab !== "notificaciones" && (
-          <CrearTratamientoDialog
-            onCreate={createTratamiento}
-            medicinas={medicinas}
-            userId={user.id}
-          />
+          <CrearTratamientoDialog />
         )}
       </div>
 
@@ -173,7 +169,6 @@ export default function TratamientosPage() {
             userId={user.id}
             onUpdate={updateTratamiento}
             onFinalizar={(id) => updateTratamiento(id, { isActive: false })}
-            obtenerNombreMedicamento={obtenerNombreMedicamento}
           />
         )}
 
@@ -183,7 +178,6 @@ export default function TratamientosPage() {
             medicinas={medicinas}
             userId={user.id}
             onDelete={deleteTratamiento}
-            obtenerNombreMedicamento={obtenerNombreMedicamento}
           />
         )}
 
@@ -199,19 +193,27 @@ export default function TratamientosPage() {
 
       {/* Dock de navegación */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <Dock className="items-end pb-3">
+        <Dock 
+          className="items-end pb-3" 
+          panelHeight={64} 
+          magnification={72} 
+          distance={120}
+          spring={{ mass: 0.1, stiffness: 150, damping: 20 }}
+        >
           {dockItems.map((item) => (
             <DockItem
               key={item.id}
-              className={`aspect-square rounded-full bg-primary dark:bg-primary cursor-pointer transition-all duration-200 flex items-center justify-center ${
-                activeTab === item.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-info hover:text-accent-foreground text-neutral-foreground dark:text-neutral-foreground'
-              }`}
+              className="cursor-pointer"
               onClick={() => setActiveTab(item.id)}
             >
               <DockLabel>{item.title}</DockLabel>
-              <DockIcon className={activeTab === item.id ? 'text-primary-foreground' : 'text-neutral-foreground dark:text-neutral-foreground'}>{item.icon}</DockIcon>
+              <DockIcon className={`aspect-square rounded-full flex items-center justify-center ${
+                activeTab === item.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}>
+                {item.icon}
+              </DockIcon>
             </DockItem>
           ))}
         </Dock>

@@ -20,22 +20,46 @@ export type Medicamento = {
 export type Tratamiento = {
   id: string;
   name: string;
-  medicationId: string;
-  frequencyHours: number;
-  durationDays: number;
-  patient: string;
+  patient: string; // Nombre del paciente (texto libre para compatibilidad)
+  patientId?: string; // ID del paciente del grupo familiar (opcional)
+  patientType?: string; // "usuario" o "perfil" - tipo de paciente seleccionado
+  symptoms?: string; // Síntomas del paciente (opcional)
   startDate: Date;
   endDate: Date;
   isActive: boolean;
-  dosage: string;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
-  medication?: Medicamento;
-  // Nuevo campo para especificar si el tratamiento comienza en una hora específica
-  startAtSpecificTime?: boolean;
-  // Nuevo campo para la hora específica de inicio
+  medications?: TratamientoMedicamento[]; // Medicamentos del tratamiento
+  images?: TratamientoImagen[]; // Imágenes del tratamiento
+};
+
+export type TratamientoMedicamento = {
+  id: string;
+  treatmentId: string;
+  medicationId: string;
+  frequencyHours: number;
+  durationDays: number;
+  dosage: string;
+  startDate: Date;
+  endDate: Date;
+  startAtSpecificTime: boolean;
   specificStartTime?: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  medication?: Medicamento;
+};
+
+export type TratamientoImagen = {
+  id: string;
+  treatmentId: string;
+  imageUrl: string;
+  imageType: "receta" | "instrucciones";
+  extractedText?: string;
+  aiAnalysis?: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type Notificacion = {

@@ -11,13 +11,52 @@ export async function GET(request: Request) {
     const tratamientos = await prisma.treatment.findMany({
       where: userId ? { userId } : {},
       include: {
-        medication: true,
         user: true,
         notifications: true,
       },
     });
 
-    return NextResponse.json(tratamientos);
+    // Obtener medicamentos e imágenes para cada tratamiento usando SQL raw
+    const tratamientosCompletos = await Promise.all(
+      tratamientos.map(async (tratamiento) => {
+        try {
+          // Obtener medicamentos
+          const medications = await prisma.$queryRaw`
+            SELECT tm.*, 
+                   m."commercialName", 
+                   m."activeIngredient",
+                   m.unit,
+                   m.description,
+                   m."intakeRecommendations"
+            FROM "TreatmentMedication" tm
+            LEFT JOIN "Medication" m ON tm."medicationId" = m.id
+            WHERE tm."treatmentId" = ${tratamiento.id}
+          ` as any[];
+
+          // Obtener imágenes
+          const images = await prisma.$queryRaw`
+            SELECT *
+            FROM "TreatmentImage"
+            WHERE "treatmentId" = ${tratamiento.id}
+          ` as any[];
+
+          return {
+            ...tratamiento,
+            medications: medications || [],
+            images: images || [],
+          };
+        } catch (error) {
+          console.error(`Error al obtener datos para tratamiento ${tratamiento.id}:`, error);
+          return {
+            ...tratamiento,
+            medications: [],
+            images: [],
+          };
+        }
+      })
+    );
+
+    return NextResponse.json(tratamientosCompletos);
   } catch (error) {
     console.error("Error al obtener tratamientos:", error);
     return NextResponse.json(
@@ -35,11 +74,10 @@ export async function POST(request: NextRequest) {
     // Validar datos requeridos
     if (
       !body.name ||
-      !body.medicationId ||
-      !body.frequencyHours ||
-      !body.durationDays ||
       !body.patient ||
-      !body.dosage ||
+      !body.medications ||
+      !Array.isArray(body.medications) ||
+      body.medications.length === 0 ||
       !body.userId
     ) {
       return NextResponse.json(
@@ -60,61 +98,108 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar que la medicina pertenezca al usuario
-    const medication = await prisma.medication.findUnique({
-      where: { id: body.medicationId },
-    });
+    // Validar medicamentos
+    for (const medication of body.medications) {
+      if (!medication.medicationId || !medication.dosage || !medication.frequencyHours || !medication.durationDays) {
+        return NextResponse.json(
+          { error: "Datos de medicamento incompletos" },
+          { status: 400 }
+        );
+      }
 
-    if (!medication || medication.userId !== body.userId) {
-      return NextResponse.json(
-        { error: "Medicamento no válido" },
-        { status: 400 }
-      );
+      // Verificar que la medicina exista
+      const med = await prisma.medication.findUnique({
+        where: { id: medication.medicationId },
+      });
+
+      if (!med) {
+        return NextResponse.json(
+          { error: `Medicamento no encontrado: ${medication.medicationId}` },
+          { status: 400 }
+        );
+      }
     }
 
-    // Determinar fecha de inicio y corregir por zona horaria
-    let startDate = new Date();
-    // Ajustar startDate a la zona horaria local (normalizar quitando el offset)
-    startDate = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000);
+    // Calcular fechas de inicio y fin del tratamiento general
+    const now = new Date();
+    const earliestStart = now;
+    let latestEnd = now;
 
-    // Si se proporcionó una hora específica, parsearla y ajustarla también
-    let specificStartDate: Date | null = null;
-    if (body.startAtSpecificTime && body.specificStartTime) {
-      // Normalizar usando el offset de la fecha proporcionada para manejar correctamente zonas horarias
-      specificStartDate = new Date(
-        new Date(body.specificStartTime).getTime() -
-          new Date(body.specificStartTime).getTimezoneOffset() * 60000
-      );
-      startDate = specificStartDate;
-    }
-
-    // Calcular fecha de finalización (manejo de zonas horarias)
-    // Creamos una copia de startDate y sumamos días usando UTC para evitar efectos de offset/DST
-    const endDate = new Date(startDate);
-    endDate.setUTCDate(endDate.getUTCDate() + parseInt(body.durationDays));
-
-    // Crear el tratamiento
+    // Crear el tratamiento principal
     const tratamiento = await prisma.treatment.create({
       data: {
         name: body.name,
-        medicationId: body.medicationId,
-        frequencyHours: parseInt(body.frequencyHours),
-        durationDays: parseInt(body.durationDays),
         patient: body.patient,
-        startDate: startDate,
-        endDate: endDate,
-        dosage: body.dosage,
+        patientId: body.patientId || null,
+        patientType: body.patientType || null,
+        symptoms: body.symptoms || null,
+        startDate: earliestStart,
+        endDate: latestEnd, // Se actualizará después
         userId: body.userId,
         isActive: true,
-        startAtSpecificTime: body.startAtSpecificTime || false,
-        specificStartTime: body.specificStartTime
-          ? new Date(
-              new Date(body.specificStartTime).getTime() -
-                new Date(body.specificStartTime).getTimezoneOffset() * 60000
-            )
-          : null,
       },
     });
+
+    // Crear medicamentos del tratamiento
+    const treatmentMedications = [];
+    for (const medicationData of body.medications) {
+      // Determinar fecha de inicio para este medicamento
+      let medicationStartDate = now;
+      if (medicationData.startOption === "specific" && medicationData.specificDate) {
+        medicationStartDate = new Date(medicationData.specificDate);
+      }
+
+      // Calcular fecha de finalización para este medicamento
+      const medicationEndDate = new Date(medicationStartDate);
+      medicationEndDate.setUTCDate(medicationEndDate.getUTCDate() + parseInt(medicationData.durationDays));
+
+      // Actualizar fecha de finalización del tratamiento si es necesario
+      if (medicationEndDate > latestEnd) {
+        latestEnd = medicationEndDate;
+      }
+
+      const treatmentMedication = await prisma.treatmentMedication.create({
+        data: {
+          treatmentId: tratamiento.id,
+          medicationId: medicationData.medicationId,
+          frequencyHours: parseInt(medicationData.frequencyHours),
+          durationDays: parseInt(medicationData.durationDays),
+          dosage: medicationData.dosage,
+          startDate: medicationStartDate,
+          endDate: medicationEndDate,
+          startAtSpecificTime: medicationData.startOption === "specific",
+          specificStartTime: medicationData.startOption === "specific" && medicationData.specificDate
+            ? new Date(medicationData.specificDate)
+            : null,
+          isActive: true,
+        },
+      });
+
+      treatmentMedications.push(treatmentMedication);
+    }
+
+    // Actualizar fecha de finalización del tratamiento
+    await prisma.treatment.update({
+      where: { id: tratamiento.id },
+      data: { endDate: latestEnd },
+    });
+
+    // Procesar imágenes si las hay
+    if (body.images && Array.isArray(body.images)) {
+      for (const imageData of body.images) {
+        // Aquí se procesarían las imágenes y se almacenarían
+        // Por ahora solo creamos el registro básico
+        await prisma.treatmentImage.create({
+          data: {
+            treatmentId: tratamiento.id,
+            imageUrl: imageData.imageUrl || "",
+            imageType: imageData.imageType,
+            extractedText: imageData.extractedText || null,
+            aiAnalysis: imageData.aiAnalysis || null,
+          },
+        });
+      }
+    }
 
     // Registrar creación de tratamiento
     const metadata = extraerMetadataRequest(request);
@@ -126,17 +211,28 @@ export async function POST(request: NextRequest) {
       undefined,
       {
         name: body.name,
-        medicationId: body.medicationId,
-        frequencyHours: parseInt(body.frequencyHours),
-        durationDays: parseInt(body.durationDays),
         patient: body.patient,
-        dosage: body.dosage,
+        medicationsCount: body.medications.length,
+        imagesCount: body.images?.length || 0,
         isActive: true,
       },
       metadata
     );
 
-    return NextResponse.json(tratamiento);
+    // Obtener el tratamiento completo con relaciones
+    const completeTreatment = await prisma.treatment.findUnique({
+      where: { id: tratamiento.id },
+      include: {
+        medications: {
+          include: {
+            medication: true,
+          },
+        },
+        images: true,
+      },
+    });
+
+    return NextResponse.json(completeTreatment);
   } catch (error) {
     console.error("Error al crear tratamiento:", error);
     return NextResponse.json(

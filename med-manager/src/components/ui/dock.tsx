@@ -89,7 +89,7 @@ function useDock() {
 function Dock({
   children,
   className,
-  spring = { mass: 0.001, stiffness: 150, damping: 12 },
+  spring = { mass: 0.1, stiffness: 150, damping: 20 },
   magnification = DEFAULT_MAGNIFICATION,
   distance = DEFAULT_DISTANCE,
   panelHeight = DEFAULT_PANEL_HEIGHT,
@@ -122,7 +122,7 @@ function Dock({
           mouseX.set(Infinity);
         }}
         className={cn(
-          'mx-auto flex w-fit gap-4 rounded-2xl bg-gray-50 px-4 dark:bg-neutral-900',
+          'mx-auto flex w-fit gap-4',
           className
         )}
         style={{ height: panelHeight }}
@@ -155,7 +155,7 @@ function DockItem({ children, className, onClick, onKeyDown, onDrag, onDragEnd, 
     [40, magnification, 40]
   );
 
-  const width = useSpring(widthTransform, spring);
+  const width = useSpring(widthTransform, { mass: 0.1, stiffness: 150, damping: 20 });
 
   // Excluir onDrag, onDragEnd, onDragStart y onAnimationStart para evitar conflicto de tipos con Framer Motion
   const motionDivProps = {
@@ -230,14 +230,20 @@ function DockIcon({ children, className, width }: DockIconProps) {
   // Crear un MotionValue con valor por defecto si width no está definido
   const defaultWidth = useMotionValue(40);
   const actualWidth = width || defaultWidth;
-  const widthTransform = useTransform(actualWidth, (val: number) => val / 2);
+  const iconSize = useTransform(actualWidth, (val: number) => Math.min(val * 0.6, 32));
+  const containerSize = useTransform(actualWidth, (val: number) => Math.min(val * 0.8, 48));
 
   return (
     <motion.div
-      style={{ width: widthTransform }}
+      style={{ width: containerSize, height: containerSize }}
       className={cn('flex items-center justify-center', className)}
     >
-      {children}
+      <motion.div
+        style={{ width: iconSize, height: iconSize }}
+        className="flex items-center justify-center"
+      >
+        {children}
+      </motion.div>
     </motion.div>
   );
 }

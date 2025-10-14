@@ -18,7 +18,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EditarTratamientoDialog } from "./EditarTratamientoDialog";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Eye } from "lucide-react";
+import { VerDetallesDialog } from "./VerDetallesDialog";
 
 interface TratamientosActivosProps {
   tratamientos: Tratamiento[];
@@ -26,7 +27,6 @@ interface TratamientosActivosProps {
   userId: string;
   onUpdate: (id: string, tratamiento: Partial<Tratamiento>) => Promise<void>;
   onFinalizar: (id: string) => Promise<void>;
-  obtenerNombreMedicamento: (id: string) => string;
 }
 
 export function TratamientosActivos({
@@ -34,8 +34,7 @@ export function TratamientosActivos({
   medicinas,
   userId,
   onUpdate,
-  onFinalizar,
-  obtenerNombreMedicamento
+  onFinalizar
 }: TratamientosActivosProps) {
   return (
     <Card className="border-0 shadow-none pl-5 pr-5">
@@ -61,11 +60,9 @@ export function TratamientosActivos({
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Medicamento</TableHead>
-                  <TableHead>Frecuencia</TableHead>
-                  <TableHead>Duración</TableHead>
-                  <TableHead>Dosis</TableHead>
                   <TableHead>Paciente</TableHead>
+                  <TableHead>Medicamentos</TableHead>
+                  <TableHead>Duración</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -73,33 +70,62 @@ export function TratamientosActivos({
                 {tratamientos.map((tratamiento) => (
                   <TableRow key={tratamiento.id}>
                     <TableCell className="font-medium">{tratamiento.name}</TableCell>
+                                <TableCell>
+                                  <div className="font-medium">{tratamiento.patient}</div>
+                                </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>{obtenerNombreMedicamento(tratamiento.medicationId)}</span>
-                        <Badge variant="secondary">
-                          Stock: {medicinas.find(m => m.id === tratamiento.medicationId)?.currentQuantity || 0}
-                        </Badge>
+                      <div className="space-y-1">
+                        {tratamiento.medications?.map((med, index) => (
+                          <div key={index} className="text-sm">
+                            <div className="font-medium">{med.commercialName || med.medication?.commercialName || "Medicamento"}</div>
+                            <div className="text-muted-foreground">
+                              {med.dosage} {med.unit || med.medication?.unit || "unidades"} - Cada {med.frequencyHours}h
+                            </div>
+                          </div>
+                        )) || "Sin medicamentos"}
                       </div>
                     </TableCell>
                     <TableCell>
-                      Cada {tratamiento.frequencyHours} horas
-                    </TableCell>
-                    <TableCell>
-                      {tratamiento.durationDays} días
-                    </TableCell>
-                    <TableCell>
-                      {tratamiento.dosage} unidades
-                    </TableCell>
-                    <TableCell>
-                      {tratamiento.patient}
+                      <div className="space-y-1">
+                        <div className="text-sm">
+                          {new Date(tratamiento.startDate).toLocaleDateString()} - {new Date(tratamiento.endDate).toLocaleDateString()}
+                        </div>
+                        {(() => {
+                          const now = new Date();
+                          const endDate = new Date(tratamiento.endDate);
+                          const diffTime = endDate.getTime() - now.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          
+                          if (diffDays > 0) {
+                            return (
+                              <Badge variant="secondary" className="text-xs">
+                                {diffDays} día{diffDays !== 1 ? 's' : ''} restante{diffDays !== 1 ? 's' : ''}
+                              </Badge>
+                            );
+                          } else if (diffDays === 0) {
+                            return (
+                              <Badge variant="destructive" className="text-xs">
+                                Finaliza hoy
+                              </Badge>
+                            );
+                          } else {
+                            return (
+                              <Badge variant="outline" className="text-xs">
+                                Finalizado hace {Math.abs(diffDays)} día{Math.abs(diffDays) !== 1 ? 's' : ''}
+                              </Badge>
+                            );
+                          }
+                        })()}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <VerDetallesDialog
+                          tratamiento={tratamiento}
+                          medicinas={medicinas}
+                        />
                         <EditarTratamientoDialog
                           tratamiento={tratamiento}
-                          onUpdate={onUpdate}
-                          medicinas={medicinas}
-                          userId={userId}
                         />
                         <Button
                           variant="outline"

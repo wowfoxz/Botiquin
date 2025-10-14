@@ -15,6 +15,10 @@
 - **No crear nuevos componentes UI**, usar solo los existentes en `src/components/ui`.
   - Documentación de componentes: [https://ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components)
 
+## Uso de iconos
+- Buscar primero el icono en **https://tabler.io/icons**.
+- Si no existe ahí, recién entonces usar **https://lucide.dev/icons**.
+
 ## Calidad de código
 - **Verificar que no haya errores de sintaxis ni de lógica** antes de finalizar una tarea.
 - **Corregir advertencias de ESLint** sin introducir nuevos errores.

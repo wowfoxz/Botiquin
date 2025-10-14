@@ -41,10 +41,19 @@ export const useTratamientos = () => {
 
   // Crear un nuevo tratamiento
   const createTratamiento = async (
-    tratamiento: Omit<Tratamiento, "id" | "createdAt" | "updatedAt">
+    tratamiento: {
+      name: string;
+      patient: string;
+      patientId?: string;
+      patientType?: string;
+      symptoms?: string;
+      medications: any[];
+      images?: any[];
+      userId: string;
+    }
   ) => {
     setLoading(true);
-    setError(null); // Limpiar cualquier error previo
+    setError(null);
     try {
       console.log("Enviando solicitud para crear tratamiento:", tratamiento);
       const response = await fetch("/api/tratamientos", {
@@ -55,51 +64,22 @@ export const useTratamientos = () => {
         body: JSON.stringify(tratamiento),
       });
 
-      console.log(
-        "Respuesta del servidor:",
-        response.status,
-        response.statusText
-      );
+      console.log("Respuesta del servidor:", response.status, response.statusText);
 
       if (!response.ok) {
-        // Intentar extraer un mensaje más descriptivo del body (JSON o texto)
-        let serverMessage: string | null = null;
-        try {
-          const json = await response.json();
-          if (json && typeof json === "object" && "message" in json) {
-            serverMessage = String((json as { message: string }).message);
-          } else {
-            serverMessage = JSON.stringify(json);
-          }
-        } catch {
-          try {
-            serverMessage = await response.text();
-          } catch {
-            serverMessage = null;
-          }
-        }
-        const messageDetail = serverMessage ? ` - ${serverMessage}` : "";
-        console.error(
-          "Error del servidor:",
-          response.status,
-          response.statusText,
-          serverMessage ?? ""
-        );
-        throw new Error(
-          `Error al crear tratamiento: ${response.status} ${response.statusText}${messageDetail}`
-        );
+        const errorData = await response.json();
+        console.error("Error del servidor:", errorData);
+        throw new Error(errorData.error || `Error del servidor: ${response.status}`);
       }
 
       const newTratamiento = await response.json();
       console.log("Tratamiento creado exitosamente:", newTratamiento);
-      // Usar el callback para evitar problemas con estado desactualizado
       setTratamientos((prev) => [...prev, newTratamiento]);
-      toast.success('Tratamiento creado exitosamente');
+      // No mostrar toast aquí, se maneja en la página
       return newTratamiento;
     } catch (err) {
       console.error("Error en createTratamiento:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Error desconocido";
+      const errorMessage = err instanceof Error ? err.message : "Error desconocido";
       setError(errorMessage);
       toast.error('Error al crear el tratamiento');
       throw err;
@@ -130,7 +110,7 @@ export const useTratamientos = () => {
       setTratamientos(
         tratamientos.map((t) => (t.id === id ? updatedTratamiento : t))
       );
-      toast.success('Tratamiento actualizado exitosamente');
+      // No mostrar toast aquí, se maneja en la página
       return updatedTratamiento;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");

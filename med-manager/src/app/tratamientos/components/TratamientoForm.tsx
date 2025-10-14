@@ -1,22 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Tratamiento, Medicamento } from "@/types/tratamientos";
+import { Tratamiento, Medicamento, TratamientoImagen } from "@/types/tratamientos";
+import { PatientSelector } from "@/components/ui/patient-selector";
+import { MedicationSelector } from "@/components/ui/medication-selector";
+import { TreatmentImageUploader } from "@/components/ui/treatment-image-uploader";
 import { toast } from "sonner";
 import { Cardio } from "ldrs/react";
+import { Plus, Save } from "lucide-react";
 import 'ldrs/react/Cardio.css';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { treatmentSchema, type TreatmentFormData } from '@/lib/validations';
+import { treatmentSchema, type TreatmentFormData, type TreatmentMedicationFormData } from '@/lib/validations';
+
+interface TreatmentImage {
+  id: string;
+  file: File;
+  imageType: "receta" | "instrucciones";
+  imageUrl: string;
+  extractedText?: string;
+  aiAnalysis?: string;
+  isAnalyzing?: boolean;
+}
 
 interface TratamientoFormProps {
-  onSubmit: (tratamiento: Omit<Tratamiento, "id" | "createdAt" | "updatedAt" | "startDate" | "endDate" | "isActive" | "medication">) => Promise<void>;
+  onSubmit: (tratamiento: {
+    name: string;
+    patient: string;
+    patientId?: string;
+    patientType?: string;
+    symptoms?: string;
+    medications: TreatmentMedicationFormData[];
+    images?: TreatmentImage[];
+    userId: string;
+  }) => Promise<void>;
   onCancel: () => void;
   medicinas: Medicamento[];
   userId: string;
@@ -26,79 +48,182 @@ interface TratamientoFormProps {
 export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initialData }: TratamientoFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!initialData; // Determinar si está en modo edición
+  const [selectedPatient, setSelectedPatient] = useState<{
+    id: string;
+    name: string;
+    type: "usuario" | "perfil";
+    rol?: string;
+  } | null>(null);
+  const [medications, setMedications] = useState<TreatmentMedicationFormData[]>([]);
+  const [images, setImages] = useState<TreatmentImage[]>([]);
+
+  // Inicializar datos cuando se está editando
+  useEffect(() => {
+    if (initialData) {
+      // Configurar paciente seleccionado
+      if (initialData.patientId && initialData.patientType) {
+        setSelectedPatient({
+          id: initialData.patientId,
+          name: initialData.patient,
+          type: initialData.patientType as "usuario" | "perfil"
+        });
+      }
+
+      // Configurar medicamentos (convertir de la estructura de BD a la del formulario)
+      if (initialData.medications) {
+        const formMedications: TreatmentMedicationFormData[] = initialData.medications.map(med => ({
+          medicationId: med.medicationId,
+          dosage: med.dosage,
+          frequencyHours: med.frequencyHours.toString(),
+          durationDays: med.durationDays.toString(),
+          startOption: med.startAtSpecificTime ? "specific" : "now",
+          specificDate: med.specificStartTime ? new Date(med.specificStartTime).toISOString().slice(0, 16) : undefined
+        }));
+        setMedications(formMedications);
+      }
+
+      // Configurar imágenes
+      if (initialData.images) {
+        const formImages: TreatmentImage[] = initialData.images.map(img => ({
+          id: img.id,
+          imageUrl: img.imageUrl,
+          imageType: img.imageType as "receta" | "instrucciones",
+          extractedText: img.extractedText || "",
+          aiAnalysis: img.aiAnalysis || "",
+          isAnalyzing: false
+        }));
+        setImages(formImages);
+      }
+    }
+  }, [initialData]);
+
+  // Debug: Log cuando cambien las imágenes
+  useEffect(() => {
+    console.log('Imágenes actualizadas en TratamientoForm:', images);
+  }, [images]);
+
+  // Debug: Log del estado del formulario
+  useEffect(() => {
+    console.log('Estado del formulario actualizado:', {
+      isSubmitting,
+      medications: medications.length,
+      images: images.length,
+      selectedPatient: selectedPatient?.name || 'No seleccionado'
+    });
+  }, [isSubmitting, medications, images, selectedPatient]);
 
   const form = useForm<TreatmentFormData>({
     resolver: zodResolver(treatmentSchema),
     defaultValues: {
       name: initialData?.name || "",
-      medicationId: initialData?.medicationId || "",
-      frequencyHours: initialData?.frequencyHours?.toString() || "8",
-      durationDays: initialData?.durationDays?.toString() || "7",
       patient: initialData?.patient || "",
-      dosage: initialData?.dosage || "",
-      startOption: initialData?.startAtSpecificTime ? "specific" : "now",
-      specificDate: initialData?.specificStartTime
-        ? new Date(initialData.specificStartTime).toISOString().slice(0, 16)
-        : new Date().toISOString().slice(0, 16),
+      patientId: initialData?.patientId || "",
+      patientType: initialData?.patientType || undefined,
+      symptoms: initialData?.symptoms || "",
+      medications: [],
     },
   });
 
   const handleSubmit = async (data: TreatmentFormData) => {
+    console.log('=== INICIANDO ENVÍO DEL FORMULARIO ===');
+    console.log('Datos del formulario:', data);
+    console.log('Medicamentos:', medications);
+    console.log('Imágenes:', images);
+    console.log('Paciente seleccionado:', selectedPatient);
+    
     // Evitar envíos duplicados
-    if (isSubmitting) return;
+    if (isSubmitting) {
+      console.log('Ya se está enviando, cancelando...');
+      return;
+    }
 
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const frecuenciaNum = Number(data.frequencyHours);
-      const duracionNum = Number(data.durationDays);
+      // Validar datos básicos
+      if (!data.name.trim()) {
+        throw new Error("El nombre del tratamiento es requerido");
+      }
 
-      // Verificar stock disponible
-      const dosisPorTratamiento = Math.ceil(duracionNum * (24 / frecuenciaNum));
-      const medicina = medicinas.find(m => m.id === data.medicationId);
+      if (!selectedPatient) {
+        throw new Error("Debe seleccionar un paciente del grupo familiar");
+      }
 
-      if (medicina && medicina.currentQuantity < dosisPorTratamiento) {
-        throw new Error(`Stock insuficiente. Se necesitan ${dosisPorTratamiento} unidades pero solo hay ${medicina.currentQuantity} disponibles.`);
+      // Validar que haya al menos un medicamento
+      if (medications.length === 0) {
+        throw new Error("Debe agregar al menos un medicamento al tratamiento");
+      }
+
+      // Validar cada medicamento
+      for (let i = 0; i < medications.length; i++) {
+        const medication = medications[i];
+        
+        if (!medication.medicationId) {
+          throw new Error(`Medicamento ${i + 1}: Debe seleccionar un medicamento`);
+        }
+
+        if (!medication.dosage || Number(medication.dosage) <= 0) {
+          throw new Error(`Medicamento ${i + 1}: La dosis debe ser mayor a 0`);
+        }
+
+        if (!medication.frequencyHours || Number(medication.frequencyHours) <= 0) {
+          throw new Error(`Medicamento ${i + 1}: La frecuencia debe ser mayor a 0`);
+        }
+
+        if (!medication.durationDays || Number(medication.durationDays) <= 0) {
+          throw new Error(`Medicamento ${i + 1}: La duración debe ser mayor a 0`);
+        }
+
+        const medicina = medicinas.find(m => m.id === medication.medicationId);
+        if (!medicina) {
+          throw new Error(`Medicamento ${i + 1}: Medicamento no encontrado`);
+        }
+
+        const dosisNecesarias = Math.ceil(
+          Number(medication.durationDays) * (24 / Number(medication.frequencyHours))
+        );
+
+        if (medicina.currentQuantity < dosisNecesarias) {
+          throw new Error(
+            `Medicamento ${i + 1} (${medicina.commercialName}): ` +
+            `Stock insuficiente. Se necesitan ${dosisNecesarias} ${medicina.unit} pero solo hay ${medicina.currentQuantity} disponibles.`
+          );
+        }
       }
 
       await onSubmit({
         name: data.name,
-        medicationId: data.medicationId,
-        frequencyHours: frecuenciaNum,
-        durationDays: duracionNum,
-        patient: data.patient,
-        dosage: data.dosage,
+        patient: selectedPatient.name,
+        patientId: selectedPatient.id,
+        patientType: selectedPatient.type,
+        symptoms: data.symptoms,
+        medications: medications,
+        images: images,
         userId: userId,
-        startAtSpecificTime: data.startOption === "specific",
-        specificStartTime: data.startOption === "specific" ? new Date(data.specificDate!) : undefined
       });
+
+      // Si llegamos aquí, el tratamiento se creó exitosamente
+      // El componente padre manejará la redirección
     } catch (error) {
+      console.error('Error en handleSubmit:', error);
       const errorMessage = error instanceof Error ? error.message : "Error al procesar el formulario";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
+      console.log('Finalizando envío del formulario');
       setIsSubmitting(false);
     }
   };
-
-  // Calcular dosis totales
-  const watchedValues = form.watch(['frequencyHours', 'durationDays']);
-  const frecuenciaNum = Number(watchedValues[0]) || 8;
-  const duracionNum = Number(watchedValues[1]) || 7;
-  const dosisTotales = Math.ceil(duracionNum * (24 / frecuenciaNum));
 
   return (
     <Card className="border-0 shadow-none">
       <CardContent className="p-0">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-2 rounded-md">
-                {error}
-              </div>
-            )}
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
 
+            {/* Nombre del tratamiento */}
             <FormField
               control={form.control}
               name="name"
@@ -116,15 +241,24 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               )}
             />
 
+            {/* Selección de paciente */}
+            <PatientSelector
+              onSelectPatient={setSelectedPatient}
+              selectedPatientId={selectedPatient?.id}
+              disabled={isSubmitting}
+            />
+
+            {/* Síntomas */}
             <FormField
               control={form.control}
-              name="patient"
+              name="symptoms"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Paciente *</FormLabel>
+                  <FormLabel>Síntomas del Paciente (Opcional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Nombre del paciente"
+                    <Textarea
+                      placeholder="Describe los síntomas que presenta el paciente..."
+                      className="min-h-[80px]"
                       {...field}
                     />
                   </FormControl>
@@ -133,185 +267,118 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="medicationId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Medicamento *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar medicamento" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {medicinas
-                          .filter(m => !m.archived)
-                          .map((medicina) => (
-                            <SelectItem key={medicina.id} value={medicina.id}>
-                              {medicina.commercialName} (Stock: {medicina.currentQuantity})
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Medicamentos */}
+            <MedicationSelector
+              medicinas={medicinas}
+              medications={medications}
+              onMedicationsChange={setMedications}
+              disabled={isSubmitting}
+            />
 
-              <FormField
-                control={form.control}
-                name="dosage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dosis por toma *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          placeholder="Cantidad"
-                          className="pr-16"
-                          {...field}
-                        />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground text-sm">
-                          unidades
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Carga de imágenes */}
+            <TreatmentImageUploader
+              images={images}
+              onImagesChange={setImages}
+              disabled={isSubmitting}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="frequencyHours"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frecuencia (horas) *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min="1"
-                          className="pr-16"
-                          {...field}
-                        />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground text-sm">
-                          horas
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Resumen del tratamiento */}
+            {medications.length > 0 && (
+              <div className="bg-muted/50 p-4 rounded-md">
+                <h4 className="font-medium mb-2">Resumen del Tratamiento</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Medicamentos:</span> {medications.length}
+                  </div>
+                  <div>
+                    <span className="font-medium">Imágenes:</span> {images.length}
+                  </div>
+                  <div>
+                    <span className="font-medium">Paciente:</span> {selectedPatient ? selectedPatient.name : "No seleccionado"}
+                  </div>
+                </div>
+              </div>
+            )}
 
-              <FormField
-                control={form.control}
-                name="durationDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duración (días) *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min="1"
-                          className="pr-16"
-                          {...field}
-                        />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground text-sm">
-                          días
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Mensaje de error - Posicionado al final para que sea visible */}
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
+                <div className="flex items-start gap-2">
+                  <div className="text-destructive">⚠️</div>
+                  <div>
+                    <p className="font-medium">Error al crear el tratamiento</p>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <div className="space-y-4">
-              <FormLabel>Inicio del Tratamiento *</FormLabel>
-              <FormField
-                control={form.control}
-                name="startOption"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="space-y-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="now" id="now" />
-                          <FormLabel htmlFor="now">Iniciar tratamiento ahora</FormLabel>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="specific" id="specific" />
-                          <FormLabel htmlFor="specific">Iniciar en una fecha y hora específica</FormLabel>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {form.watch('startOption') === "specific" && (
-                <FormField
-                  control={form.control}
-                  name="specificDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fecha y Hora de Inicio</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="datetime-local"
-                          min={new Date().toISOString().slice(0, 16)}
-                          {...field}
-                        />
-                      </FormControl>
-                      <p className="text-sm text-muted-foreground">
-                        Seleccione la fecha y hora en que desea que comience la primera toma
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <div className="bg-muted p-3 rounded-md">
-              <p className="text-sm">
-                <span className="font-medium">Dosis totales estimadas:</span> {dosisTotales} unidades
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Basado en {duracionNum} días con una frecuencia cada {frecuenciaNum} horas
-              </p>
-            </div>
-
+            {/* Botones de acción */}
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="button" 
+                disabled={isSubmitting || medications.length === 0}
+                className="min-w-[160px]"
+                onClick={async (e) => {
+                  console.log('Click en botón Crear Tratamiento');
+                  console.log('isSubmitting:', isSubmitting);
+                  console.log('medications.length:', medications.length);
+                  console.log('form state:', form.getValues());
+                  
+                  // Prevenir el comportamiento por defecto del submit
+                  e.preventDefault();
+                  
+                  // Si hay medicamentos, llamar directamente a handleSubmit
+                  if (medications.length > 0) {
+                    console.log('Intentando enviar formulario directamente...');
+                    
+                    // Obtener los datos del formulario
+                    const formData = form.getValues();
+                    console.log('Datos del formulario obtenidos:', formData);
+                    
+                    // Llamar directamente a handleSubmit
+                    await handleSubmit(formData);
+                  } else {
+                    console.log('No se puede enviar: no hay medicamentos');
+                  }
+                }}
+              >
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <Cardio size={20} stroke={3} speed={1.5} color="var(--color-info)" />
-                    <span>Procesando...</span>
+                    <span>{isEditing ? 'Actualizando...' : 'Creando...'}</span>
                   </div>
                 ) : (
-                  initialData ? "Actualizar Tratamiento" : "Crear Tratamiento"
+                  <div className="flex items-center gap-2">
+                    {isEditing ? (
+                      <Save className="h-4 w-4" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    <span>{isEditing ? 'Actualizar Tratamiento' : 'Crear Tratamiento'}</span>
+                  </div>
                 )}
               </Button>
             </div>
+
+            {/* Mensaje de ayuda */}
+            {medications.length === 0 && (
+              <div className="bg-warning/10 border border-warning/20 text-warning px-4 py-3 rounded-md">
+                <div className="flex items-start gap-2">
+                  <div className="text-warning">💡</div>
+                  <div>
+                    <p className="font-medium">Información requerida</p>
+                    <p className="text-sm mt-1">
+                      Para crear el tratamiento, debes agregar al menos un medicamento. 
+                      Haz clic en "Agregar Medicamento" para continuar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </Form>
       </CardContent>

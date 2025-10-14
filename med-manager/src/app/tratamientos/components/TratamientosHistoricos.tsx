@@ -17,23 +17,22 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
-import { XCircle, Calendar } from "lucide-react";
+import { XCircle, Calendar, Eye } from "lucide-react";
 import { History } from "lucide-react";
+import { VerDetallesDialog } from "./VerDetallesDialog";
 
 interface TratamientosHistoricosProps {
   tratamientos: Tratamiento[];
   medicinas: Medicamento[];
   userId: string;
   onDelete: (id: string) => Promise<void>;
-  obtenerNombreMedicamento: (id: string) => string;
 }
 
 export function TratamientosHistoricos({
   tratamientos,
   medicinas,
   userId,
-  onDelete,
-  obtenerNombreMedicamento
+  onDelete
 }: TratamientosHistoricosProps) {
   return (
     <Card className="border-0 shadow-none pl-5 pr-5">
@@ -55,11 +54,9 @@ export function TratamientosHistoricos({
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Medicamento</TableHead>
-                  <TableHead>Frecuencia</TableHead>
-                  <TableHead>Duración</TableHead>
-                  <TableHead>Dosis</TableHead>
                   <TableHead>Paciente</TableHead>
+                  <TableHead>Medicamentos</TableHead>
+                  <TableHead>Duración</TableHead>
                   <TableHead>Finalizado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -75,22 +72,25 @@ export function TratamientosHistoricos({
                   return (
                     <TableRow key={tratamiento.id}>
                       <TableCell className="font-medium">{tratamiento.name}</TableCell>
+                                  <TableCell>
+                                    <div className="font-medium">{tratamiento.patient}</div>
+                                  </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span>{obtenerNombreMedicamento(tratamiento.medicationId)}</span>
+                        <div className="space-y-1">
+                          {tratamiento.medications?.map((med, index) => (
+                            <div key={index} className="text-sm">
+                              <div className="font-medium">{med.commercialName || med.medication?.commercialName || "Medicamento"}</div>
+                              <div className="text-muted-foreground">
+                                {med.dosage} {med.unit || med.medication?.unit || "unidades"} - Cada {med.frequencyHours}h
+                              </div>
+                            </div>
+                          )) || "Sin medicamentos"}
                         </div>
                       </TableCell>
                       <TableCell>
-                        Cada {tratamiento.frequencyHours} horas
-                      </TableCell>
-                      <TableCell>
-                        {tratamiento.durationDays} días
-                      </TableCell>
-                      <TableCell>
-                        {tratamiento.dosage} unidades
-                      </TableCell>
-                      <TableCell>
-                        {tratamiento.patient}
+                        <div className="text-sm">
+                          {new Date(tratamiento.startDate).toLocaleDateString()} - {new Date(tratamiento.endDate).toLocaleDateString()}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -104,15 +104,21 @@ export function TratamientosHistoricos({
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => onDelete(tratamiento.id)}
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Eliminar
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <VerDetallesDialog
+                            tratamiento={tratamiento}
+                            medicinas={medicinas}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => onDelete(tratamiento.id)}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Eliminar
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

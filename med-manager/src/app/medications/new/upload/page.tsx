@@ -24,6 +24,7 @@ export default function UploadPage() {
   const [imageBase64, setImageBase64] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
+  const [processingMessage, setProcessingMessage] = useState<string>('');
   const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -36,7 +37,20 @@ export default function UploadPage() {
       // Decode once and set to state
       const decodedError = decodeURIComponent(errorMessage);
       setError(decodedError);
-      toast.error(decodedError);
+      
+      // Mostrar toast con duración más larga para errores de servicio
+      const isServiceError = decodedError.includes('sobrecargado') || 
+                            decodedError.includes('límites de uso') ||
+                            decodedError.includes('temporalmente');
+      
+      if (isServiceError) {
+        toast.error(decodedError, {
+          duration: 8000, // 8 segundos para errores de servicio
+          description: "Puedes intentar de nuevo en unos momentos."
+        });
+      } else {
+        toast.error(decodedError);
+      }
     }
   }, [searchParams]);
 
@@ -160,6 +174,21 @@ export default function UploadPage() {
 
     setIsSubmitting(true);
     setError('');
+    setProcessingMessage('Analizando imagen...');
+
+    // Simular progreso para mostrar que el sistema puede estar reintentando
+    const progressMessages = [
+      'Analizando imagen...',
+      'Procesando con IA...',
+      'Extrayendo información...',
+      'Finalizando análisis...'
+    ];
+    
+    let messageIndex = 0;
+    const progressInterval = setInterval(() => {
+      messageIndex = (messageIndex + 1) % progressMessages.length;
+      setProcessingMessage(progressMessages[messageIndex]);
+    }, 2000);
 
     try {
       const pureBase64 = imageBase64.split(',')[1];
@@ -169,11 +198,16 @@ export default function UploadPage() {
       // Verificar si es una redirección de Next.js (comportamiento normal)
       if (err?.digest?.includes('NEXT_REDIRECT')) {
         // Es una redirección normal, no un error real
+        clearInterval(progressInterval);
         return;
       }
       // Solo manejar errores reales
       setError('Ocurrió un error inesperado al enviar la imagen.');
       console.error(err);
+    } finally {
+      clearInterval(progressInterval);
+      setIsSubmitting(false);
+      setProcessingMessage('');
     }
   };
 
@@ -321,7 +355,18 @@ export default function UploadPage() {
 
                 {error && (
                   <div className="rounded-md bg-destructive/10 p-3">
-                    <p className="text-sm text-destructive text-center">{error}</p>
+                    <p className="text-sm text-destructive text-center mb-2">{error}</p>
+                    {(error.includes('sobrecargado') || error.includes('límites de uso') || error.includes('temporalmente')) && (
+                      <div className="text-xs text-muted-foreground text-center space-y-1">
+                        <p>💡 <strong>Sugerencia:</strong> Espera unos minutos antes de intentar de nuevo.</p>
+                        <p>El sistema intentará automáticamente varias veces antes de mostrar este error.</p>
+                      </div>
+                    )}
+                    {error.includes('conexión') && (
+                      <div className="text-xs text-muted-foreground text-center space-y-1">
+                        <p>💡 <strong>Sugerencia:</strong> Verifica tu conexión a internet e inténtalo de nuevo.</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -330,8 +375,16 @@ export default function UploadPage() {
             {file && !isCameraActive && (
               <CardFooter className="flex flex-col items-center">
                 {isSubmitting ? (
-                  <div className="w-full flex flex-col items-center py-4">
+                  <div className="w-full flex flex-col items-center py-4 space-y-3">
                     <BookLoader isVisible={isSubmitting} />
+                    {processingMessage && (
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">{processingMessage}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          El sistema puede reintentar automáticamente si hay problemas de conexión
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Button

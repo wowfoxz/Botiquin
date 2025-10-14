@@ -115,16 +115,8 @@ export const notificationSettingsSchema = z.object({
     }),
 });
 
-// Esquema para el formulario de tratamientos
-export const treatmentSchema = z.object({
-  name: z
-    .string()
-    .min(1, "El nombre del tratamiento es requerido")
-    .max(100, "El nombre no puede tener más de 100 caracteres"),
-  patient: z
-    .string()
-    .min(1, "El nombre del paciente es requerido")
-    .max(100, "El nombre del paciente no puede tener más de 100 caracteres"),
+// Esquema para medicamentos individuales en un tratamiento
+export const treatmentMedicationSchema = z.object({
   medicationId: z
     .string()
     .min(1, "Debe seleccionar un medicamento"),
@@ -135,7 +127,7 @@ export const treatmentSchema = z.object({
       const num = Number(val);
       return !isNaN(num) && num > 0;
     }, {
-      message: "La dosis debe ser un número mayor que 0",
+      message: "La dosis debe ser un número mayor a 0",
     }),
   frequencyHours: z
     .string()
@@ -170,6 +162,24 @@ export const treatmentSchema = z.object({
 }, {
   message: "La fecha de inicio debe ser en el futuro",
   path: ["specificDate"],
+});
+
+// Esquema para el formulario de tratamientos mejorado
+export const treatmentSchema = z.object({
+  name: z
+    .string()
+    .min(1, "El nombre del tratamiento es requerido")
+    .max(100, "El nombre no puede tener más de 100 caracteres"),
+  patient: z.string().optional(),
+  patientId: z.string().optional(), // ID del paciente del grupo familiar
+  patientType: z.enum(["usuario", "perfil"]).optional(), // Tipo de paciente
+  symptoms: z
+    .string()
+    .max(500, "Los síntomas no pueden tener más de 500 caracteres")
+    .optional(),
+  medications: z
+    .array(treatmentMedicationSchema)
+    .min(1, "Debe agregar al menos un medicamento"),
 });
 
 // Esquema para agregar integrante adulto al grupo familiar
@@ -284,4 +294,5 @@ export type AgregarPerfilMenorFormData = z.infer<typeof agregarPerfilMenorSchema
 export type RegistrarTomaFormData = z.infer<typeof registrarTomaSchema>;
 export type MedicationFormData = z.infer<typeof medicationSchema>;
 export type NotificationSettingsFormData = z.infer<typeof notificationSettingsSchema>;
+export type TreatmentMedicationFormData = z.infer<typeof treatmentMedicationSchema>;
 export type TreatmentFormData = z.infer<typeof treatmentSchema>;
