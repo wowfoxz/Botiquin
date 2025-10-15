@@ -1,0 +1,7 @@
+{
+  "/api/auth/route": "app/api/auth/route.js",
+  "/api/historial/route": "app/api/historial/route.js",
+  "/botiquin/page": "app/botiquin/page.js",
+  "/historial/page": "app/historial/page.js",
+  "/login/page": "app/login/page.js"
+}
