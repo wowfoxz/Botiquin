@@ -217,7 +217,7 @@ export default function MedicationForm() {
                     </FormLabel>
                     <div className="relative rounded-md overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
                       <Image
-                        src={form.watch('imageUrl')}
+                        src={form.watch('imageUrl') || ''}
                         alt="Imagen del medicamento"
                         width={400}
                         height={300}

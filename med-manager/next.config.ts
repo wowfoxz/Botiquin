@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   },
   // Configurar basePath si está definido en las variables de entorno
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
+  // Configuración para Docker y producción
+  output: 'standalone',
   // Configuración para mejorar la seguridad en producción
   async headers() {
     return [

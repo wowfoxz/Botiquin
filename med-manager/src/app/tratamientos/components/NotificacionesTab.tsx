@@ -1,6 +1,7 @@
 "use client";
 
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Card,
@@ -18,7 +19,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tratamiento, PreferenciasNotificaciones, Notificacion } from "@/types/tratamientos";
-import { Bell, BellOff, Calendar, Clock } from "lucide-react";
+import { Bell, BellOff, Calendar, Clock, Smartphone, TestTube, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface NotificacionesTabProps {
   preferencias: PreferenciasNotificaciones | null;
@@ -33,9 +38,46 @@ export function NotificacionesTab({
   tratamientos,
   onUpdatePreferencias
 }: NotificacionesTabProps) {
+  const { user } = useAuth();
+  const {
+    isSupported,
+    permission,
+    isSubscribed,
+    isLoading,
+    subscribeToPush,
+    unsubscribeFromPush,
+    sendTestNotification
+  } = useNotifications();
+
   // Obtener tratamiento por ID
   const obtenerTratamiento = (id: string) => {
     return tratamientos.find(t => t.id === id);
+  };
+
+  // Manejar cambio en preferencias de push
+  const handlePushToggle = async (checked: boolean) => {
+    if (!user) return;
+
+    try {
+      if (checked) {
+        // Activar notificaciones push
+        await subscribeToPush(user.id);
+      } else {
+        // Desactivar notificaciones push
+        await unsubscribeFromPush(user.id);
+      }
+      
+      // Actualizar preferencias en la base de datos
+      await onUpdatePreferencias({ push: checked });
+    } catch (error) {
+      console.error('Error al actualizar notificaciones push:', error);
+      toast.error('Error al actualizar configuración de notificaciones');
+    }
+  };
+
+  // Manejar envío de notificación de prueba
+  const handleTestNotification = async () => {
+    await sendTestNotification();
   };
 
   return (
@@ -49,37 +91,83 @@ export function NotificacionesTab({
             <div className="flex items-center gap-4">
               <div
                 className={`p-2 rounded-full ${
-                  preferencias?.push ? "bg-green-100" : "bg-primary/10"
+                  isSubscribed ? "bg-green-100" : "bg-primary/10"
                 }`}
               >
-                <Bell
+                <Smartphone
                   className={`h-6 w-6 ${
-                    preferencias?.push ? "text-green-600" : "text-primary"
+                    isSubscribed ? "text-green-600" : "text-primary"
                   }`}
                 />
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <h3 className="font-medium">Notificaciones Push</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <div className="space-y-2">
+                          <p className="font-medium">Configuración en Windows:</p>
+                          <ul className="text-sm space-y-1">
+                            <li>• <strong>Windows 10/11:</strong> Configuración → Sistema → Notificaciones y acciones</li>
+                            <li>• Busca tu navegador en la lista de aplicaciones</li>
+                            <li>• Activa &quot;Permitir notificaciones&quot;</li>
+                            <li>• Reinicia el navegador si es necesario</li>
+                          </ul>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Sin esta configuración, las notificaciones no aparecerán aunque estén activadas aquí.
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      preferencias?.push
+                      isSubscribed
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
                     }`}
                     aria-live="polite"
                   >
-                    {preferencias?.push ? "Activadas" : "Desactivadas"}
+                    {!isSupported 
+                      ? "No compatible" 
+                      : permission === 'denied'
+                      ? "Denegado"
+                      : isSubscribed 
+                      ? "Activadas" 
+                      : "Desactivadas"
+                    }
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Recibir notificaciones en la aplicación
+                  {!isSupported 
+                    ? "Tu navegador no soporta notificaciones push"
+                    : permission === 'denied'
+                    ? "Los permisos fueron denegados. Actívalos en configuración del navegador"
+                    : "Recibir notificaciones push en tu dispositivo"
+                  }
                 </p>
+                {isSubscribed && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={handleTestNotification}
+                    disabled={isLoading}
+                  >
+                    <TestTube className="h-4 w-4 mr-2" />
+                    Enviar prueba
+                  </Button>
+                )}
               </div>
             </div>
             <Switch
-              checked={preferencias?.push || false}
-              onCheckedChange={(checked) => onUpdatePreferencias({ push: checked })}
+              checked={isSubscribed}
+              onCheckedChange={handlePushToggle}
+              disabled={!isSupported || permission === 'denied' || isLoading}
               aria-label="Alternar notificaciones push"
             />
           </div>

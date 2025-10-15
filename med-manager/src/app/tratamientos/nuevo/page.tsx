@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { TratamientoForm } from "../components/TratamientoForm";
-import { useMedicinas } from "@/hooks/useTratamientos";
+import { useMedicinas, useTratamientos } from "@/hooks/useTratamientos";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Cardio } from "ldrs/react";
@@ -37,7 +37,6 @@ export default function NuevoTratamientoPage() {
     userId: string;
   }) => {
     try {
-      console.log("Iniciando creación de tratamiento:", tratamiento);
       
       // Procesar imágenes para serialización
       const processedImages = tratamiento.images?.map(img => ({
@@ -52,16 +51,13 @@ export default function NuevoTratamientoPage() {
         images: processedImages
       };
       
-      console.log("Tratamiento procesado:", processedTreatment);
       
       await createTratamiento(processedTreatment);
-      console.log("Tratamiento creado exitosamente");
       
       toast.success("Tratamiento creado exitosamente");
       
       // Redirigir a la lista de tratamientos usando setTimeout para asegurar que se ejecute
       setTimeout(() => {
-        console.log("Redirigiendo a /tratamientos después de crear...");
         router.push("/tratamientos");
       }, 100);
     } catch (error) {

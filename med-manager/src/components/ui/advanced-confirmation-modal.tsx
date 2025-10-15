@@ -37,11 +37,11 @@ export function AdvancedConfirmationModal({
   confirmationText = "ELIMINAR",
 }: AdvancedConfirmationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [confirmationText, setConfirmationText] = useState("");
+  const [userInput, setUserInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirm = async () => {
-    if (confirmationText !== confirmationText) {
+    if (userInput !== confirmationText) {
       return;
     }
 
@@ -49,7 +49,7 @@ export function AdvancedConfirmationModal({
     try {
       await onConfirm();
       setIsOpen(false);
-      setConfirmationText("");
+      setUserInput("");
     } catch (error) {
       console.error("Error al ejecutar acción:", error);
     } finally {
@@ -59,7 +59,7 @@ export function AdvancedConfirmationModal({
 
   const handleCancel = () => {
     setIsOpen(false);
-    setConfirmationText("");
+    setUserInput("");
   };
 
   const getIcon = () => {
@@ -106,7 +106,7 @@ export function AdvancedConfirmationModal({
       <DialogTrigger asChild>
         {trigger || (
           <Button 
-            variant={variant === "destructive" ? "outline" : variant} 
+            variant={variant === "destructive" ? "outline" : variant === "warning" ? "secondary" : variant} 
             size="sm" 
             className={variant === "destructive" ? "text-destructive hover:text-destructive" : ""}
           >
@@ -151,8 +151,8 @@ export function AdvancedConfirmationModal({
             </Label>
             <Input
               id="confirmation"
-              value={confirmationText}
-              onChange={(e) => setConfirmationText(e.target.value)}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
               placeholder={confirmationText}
               className="font-mono"
             />
@@ -166,7 +166,7 @@ export function AdvancedConfirmationModal({
           <Button
             variant={variant === "destructive" ? "destructive" : "default"}
             onClick={handleConfirm}
-            disabled={confirmationText !== confirmationText || isDeleting}
+            disabled={userInput !== confirmationText || isDeleting}
             className="flex items-center gap-2"
           >
             {isDeleting ? (

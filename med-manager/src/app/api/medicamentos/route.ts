@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { registrarBusqueda, extraerMetadataRequest } from "@/lib/auditoria";
+import { registrarBusqueda, extraerMetadataRequest, TipoEntidad } from "@/lib/auditoria";
 import { getServerSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     await registrarBusqueda(
       session.userId,
       searchdata,
-      "medicamento",
+      TipoEntidad.MEDICAMENTO,
       cantidadResultados,
       metadata
     );

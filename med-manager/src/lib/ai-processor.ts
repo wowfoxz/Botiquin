@@ -8,8 +8,8 @@ const API_KEY = process.env.GOOGLE_API_KEY;
 if (!API_KEY) {
   // Este error detendrá el servidor si la clave no está configurada,
   // lo cual es bueno para la seguridad y para alertar al desarrollador.
-  console.error(
-    "Error Crítico: La variable de entorno GOOGLE_API_KEY no está definida."
+  console.warn(
+    "Advertencia: La variable de entorno GOOGLE_API_KEY no está definida. Las funciones de IA no estarán disponibles."
   );
   // En un entorno de producción, podrías manejar esto de forma más elegante,
   // pero para el desarrollo, fallar rápido es una buena práctica.

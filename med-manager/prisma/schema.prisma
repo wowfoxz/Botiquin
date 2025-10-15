@@ -30,6 +30,7 @@ model User {
   notificationSettings NotificationSettings?
   treatments          Treatment[]          // Relación con tratamientos
   notificationPreferences NotificationPreferences? // Relación con preferencias de notificaciones
+  pushSubscriptions   PushSubscription[]   // Relación con suscripciones push
   shoppingLists       ShoppingList[]       // Relación con listas de compras
   tomasRegistradas    Toma[]               @relation("TomaRegistrante")
   tomasConsumidas     Toma[]               @relation("TomaConsumidorUsuario")
@@ -145,6 +146,20 @@ model NotificationPreferences {
   userId      String   @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Modelo para suscripciones push
+model PushSubscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  endpoint  String   // URL del endpoint de push
+  p256dhKey String   // Clave pública P256DH
+  authKey   String   // Clave de autenticación
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, endpoint])
 }
 
 // Modelo para items de la lista de compras

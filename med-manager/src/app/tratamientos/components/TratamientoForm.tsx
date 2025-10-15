@@ -65,7 +65,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
       if (initialData.patientId && initialData.patientType) {
         setSelectedPatient({
           id: initialData.patientId,
-          name: initialData.patient,
+          name: initialData.patient || '',
           type: initialData.patientType as "usuario" | "perfil"
         });
       }
@@ -87,6 +87,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
       if (initialData.images) {
         const formImages: TreatmentImage[] = initialData.images.map(img => ({
           id: img.id,
+          file: new File([], 'existing-image.jpg', { type: 'image/jpeg' }), // Archivo ficticio para imágenes existentes
           imageUrl: img.imageUrl,
           imageType: img.imageType as "receta" | "instrucciones",
           extractedText: img.extractedText || "",
@@ -98,20 +99,6 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
     }
   }, [initialData]);
 
-  // Debug: Log cuando cambien las imágenes
-  useEffect(() => {
-    console.log('Imágenes actualizadas en TratamientoForm:', images);
-  }, [images]);
-
-  // Debug: Log del estado del formulario
-  useEffect(() => {
-    console.log('Estado del formulario actualizado:', {
-      isSubmitting,
-      medications: medications.length,
-      images: images.length,
-      selectedPatient: selectedPatient?.name || 'No seleccionado'
-    });
-  }, [isSubmitting, medications, images, selectedPatient]);
 
   const form = useForm<TreatmentFormData>({
     resolver: zodResolver(treatmentSchema),
@@ -119,22 +106,16 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
       name: initialData?.name || "",
       patient: initialData?.patient || "",
       patientId: initialData?.patientId || "",
-      patientType: initialData?.patientType || undefined,
+      patientType: (initialData?.patientType as "usuario" | "perfil") || undefined,
       symptoms: initialData?.symptoms || "",
       medications: [],
     },
   });
 
   const handleSubmit = async (data: TreatmentFormData) => {
-    console.log('=== INICIANDO ENVÍO DEL FORMULARIO ===');
-    console.log('Datos del formulario:', data);
-    console.log('Medicamentos:', medications);
-    console.log('Imágenes:', images);
-    console.log('Paciente seleccionado:', selectedPatient);
     
     // Evitar envíos duplicados
     if (isSubmitting) {
-      console.log('Ya se está enviando, cancelando...');
       return;
     }
 
@@ -212,7 +193,6 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
-      console.log('Finalizando envío del formulario');
       setIsSubmitting(false);
     }
   };
@@ -323,26 +303,18 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
                 disabled={isSubmitting || medications.length === 0}
                 className="min-w-[160px]"
                 onClick={async (e) => {
-                  console.log('Click en botón Crear Tratamiento');
-                  console.log('isSubmitting:', isSubmitting);
-                  console.log('medications.length:', medications.length);
-                  console.log('form state:', form.getValues());
                   
                   // Prevenir el comportamiento por defecto del submit
                   e.preventDefault();
                   
                   // Si hay medicamentos, llamar directamente a handleSubmit
                   if (medications.length > 0) {
-                    console.log('Intentando enviar formulario directamente...');
-                    
                     // Obtener los datos del formulario
                     const formData = form.getValues();
-                    console.log('Datos del formulario obtenidos:', formData);
                     
                     // Llamar directamente a handleSubmit
                     await handleSubmit(formData);
                   } else {
-                    console.log('No se puede enviar: no hay medicamentos');
                   }
                 }}
               >

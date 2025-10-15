@@ -530,9 +530,9 @@ export async function getDescriptionFromAI(formData: FormData) {
     session.userId,
     TipoAccion.SEARCH, // Usar SEARCH para búsquedas de IA
     TipoEntidad.MEDICAMENTO,
-    undefined, // No hay ID específico para búsquedas de IA
-    undefined,
-    undefined,
+    '', // No hay ID específico para búsquedas de IA
+    '',
+    '',
     {
       tipoOperacion: "descripcion_ia",
       medicamento: commercialName,
@@ -573,9 +573,9 @@ export async function getIntakeRecommendationsFromAI(formData: FormData) {
     session.userId,
     TipoAccion.SEARCH, // Usar SEARCH para búsquedas de IA
     TipoEntidad.MEDICAMENTO,
-    undefined, // No hay ID específico para búsquedas de IA
-    undefined,
-    undefined,
+    '', // No hay ID específico para búsquedas de IA
+    '',
+    '',
     {
       tipoOperacion: "recomendaciones_ia",
       medicamento: commercialName,
@@ -762,7 +762,7 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
     fechaNacimiento: new Date(fechaNacimiento),
     password: hashedPassword,
     rol: "ADULTO",
-    grupoId: usuarioActual.grupo.id,
+    grupoId: usuarioActual.grupo?.id,
   };
 
   // Solo agregar la foto si se proporciona
@@ -786,7 +786,7 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
       email,
       dni,
       rol: "ADULTO",
-      grupoId: usuarioActual.grupo.id,
+      grupoId: usuarioActual.grupo?.id,
       foto: nuevoUsuario.foto,
     }
   );
@@ -849,7 +849,7 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
     fechaNacimiento: new Date(fechaNacimiento),
     password: hashedPassword,
     rol: "MENOR",
-    grupoId: usuarioActual.grupo.id,
+    grupoId: usuarioActual.grupo?.id,
   };
 
   // Solo agregar la foto si se proporciona
@@ -873,7 +873,7 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
       email,
       dni,
       rol: "MENOR",
-      grupoId: usuarioActual.grupo.id,
+      grupoId: usuarioActual.grupo?.id,
       foto: nuevoUsuario.foto,
     }
   );
@@ -929,7 +929,7 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
     nombre: name,
     dni,
     fechaNacimiento: new Date(fechaNacimiento),
-    grupoId: usuarioActual.grupo.id,
+    grupoId: usuarioActual.grupo?.id,
   };
 
   // Solo agregar la foto si se proporciona
@@ -952,7 +952,7 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
       nombre: name,
       dni,
       fechaNacimiento: new Date(fechaNacimiento),
-      grupoId: usuarioActual.grupo.id,
+      grupoId: usuarioActual.grupo?.id,
       foto: nuevoPerfil.foto,
     }
   );
@@ -991,7 +991,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
     where: {
       id: medicamentoId,
       user: {
-        grupoId: usuarioActual.grupo.id,
+        grupoId: usuarioActual.grupo?.id,
       },
     },
   });
@@ -1012,13 +1012,13 @@ export async function registrarTomaMedicamento(formData: FormData) {
   let nombreConsumidor = "";
   if (consumidorTipo === "usuario") {
     const consumidorUsuario = await prisma.user.findFirst({
-      where: { id: consumidorId, grupoId: usuarioActual.grupo.id },
+      where: { id: consumidorId, grupoId: usuarioActual.grupo?.id },
       select: { name: true, email: true },
     });
     nombreConsumidor = consumidorUsuario?.name || consumidorUsuario?.email || "Usuario desconocido";
   } else if (consumidorTipo === "perfil") {
     const consumidorPerfil = await prisma.perfilMenor.findFirst({
-      where: { id: consumidorId, grupoId: usuarioActual.grupo.id },
+      where: { id: consumidorId, grupoId: usuarioActual.grupo?.id },
       select: { nombre: true },
     });
     nombreConsumidor = consumidorPerfil?.nombre || "Perfil desconocido";
@@ -1034,7 +1034,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
       const consumidorUsuario = await tx.user.findFirst({
         where: {
           id: consumidorId,
-          grupoId: usuarioActual.grupo.id,
+          grupoId: usuarioActual.grupo?.id || '',
         },
       });
 
@@ -1048,7 +1048,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
           consumidorUsuarioId: consumidorId,
           registranteId: session.userId,
           fechaHora: new Date(fechaHora),
-          grupoId: usuarioActual.grupo.id,
+          grupoId: usuarioActual.grupo?.id || '',
         },
       });
     } else if (consumidorTipo === "perfil") {
@@ -1056,7 +1056,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
       const consumidorPerfil = await tx.perfilMenor.findFirst({
         where: {
           id: consumidorId,
-          grupoId: usuarioActual.grupo.id,
+          grupoId: usuarioActual.grupo?.id || '',
         },
       });
 
@@ -1070,7 +1070,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
           consumidorPerfilId: consumidorId,
           registranteId: session.userId,
           fechaHora: new Date(fechaHora),
-          grupoId: usuarioActual.grupo.id,
+          grupoId: usuarioActual.grupo?.id || '',
         },
       });
     }
@@ -1093,7 +1093,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
     session.userId,
     TipoAccion.CREATE,
     TipoEntidad.TOMA,
-    resultado.id,
+    resultado?.id || '',
     undefined,
     {
       medicamentoId,

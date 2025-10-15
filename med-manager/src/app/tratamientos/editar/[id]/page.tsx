@@ -36,14 +36,17 @@ export default function EditarTratamientoPage() {
     userId: string;
   }) => {
     try {
-      console.log("Iniciando actualización de tratamiento:", tratamientoData);
       
       // Procesar imágenes para serialización
       const processedImages = tratamientoData.images?.map(img => ({
+        id: img.id || '',
+        treatmentId: tratamientoId,
         imageUrl: img.imageUrl,
         imageType: img.imageType,
         extractedText: img.extractedText,
-        aiAnalysis: img.aiAnalysis
+        aiAnalysis: img.aiAnalysis,
+        createdAt: img.createdAt || new Date(),
+        updatedAt: new Date()
       })) || [];
       
       const processedTreatment = {
@@ -51,7 +54,6 @@ export default function EditarTratamientoPage() {
         images: processedImages
       };
       
-      console.log("Tratamiento procesado:", processedTreatment);
       
       await updateTratamiento(tratamientoId, processedTreatment);
       
@@ -59,7 +61,6 @@ export default function EditarTratamientoPage() {
       
       // Redirigir a la lista de tratamientos usando setTimeout para asegurar que se ejecute
       setTimeout(() => {
-        console.log("Redirigiendo a /tratamientos después de actualizar...");
         router.push("/tratamientos");
       }, 100);
     } catch (error) {

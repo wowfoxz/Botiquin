@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: botilyx
+  namespace: botilyx
+  labels:
+    app: botilyx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: botilyx
+  template:
+    metadata:
+      labels:
+        app: botilyx
+    spec:
+      containers:
+      - name: botilyx
+        image: botilyx:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: botilyx-config
+              key: NODE_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: botilyx-config
+              key: LOG_LEVEL
+        - name: NEXT_PUBLIC_BASE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: botilyx-config
+              key: NEXT_PUBLIC_BASE_PATH
+        - name: FORCE_HTTPS
+          valueFrom:
+            configMapKeyRef:
+              name: botilyx-config
+              key: FORCE_HTTPS
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: botilyx-secrets
+              key: DATABASE_URL
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: botilyx-secrets
+              key: SESSION_SECRET
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: botilyx-secrets
+              key: GEMINI_API_KEY
+        - name: VAPID_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: botilyx-secrets
+              key: VAPID_PUBLIC_KEY
+        - name: VAPID_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: botilyx-secrets
+              key: VAPID_PRIVATE_KEY
+        - name: NOTIFICATION_PROCESSOR_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: botilyx-secrets
+              key: NOTIFICATION_PROCESSOR_SECRET
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5

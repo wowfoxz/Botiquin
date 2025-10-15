@@ -5,6 +5,11 @@ import { cookies } from "next/headers";
 // En producción, esta clave secreta debe ser una cadena larga y aleatoria,
 // guardada de forma segura en una variable de entorno.
 const secretKey = process.env.SESSION_SECRET;
+
+if (!secretKey) {
+  throw new Error('SESSION_SECRET no está definida en las variables de entorno');
+}
+
 const key = new TextEncoder().encode(secretKey);
 
 interface SessionPayload extends JWTPayload {

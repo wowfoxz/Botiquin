@@ -6,8 +6,9 @@ import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'Botilyx',
-  description: 'Recuerda por ti',
+  title: 'Botilyx - Gestor de Medicamentos',
+  description: 'Sistema de gestión de medicamentos y tratamientos médicos',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/icons/favicon.ico', sizes: 'any' },
@@ -25,6 +26,20 @@ export const metadata: Metadata = {
       { url: '/icons/apple/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'Botilyx',
+    'mobile-web-app-capable': 'yes',
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#3b82f6',
 };
 
 export default function RootLayout({
@@ -48,6 +63,23 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('Service Worker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                      console.log('Error al registrar Service Worker:', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

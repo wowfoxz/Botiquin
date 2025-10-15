@@ -29,6 +29,8 @@ export async function GET(
             email: `${userId}@temp.com`,
             name: "Usuario Temporal",
             password: "temp-password", // En una app real, esto estaría hasheado
+            dni: "00000000",
+            fechaNacimiento: new Date("1990-01-01")
           },
         });
       }

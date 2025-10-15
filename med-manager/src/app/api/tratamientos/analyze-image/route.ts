@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const mimeType = file.type;
 
     // Analizar la imagen con IA
-    const analysis = await analyzeTreatmentImageWithGemini(buffer, mimeType, imageType);
+    const analysis = await analyzeTreatmentImageWithGemini(buffer, mimeType, imageType as "receta" | "instrucciones");
 
     return NextResponse.json(analysis);
   } catch (error) {

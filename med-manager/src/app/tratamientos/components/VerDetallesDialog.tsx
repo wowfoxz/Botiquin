@@ -98,13 +98,13 @@ export function VerDetallesDialog({ tratamiento, medicinas }: VerDetallesDialogP
                       <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h4 className="font-medium">{med.commercialName || med.medication?.commercialName || "Medicamento"}</h4>
+                            <h4 className="font-medium">{med.medication?.commercialName || "Medicamento"}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {med.activeIngredient || med.medication?.activeIngredient || "Principio activo no especificado"}
+                              {med.medication?.activeIngredient || "Principio activo no especificado"}
                             </p>
                           </div>
                           <Badge variant="secondary">
-                            {med.unit || med.medication?.unit || "unidades"}
+                            {med.medication?.unit || "unidades"}
                           </Badge>
                         </div>
                         
@@ -113,7 +113,7 @@ export function VerDetallesDialog({ tratamiento, medicinas }: VerDetallesDialogP
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                           <div>
                             <label className="font-medium text-muted-foreground">Dosis</label>
-                            <p>{med.dosage} {med.unit || med.medication?.unit || "unidades"}</p>
+                            <p>{med.dosage} {med.medication?.unit || "unidades"}</p>
                           </div>
                           <div>
                             <label className="font-medium text-muted-foreground">Frecuencia</label>

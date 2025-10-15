@@ -1,0 +1,48 @@
+# Configuración básica de monitoreo para Botilyx
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: botilyx-monitor
+  namespace: botilyx
+  labels:
+    app: botilyx
+spec:
+  selector:
+    matchLabels:
+      app: botilyx
+  endpoints:
+  - port: http
+    path: /api/health
+    interval: 30s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: botilyx-metrics
+  namespace: botilyx
+  labels:
+    app: botilyx
+spec:
+  selector:
+    app: botilyx
+  ports:
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: botilyx-prometheus-config
+  namespace: botilyx
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+    - job_name: 'botilyx'
+      static_configs:
+      - targets: ['botilyx-metrics:9090']
+      scrape_interval: 30s

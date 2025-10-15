@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { processUploadedImage } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-export default function UploadPage() {
+function UploadPageContent() {
   const [file, setFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -400,5 +400,13 @@ export default function UploadPage() {
         </Card>
       </div>
     </main>
+  );
+}
+
+export default function UploadPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <UploadPageContent />
+    </Suspense>
   );
 }

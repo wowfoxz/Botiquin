@@ -1,5 +1,5 @@
 {
-  "name": "med-manager",
+  "name": "botilyx",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "patch:ring": "node scripts/patch-ring-classes.js"
+    "patch:ring": "node scripts/patch-ring-classes.js",
+    "build:prod": "NODE_ENV=production npm run build",
+    "start:prod": "NODE_ENV=production npm start",
+    "deploy": "chmod +x deploy.sh && ./deploy.sh",
+    "docker:build": "docker build -t botilyx:latest .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env.production botilyx:latest"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -58,6 +63,7 @@
     "motion": "^12.23.15",
     "next": "15.5.3",
     "next-themes": "^0.4.6",
+    "node-fetch": "^3.3.2",
     "pdf-lib": "^1.17.1",
     "react": "19.1.0",
     "react-day-picker": "^9.10.0",
@@ -68,6 +74,7 @@
     "tailwind-merge": "^3.3.1",
     "use-debounce": "^10.0.6",
     "vaul": "^1.1.2",
+    "web-push": "^3.6.7",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -76,8 +83,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "mkcert": "^3.2.0",
     "prettier": "^3.6.2",
     "prisma": "^6.16.1",
     "tailwindcss": "^4.1.13",

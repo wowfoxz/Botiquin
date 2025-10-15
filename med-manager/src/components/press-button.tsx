@@ -70,6 +70,42 @@ const PressButton: React.FC<PressButtonProps> = ({
     // NO llamar onRelease aquí - permitir que el usuario mantenga el selector abierto
   };
 
+  const handleTouchStart = (event: React.TouchEvent) => {
+    if (disabled) return;
+    
+    event.preventDefault();
+    setIsPressed(true);
+    
+    // Obtener posición del botón
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      setButtonPosition({ x: centerX, y: centerY });
+    }
+
+    // Crear un evento similar al mouse para compatibilidad
+    const mouseEvent = {
+      preventDefault: () => event.preventDefault(),
+      stopPropagation: () => event.stopPropagation(),
+      buttonPosition: buttonRef.current ? {
+        x: buttonRef.current.getBoundingClientRect().left + buttonRef.current.getBoundingClientRect().width / 2,
+        y: buttonRef.current.getBoundingClientRect().top + buttonRef.current.getBoundingClientRect().height / 2
+      } : { x: 0, y: 0 }
+    } as React.MouseEvent & { buttonPosition?: { x: number; y: number } };
+    
+    onPress(mouseEvent);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    if (disabled) return;
+    
+    event.preventDefault();
+    setIsPressed(false);
+    
+    // NO llamar onRelease aquí - el selector se cierra solo cuando se selecciona un avatar
+  };
+
   // Limpiar timeout si el componente se desmonta
   useEffect(() => {
     return () => {
@@ -91,8 +127,8 @@ const PressButton: React.FC<PressButtonProps> = ({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
-      onTouchStart={handleMouseDown}
-      onTouchEnd={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {children}
     </Button>

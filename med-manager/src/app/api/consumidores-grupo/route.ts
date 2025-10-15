@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         name: usuario.name || "Sin nombre",
         tipo: "usuario",
         rol: usuario.rol,
-        foto: usuario.foto,
+        foto: usuario.foto || undefined,
       });
     });
 
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         id: perfil.id,
         name: perfil.nombre,
         tipo: "perfil",
-        foto: perfil.foto,
+        foto: perfil.foto || undefined,
       });
     });
 

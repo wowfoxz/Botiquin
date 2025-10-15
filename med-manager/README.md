@@ -1,6 +1,6 @@
-# MedManager - Sistema de Gestión de Medicamentos y Tratamientos
+# Botilyx - Sistema de Gestión de Medicamentos y Tratamientos
 
-MedManager es una aplicación completa para la gestión personalizada de medicamentos, tratamientos y notificaciones médicas. Permite a los usuarios llevar un control detallado de sus medicamentos, crear tratamientos personalizados y recibir notificaciones sobre vencimientos y dosis.
+Botilyx es una aplicación completa para la gestión personalizada de medicamentos, tratamientos y notificaciones médicas. Permite a los usuarios llevar un control detallado de sus medicamentos, crear tratamientos personalizados y recibir notificaciones sobre vencimientos y dosis.
 
 ## Características Principales
 
@@ -158,7 +158,7 @@ src/
 ```bash
 # Clonar el repositorio
 git clone <repositorio-url>
-cd med-manager
+cd botilyx
 
 # Instalar dependencias
 npm install
@@ -174,6 +174,54 @@ npx prisma generate
 # Iniciar servidor de desarrollo
 npm run dev
 ```
+
+## 🚀 Despliegue en Producción
+
+### Despliegue en Kubernetes
+
+Botilyx está configurado para desplegarse fácilmente en Kubernetes con soporte para HTTPS automático.
+
+#### Configuración Rápida
+
+```bash
+# 1. Configurar el entorno de producción
+./scripts/setup-production.sh tu-dominio.com
+
+# 2. Configurar secrets reales
+# Edita k8s/secret-template.yaml con tus valores
+kubectl apply -f k8s/secret-template.yaml
+
+# 3. Desplegar la aplicación
+./scripts/deploy.sh
+```
+
+#### Configuración Manual
+
+```bash
+# Crear namespace
+kubectl apply -f k8s/namespace.yaml
+
+# Aplicar configuración
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secret.yaml
+
+# Desplegar aplicación
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+#### Con Docker
+
+```bash
+# Construir imagen
+docker build -t botilyx:latest .
+
+# Ejecutar contenedor
+docker run -p 3000:3000 --env-file .env.production botilyx:latest
+```
+
+Para más detalles, consulta la [Guía de Despliegue](docs/DEPLOYMENT.md).
 
 ### Variables de Entorno Requeridas
 

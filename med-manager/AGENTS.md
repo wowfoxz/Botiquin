@@ -53,3 +53,4 @@
 - En este proyecto **no se escriben tests automáticos**.
 - No generes archivos de test (`*.test.*`, `*.spec.*`) ni instales
   frameworks de testing (jest, vitest, cypress, etc.).
+-Cuando se te solicita un texto de los ultimos cambios para el Commit, tienes que usar adelante del cada texto la nomenclatura correspondiente [CREATE] [FIX] [ADD] [UPDATE] [DELETE] [CAHNGE] [EDIT]

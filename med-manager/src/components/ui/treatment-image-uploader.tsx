@@ -40,10 +40,6 @@ export function TreatmentImageUploader({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Debug: Log cuando cambien las imágenes
-  useEffect(() => {
-    console.log('Imágenes actualizadas en TreatmentImageUploader:', images);
-  }, [images]);
 
     const handleFileSelect = async (file: File, imageType: "receta" | "instrucciones") => {
       if (!file.type.startsWith('image/')) {
@@ -51,7 +47,6 @@ export function TreatmentImageUploader({
         return;
       }
 
-      console.log('Seleccionando archivo:', file.name, 'Tipo:', imageType);
 
       // Crear imagen temporal para mostrar mientras se sube
       const tempImageUrl = URL.createObjectURL(file);
@@ -63,7 +58,6 @@ export function TreatmentImageUploader({
         isAnalyzing: true,
       };
 
-      console.log('Nueva imagen creada:', newImage);
       onImagesChange([...images, newImage]);
 
       try {
@@ -72,7 +66,6 @@ export function TreatmentImageUploader({
         uploadFormData.append('image', file);
         uploadFormData.append('imageType', imageType);
 
-        console.log('Subiendo imagen al servidor...');
         const uploadResponse = await fetch('/api/tratamientos/upload-image', {
           method: 'POST',
           body: uploadFormData,
@@ -83,20 +76,18 @@ export function TreatmentImageUploader({
         }
 
         const uploadResult = await uploadResponse.json();
-        console.log('Imagen subida exitosamente:', uploadResult);
 
         // Actualizar la imagen con la URL permanente
-        onImagesChange(prevImages => 
-          prevImages.map(img => 
-            img.id === newImage.id 
-              ? { 
-                  ...img, 
-                  imageUrl: uploadResult.imageUrl,
-                  isAnalyzing: false
-                }
-              : img
-          )
+        const updatedImages = images.map(img => 
+          img.id === newImage.id 
+            ? { 
+                ...img, 
+                imageUrl: uploadResult.imageUrl,
+                isAnalyzing: false
+              }
+            : img
         );
+        onImagesChange(updatedImages);
 
         // Ahora hacer el análisis con IA
         const updatedImage = { ...newImage, imageUrl: uploadResult.imageUrl };
@@ -106,18 +97,17 @@ export function TreatmentImageUploader({
         console.error('Error al subir imagen:', error);
         
         // En caso de error, mantener la imagen temporal pero marcar como error
-        onImagesChange(prevImages => 
-          prevImages.map(img => 
-            img.id === newImage.id 
-              ? { 
-                  ...img, 
-                  extractedText: "Error al subir la imagen",
-                  aiAnalysis: `No se pudo procesar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-                  isAnalyzing: false 
-                }
-              : img
-          )
+        const errorImages = images.map(img => 
+          img.id === newImage.id 
+            ? { 
+                ...img, 
+                extractedText: "Error al subir la imagen",
+                aiAnalysis: `No se pudo procesar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+                isAnalyzing: false 
+              }
+            : img
         );
+        onImagesChange(errorImages);
       }
     };
 
@@ -128,7 +118,6 @@ export function TreatmentImageUploader({
       formData.append('image', image.file);
       formData.append('imageType', image.imageType);
 
-      console.log('Enviando imagen para análisis:', image.imageType);
 
       // Llamar a la API de análisis de IA
       const response = await fetch('/api/tratamientos/analyze-image', {
@@ -141,36 +130,33 @@ export function TreatmentImageUploader({
       }
 
       const analysis = await response.json();
-      console.log('Análisis recibido:', analysis);
       
       // Usar el estado actual de imágenes
-      onImagesChange(prevImages => 
-        prevImages.map(img => 
-          img.id === image.id 
-            ? { 
-                ...img, 
-                extractedText: analysis.extractedText || "",
-                aiAnalysis: analysis.aiAnalysis || "",
-                isAnalyzing: false 
-              }
-            : img
-        )
+      const updatedImages = images.map(img => 
+        img.id === image.id 
+          ? { 
+              ...img, 
+              extractedText: analysis.extractedText || "",
+              aiAnalysis: analysis.aiAnalysis || "",
+              isAnalyzing: false 
+            }
+          : img
       );
+      onImagesChange(updatedImages);
     } catch (error) {
       console.error('Error al analizar imagen:', error);
       // Usar el estado actual de imágenes
-      onImagesChange(prevImages => 
-        prevImages.map(img => 
-          img.id === image.id 
-            ? { 
-                ...img, 
-                extractedText: "Error al analizar la imagen",
-                aiAnalysis: `No se pudo procesar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-                isAnalyzing: false 
-              }
-            : img
-        )
+      const errorImages = images.map(img => 
+        img.id === image.id 
+          ? { 
+              ...img, 
+              extractedText: "Error al analizar la imagen",
+              aiAnalysis: `No se pudo procesar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+              isAnalyzing: false 
+            }
+          : img
       );
+      onImagesChange(errorImages);
     }
   };
 

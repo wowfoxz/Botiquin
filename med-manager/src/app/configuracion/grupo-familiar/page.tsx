@@ -28,6 +28,7 @@ interface Usuario {
   dni: string;
   rol: string;
   fechaNacimiento: Date;
+  foto?: string;
 }
 
 interface Perfil {
@@ -35,6 +36,7 @@ interface Perfil {
   nombre: string;
   dni: string;
   fechaNacimiento: Date;
+  foto?: string;
 }
 
 interface Grupo {
@@ -76,7 +78,7 @@ export default function GrupoFamiliarPage() {
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <Cardio size={40} stroke={3} speed={1.5} color="var(--color-primary)" className="mx-auto mb-4" />
+            <Cardio size={40} stroke={3} speed={1.5} color="var(--color-primary)" />
             <p className="text-muted-foreground">Cargando grupo familiar...</p>
           </div>
         </div>

@@ -79,9 +79,9 @@ export function TratamientosHistoricos({
                         <div className="space-y-1">
                           {tratamiento.medications?.map((med, index) => (
                             <div key={index} className="text-sm">
-                              <div className="font-medium">{med.commercialName || med.medication?.commercialName || "Medicamento"}</div>
+                              <div className="font-medium">{med.medication?.commercialName || "Medicamento"}</div>
                               <div className="text-muted-foreground">
-                                {med.dosage} {med.unit || med.medication?.unit || "unidades"} - Cada {med.frequencyHours}h
+                                {med.dosage} {med.medication?.unit || "unidades"} - Cada {med.frequencyHours}h
                               </div>
                             </div>
                           )) || "Sin medicamentos"}

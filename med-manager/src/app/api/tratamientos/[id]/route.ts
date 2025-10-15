@@ -101,10 +101,7 @@ export async function PUT(
 
     // Calcular nueva fecha de finalización si cambia la duración
     let endDate = tratamientoExistente.endDate;
-    if (
-      body.durationDays &&
-      parseInt(body.durationDays) !== tratamientoExistente.durationDays
-    ) {
+    if (body.durationDays) {
       // Usar la fecha de inicio existente o la específica si está configurada
       const startDate = new Date(tratamientoExistente.startDate);
       // Ajustar startDate a la zona horaria local

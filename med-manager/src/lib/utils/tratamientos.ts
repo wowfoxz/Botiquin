@@ -5,34 +5,35 @@ import {
 } from "@/types/tratamientos";
 
 /**
- * Calcular el número total de dosis para un tratamiento
- * @param tratamiento - El tratamiento para calcular las dosis
+ * Calcular el número total de dosis para un medicamento de un tratamiento
+ * @param medicamento - El medicamento del tratamiento para calcular las dosis
  * @returns El número total de dosis
  */
-export const calcularDosisTotales = (tratamiento: Tratamiento): number => {
+export const calcularDosisTotales = (medicamento: { durationDays: number; frequencyHours: number }): number => {
   return Math.ceil(
-    tratamiento.durationDays * (24 / tratamiento.frequencyHours)
+    medicamento.durationDays * (24 / medicamento.frequencyHours)
   );
 };
 
 /**
- * Generar fechas de dosis para un tratamiento
- * @param tratamiento - El tratamiento para generar las fechas
+ * Generar fechas de dosis para un medicamento de un tratamiento
+ * @param medicamento - El medicamento del tratamiento para generar las fechas
+ * @param startDate - La fecha de inicio del tratamiento
  * @returns Un array de fechas de dosis
  */
-export const generarFechasDosis = (tratamiento: Tratamiento): Date[] => {
+export const generarFechasDosis = (medicamento: { durationDays: number; frequencyHours: number }, startDate: Date): Date[] => {
   // Ajustar la fecha de inicio a la zona horaria local
   const adjustedStartDate = new Date(
-    tratamiento.startDate.getTime() -
-      tratamiento.startDate.getTimezoneOffset() * 60000
+    startDate.getTime() -
+      startDate.getTimezoneOffset() * 60000
   );
-  const dosisTotales = calcularDosisTotales(tratamiento);
+  const dosisTotales = calcularDosisTotales(medicamento);
   const fechas: Date[] = [];
 
   for (let i = 0; i < dosisTotales; i++) {
     const fechaDosis = new Date(
       adjustedStartDate.getTime() +
-        i * tratamiento.frequencyHours * 60 * 60 * 1000
+        i * medicamento.frequencyHours * 60 * 60 * 1000
     );
     fechas.push(fechaDosis);
   }
