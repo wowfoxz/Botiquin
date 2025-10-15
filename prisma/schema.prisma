@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  name                String?
+  dni                 String               @unique
+  fechaNacimiento     DateTime
+  foto                String?
+  password            String
+  rol                 UserRole             @default(ADULTO)
+  grupoId             String?
+  grupo               GrupoFamiliar?       @relation(fields: [grupoId], references: [id])
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  medications         Medication[]
+  notificationSettings NotificationSettings?
+  treatments          Treatment[]          // Relación con tratamientos
+  notificationPreferences NotificationPreferences? // Relación con preferencias de notificaciones
+  pushSubscriptions   PushSubscription[]   // Relación con suscripciones push
+  shoppingLists       ShoppingList[]       // Relación con listas de compras
+  tomasRegistradas    Toma[]               @relation("TomaRegistrante")
+  tomasConsumidas     Toma[]               @relation("TomaConsumidorUsuario")
+  grupoCreado         GrupoFamiliar[]      @relation("GrupoCreador")
+  historial           Historial[]          // Relación con historial de auditoría
+}
+
+enum UserRole {
+  ADULTO
+  MENOR
+}
+
+model Medication {
+  id                  String      @id @default(cuid())
+  commercialName      String
+  activeIngredient    String?
+  description         String?
+  intakeRecommendations String?
+  imageUrl            String?
+  initialQuantity     Float
+  currentQuantity     Float
+  unit                String // e.g., "pills", "ml"
+  expirationDate      DateTime
+  archived            Boolean     @default(false)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  user                User        @relation(fields: [userId], references: [id])
+  userId              String
+  treatmentMedications TreatmentMedication[] // Relación con medicamentos de tratamientos
+  tomas               Toma[]      // Relación con tomas de este medicamento
+}
+
+model NotificationSettings {
+  id                  String   @id @default(cuid())
+  daysBeforeExpiration Int      @default(30)
+  lowStockThreshold    Float    @default(10)
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String   @unique
+}
+
+// Modelo para tratamientos médicos
+model Treatment {
+  id             String     @id @default(cuid())
+  name           String
+  patient        String    // Nombre del paciente (texto libre para compatibilidad)
+  patientId      String?   // ID del paciente del grupo familiar (opcional)
+  patientType    String?   // "usuario" o "perfil" - tipo de paciente seleccionado
+  symptoms       String?   // Síntomas del paciente (opcional)
+  startDate      DateTime  @default(now())
+  endDate        DateTime  // Fecha de finalización calculada
+  isActive       Boolean   @default(true)
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String
+  notifications  Notification[] // Notificaciones asociadas al tratamiento
+  medications    TreatmentMedication[] // Medicamentos del tratamiento
+  images         TreatmentImage[] // Imágenes del tratamiento (recetas e instrucciones)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// Modelo para medicamentos dentro de un tratamiento (relación muchos a muchos)
+model TreatmentMedication {
+  id             String     @id @default(cuid())
+  treatment      Treatment  @relation(fields: [treatmentId], references: [id])
+  treatmentId    String
+  medication     Medication @relation(fields: [medicationId], references: [id])
+  medicationId   String
+  frequencyHours Int       // Frecuencia en horas (ej: cada 8 horas)
+  durationDays   Int       // Duración en días
+  dosage         String    // Descripción de la dosis (ej: "1 tableta")
+  startDate      DateTime  // Fecha de inicio específica para este medicamento
+  endDate        DateTime  // Fecha de finalización específica para este medicamento
+  startAtSpecificTime Boolean @default(false) // Si este medicamento comienza en una hora específica
+  specificStartTime   DateTime? // Hora específica de inicio para este medicamento
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// Modelo para imágenes de tratamientos (recetas e instrucciones)
+model TreatmentImage {
+  id             String     @id @default(cuid())
+  treatment      Treatment  @relation(fields: [treatmentId], references: [id])
+  treatmentId    String
+  imageUrl       String    // URL de la imagen almacenada
+  imageType      String    // "receta" o "instrucciones"
+  extractedText  String?   // Texto extraído por IA
+  aiAnalysis     String?   // Análisis estructurado de la IA
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// Modelo para notificaciones de tratamientos
+model Notification {
+  id              String    @id @default(cuid())
+  treatment       Treatment @relation(fields: [treatmentId], references: [id])
+  treatmentId     String
+  scheduledDate   DateTime  // Fecha programada para la notificación
+  sent            Boolean   @default(false)
+  type            String    // Tipo de notificación: push, sound, email, browser
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Modelo para preferencias de notificaciones del usuario
+model NotificationPreferences {
+  id          String   @id @default(cuid())
+  push        Boolean  @default(false)
+  sound       Boolean  @default(false)
+  email       Boolean  @default(false)
+  browser     Boolean  @default(false)
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Modelo para suscripciones push
+model PushSubscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  endpoint  String   // URL del endpoint de push
+  p256dhKey String   // Clave pública P256DH
+  authKey   String   // Clave de autenticación
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, endpoint])
+}
+
+// Modelo para items de la lista de compras
+model ShoppingItem {
+  id             String       @id @default(cuid())
+  name           String
+  presentation   String?
+  laboratory     String?
+  price          Float
+  quantity       Int          @default(1)
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id])
+  shoppingListId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Modelo para listas de compras
+model ShoppingList {
+  id           String         @id @default(cuid())
+  name         String
+  items        ShoppingItem[]
+  total        Float
+  isArchived   Boolean        @default(false)
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// Modelo para grupos familiares
+model GrupoFamiliar {
+  id           String         @id @default(cuid())
+  nombre       String
+  creadorId    String
+  creador      User           @relation("GrupoCreador", fields: [creadorId], references: [id])
+  integrantes  User[]         // Usuarios adultos y menores con cuenta
+  perfilesMenores PerfilMenor[] // Perfiles de menores sin cuenta
+  tomas        Toma[]         // Todas las tomas del grupo
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// Modelo para perfiles de menores sin cuenta
+model PerfilMenor {
+  id              String         @id @default(cuid())
+  nombre          String
+  dni             String         @unique
+  fechaNacimiento DateTime
+  foto            String?
+  grupoId         String
+  grupo           GrupoFamiliar  @relation(fields: [grupoId], references: [id])
+  tomas           Toma[]         @relation("TomaPerfilMenor")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// Modelo para tomas de medicamentos
+model Toma {
+  id                    String         @id @default(cuid())
+  medicamentoId         String
+  medicamento           Medication     @relation(fields: [medicamentoId], references: [id])
+  consumidorUsuarioId   String?        // Usuario que tomó el medicamento (adulto o menor con cuenta)
+  consumidorUsuario     User?          @relation("TomaConsumidorUsuario", fields: [consumidorUsuarioId], references: [id])
+  consumidorPerfilId    String?        // Perfil de menor sin cuenta que tomó el medicamento
+  consumidorPerfil      PerfilMenor?   @relation("TomaPerfilMenor", fields: [consumidorPerfilId], references: [id])
+  registranteId         String         // Usuario que registró la toma
+  registrante           User           @relation("TomaRegistrante", fields: [registranteId], references: [id])
+  fechaHora             DateTime       @default(now())
+  grupoId               String
+  grupo                 GrupoFamiliar  @relation(fields: [grupoId], references: [id])
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+}
+
+// Modelo para historial de auditoría
+model Historial {
+  id                  String    @id @default(cuid())
+  usuarioId           String    // Usuario que realizó la acción
+  usuario             User      @relation(fields: [usuarioId], references: [id])
+  tipoAccion          String    // Tipo de acción: login, create, update, delete, search, etc.
+  entidadTipo         String    // Tipo de entidad: usuario, perfil, medicamento, toma, lista_compra, tratamiento, etc.
+  entidadId           String?   // ID del registro afectado (nullable si no aplica, ej: login)
+  datosPrevios        String?   // JSON con el estado anterior (opcional)
+  datosPosteriores    String?   // JSON con el estado posterior (opcional)
+  metadata            String?   // JSON con metadata adicional (IP, user-agent, etc.)
+  createdAt           DateTime  @default(now())
+  
+  @@index([usuarioId])
+  @@index([tipoAccion])
+  @@index([entidadTipo, entidadId])
+  @@index([createdAt])
+}
