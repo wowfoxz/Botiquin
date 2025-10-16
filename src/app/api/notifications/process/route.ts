@@ -55,7 +55,13 @@ export async function POST(request: Request) {
     });
 
 
-    const resultados = [];
+    const resultados: Array<{
+      id: string;
+      success: boolean;
+      message?: string;
+      resultados?: any[];
+      error?: string;
+    }> = [];
 
     for (const notificacion of notificacionesPendientes) {
       try {
@@ -146,7 +152,11 @@ async function enviarNotificacionPush(userId: string, mensaje: {
     }
 
     const payload = JSON.stringify(mensaje);
-    const resultados = [];
+    const resultados: Array<{
+      suscripcion: string;
+      success: boolean;
+      error?: string;
+    }> = [];
 
     for (const suscripcion of suscripciones) {
       try {

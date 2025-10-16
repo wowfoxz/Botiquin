@@ -1,4 +1,4 @@
-// File: C:\Users\Usuario\Desktop\Botiquin\med-manager\src\app\botiquin\page.tsx
+// File: C:\Users\Usuario\Desktop\Botiquin\src\app\botiquin\page.tsx
 import * as entry from '../../../../src/app/botiquin/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Crear medicamentos del tratamiento
-    const treatmentMedications = [];
+    const treatmentMedications: any[] = [];
     for (const medicationData of body.medications) {
       // Determinar fecha de inicio para este medicamento
       let medicationStartDate = now;

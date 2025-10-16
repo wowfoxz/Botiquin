@@ -1,4 +1,4 @@
-// File: C:\Users\Usuario\Desktop\Botiquin\med-manager\src\app\api\auth\route.ts
+// File: C:\Users\Usuario\Desktop\Botiquin\src\app\api\auth\route.ts
 import * as entry from '../../../../../src/app/api/auth/route.js'
 import type { NextRequest } from 'next/server.js'
 

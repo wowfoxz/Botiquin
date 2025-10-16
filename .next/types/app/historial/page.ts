@@ -1,4 +1,4 @@
-// File: C:\Users\Usuario\Desktop\Botiquin\med-manager\src\app\historial\page.tsx
+// File: C:\Users\Usuario\Desktop\Botiquin\src\app\historial\page.tsx
 import * as entry from '../../../../src/app/historial/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -1,4 +1,4 @@
-// File: C:\Users\Usuario\Desktop\Botiquin\med-manager\src\app\api\consumidores-grupo\route.ts
+// File: C:\Users\Usuario\Desktop\Botiquin\src\app\api\consumidores-grupo\route.ts
 import * as entry from '../../../../../src/app/api/consumidores-grupo/route.js'
 import type { NextRequest } from 'next/server.js'
 

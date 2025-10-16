@@ -38,7 +38,12 @@ export default async function SettingsPage() {
     redirect('/login');
   }
 
-  let settings = null;
+  let settings: {
+    userId: string;
+    id: string;
+    daysBeforeExpiration: number;
+    lowStockThreshold: number;
+  } | null = null;
   if (userId) {
     settings = await prisma.notificationSettings.findUnique({
       where: { userId: userId },
