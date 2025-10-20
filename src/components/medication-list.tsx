@@ -3,7 +3,7 @@ import MedicationCard from './medication-card';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { Medication } from '@prisma/client';
+import type { Medication } from '@prisma/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 

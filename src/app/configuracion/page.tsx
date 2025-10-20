@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/session';
+// import { getSession } from '@/lib/session';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decrypt } from '@/lib/session';

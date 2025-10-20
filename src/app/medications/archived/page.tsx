@@ -2,7 +2,7 @@ import React from 'react';
 import MedicationCard from '@/components/medication-card';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { Archive } from 'lucide-react';
 import {
   Card,

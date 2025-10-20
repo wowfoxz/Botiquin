@@ -1,6 +1,6 @@
 'use client';
 
-import { Medication } from '@prisma/client';
+import type { Medication } from '@prisma/client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication, registrarTomaMedicamento } from '@/app/actions';
