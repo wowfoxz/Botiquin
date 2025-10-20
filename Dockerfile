@@ -8,7 +8,7 @@ WORKDIR /app
 # Instalar dependencias
 FROM base AS deps
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Build de la aplicación
 FROM base AS builder
@@ -16,6 +16,9 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
+
+# Generar cliente de Prisma
+RUN npx prisma generate
 
 # Variables de entorno para el build
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -3,7 +3,23 @@ import MedicationCard from './medication-card';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import type { Medication } from '@prisma/client';
+// Definir tipo local para Medication
+type Medication = {
+  id: string;
+  commercialName: string;
+  activeIngredient?: string | null;
+  description?: string | null;
+  intakeRecommendations?: string | null;
+  imageUrl?: string | null;
+  initialQuantity: number;
+  currentQuantity: number;
+  unit: string;
+  expirationDate: Date;
+  archived: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+};
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 

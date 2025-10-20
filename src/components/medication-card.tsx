@@ -1,6 +1,22 @@
 'use client';
 
-import type { Medication } from '@prisma/client';
+// Definir tipo local para Medication
+type Medication = {
+  id: string;
+  commercialName: string;
+  activeIngredient?: string | null;
+  description?: string | null;
+  intakeRecommendations?: string | null;
+  imageUrl?: string | null;
+  initialQuantity: number;
+  currentQuantity: number;
+  unit: string;
+  expirationDate: Date;
+  archived: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+};
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication, registrarTomaMedicamento } from '@/app/actions';
