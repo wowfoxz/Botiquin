@@ -32,7 +32,7 @@ export default async function BotiquinContent({
   }
 
   // Verificar si la sesión ha expirado
-  let userId: string | null = null;
+  // let userId: string | null = null;
   try {
     const session = await decrypt(sessionCookie);
     if (
@@ -43,7 +43,7 @@ export default async function BotiquinContent({
     ) {
       redirect("/login");
     }
-    userId = session.userId;
+    // userId = session.userId;
   } catch {
     redirect("/login");
   }

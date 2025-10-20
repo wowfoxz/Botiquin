@@ -1,168 +1,163 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id                  String               @id @default(cuid())
-  email               String               @unique
-  name                String?
-  dni                 String               @unique
-  fechaNacimiento     DateTime
-  foto                String?
-  password            String
-  rol                 UserRole             @default(ADULTO)
-  grupoId             String?
-  grupo               GrupoFamiliar?       @relation(fields: [grupoId], references: [id])
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  medications         Medication[]
-  notificationSettings NotificationSettings?
-  treatments          Treatment[]          // Relación con tratamientos
-  notificationPreferences NotificationPreferences? // Relación con preferencias de notificaciones
-  pushSubscriptions   PushSubscription[]   // Relación con suscripciones push
-  shoppingLists       ShoppingList[]       // Relación con listas de compras
-  tomasRegistradas    Toma[]               @relation("TomaRegistrante")
-  tomasConsumidas     Toma[]               @relation("TomaConsumidorUsuario")
-  grupoCreado         GrupoFamiliar[]      @relation("GrupoCreador")
-  historial           Historial[]          // Relación con historial de auditoría
-}
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  name                    String?
+  dni                     String                   @unique
+  password                String
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  fechaNacimiento         DateTime
+  foto                    String?
+  grupoId                 String?
+  rol                     UserRole                 @default(ADULTO)
+  grupoCreado             GrupoFamiliar[]          @relation("GrupoCreador")
+  historial               Historial[]
+  medications             Medication[]
+  notificationPreferences NotificationPreferences?
+  notificationSettings    NotificationSettings?
+  pushSubscriptions       PushSubscription[]
+  shoppingLists           ShoppingList[]
+  tomasConsumidas         Toma[]                   @relation("TomaConsumidorUsuario")
+  tomasRegistradas        Toma[]                   @relation("TomaRegistrante")
+  treatments              Treatment[]
+  grupo                   GrupoFamiliar?           @relation(fields: [grupoId], references: [id])
 
-enum UserRole {
-  ADULTO
-  MENOR
+  @@index([grupoId], map: "User_grupoId_fkey")
 }
 
 model Medication {
-  id                  String      @id @default(cuid())
-  commercialName      String
-  activeIngredient    String?
-  description         String?
+  id                    String                @id @default(cuid())
+  commercialName        String
+  activeIngredient      String?
+  description           String?
   intakeRecommendations String?
-  imageUrl            String?
-  initialQuantity     Float
-  currentQuantity     Float
-  unit                String // e.g., "pills", "ml"
-  expirationDate      DateTime
-  archived            Boolean     @default(false)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-  user                User        @relation(fields: [userId], references: [id])
-  userId              String
-  treatmentMedications TreatmentMedication[] // Relación con medicamentos de tratamientos
-  tomas               Toma[]      // Relación con tomas de este medicamento
+  imageUrl              String?
+  initialQuantity       Float
+  currentQuantity       Float
+  unit                  String
+  expirationDate        DateTime
+  archived              Boolean               @default(false)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  userId                String
+  user                  User                  @relation(fields: [userId], references: [id])
+  tomas                 Toma[]
+  treatmentMedications  TreatmentMedication[]
+
+  @@index([userId], map: "Medication_userId_fkey")
 }
 
 model NotificationSettings {
-  id                  String   @id @default(cuid())
-  daysBeforeExpiration Int      @default(30)
-  lowStockThreshold    Float    @default(10)
-  user                User     @relation(fields: [userId], references: [id])
-  userId              String   @unique
+  id                   String @id @default(cuid())
+  userId               String @unique
+  daysBeforeExpiration Int    @default(30)
+  lowStockThreshold    Float  @default(10)
+  user                 User   @relation(fields: [userId], references: [id])
 }
 
-// Modelo para tratamientos médicos
 model Treatment {
-  id             String     @id @default(cuid())
-  name           String
-  patient        String    // Nombre del paciente (texto libre para compatibilidad)
-  patientId      String?   // ID del paciente del grupo familiar (opcional)
-  patientType    String?   // "usuario" o "perfil" - tipo de paciente seleccionado
-  symptoms       String?   // Síntomas del paciente (opcional)
-  startDate      DateTime  @default(now())
-  endDate        DateTime  // Fecha de finalización calculada
-  isActive       Boolean   @default(true)
-  user           User      @relation(fields: [userId], references: [id])
-  userId         String
-  notifications  Notification[] // Notificaciones asociadas al tratamiento
-  medications    TreatmentMedication[] // Medicamentos del tratamiento
-  images         TreatmentImage[] // Imágenes del tratamiento (recetas e instrucciones)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String                @id @default(cuid())
+  name          String
+  startDate     DateTime              @default(now())
+  endDate       DateTime
+  isActive      Boolean               @default(true)
+  userId        String
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  patient       String
+  patientId     String?
+  patientType   String?
+  symptoms      String?
+  notifications Notification[]
+  user          User                  @relation(fields: [userId], references: [id])
+  images        TreatmentImage[]
+  medications   TreatmentMedication[]
+
+  @@index([userId], map: "Treatment_userId_fkey")
 }
 
-// Modelo para medicamentos dentro de un tratamiento (relación muchos a muchos)
 model TreatmentMedication {
-  id             String     @id @default(cuid())
-  treatment      Treatment  @relation(fields: [treatmentId], references: [id])
-  treatmentId    String
-  medication     Medication @relation(fields: [medicationId], references: [id])
-  medicationId   String
-  frequencyHours Int       // Frecuencia en horas (ej: cada 8 horas)
-  durationDays   Int       // Duración en días
-  dosage         String    // Descripción de la dosis (ej: "1 tableta")
-  startDate      DateTime  // Fecha de inicio específica para este medicamento
-  endDate        DateTime  // Fecha de finalización específica para este medicamento
-  startAtSpecificTime Boolean @default(false) // Si este medicamento comienza en una hora específica
-  specificStartTime   DateTime? // Hora específica de inicio para este medicamento
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                  String     @id @default(cuid())
+  treatmentId         String
+  medicationId        String
+  frequencyHours      Int
+  durationDays        Int
+  dosage              String
+  startAtSpecificTime Boolean    @default(false)
+  specificStartTime   DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  endDate             DateTime
+  isActive            Boolean    @default(true)
+  startDate           DateTime
+  medication          Medication @relation(fields: [medicationId], references: [id])
+  treatment           Treatment  @relation(fields: [treatmentId], references: [id])
+
+  @@index([medicationId], map: "TreatmentMedication_medicationId_fkey")
+  @@index([treatmentId], map: "TreatmentMedication_treatmentId_fkey")
 }
 
-// Modelo para imágenes de tratamientos (recetas e instrucciones)
 model TreatmentImage {
-  id             String     @id @default(cuid())
-  treatment      Treatment  @relation(fields: [treatmentId], references: [id])
-  treatmentId    String
-  imageUrl       String    // URL de la imagen almacenada
-  imageType      String    // "receta" o "instrucciones"
-  extractedText  String?   // Texto extraído por IA
-  aiAnalysis     String?   // Análisis estructurado de la IA
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  treatmentId   String
+  imageUrl      String
+  imageType     String
+  createdAt     DateTime  @default(now())
+  aiAnalysis    String?
+  extractedText String?
+  updatedAt     DateTime  @updatedAt
+  treatment     Treatment @relation(fields: [treatmentId], references: [id])
+
+  @@index([treatmentId], map: "TreatmentImage_treatmentId_fkey")
 }
 
-// Modelo para notificaciones de tratamientos
 model Notification {
-  id              String    @id @default(cuid())
-  treatment       Treatment @relation(fields: [treatmentId], references: [id])
-  treatmentId     String
-  scheduledDate   DateTime  // Fecha programada para la notificación
-  sent            Boolean   @default(false)
-  type            String    // Tipo de notificación: push, sound, email, browser
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  treatmentId   String
+  scheduledDate DateTime
+  sent          Boolean   @default(false)
+  type          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  treatment     Treatment @relation(fields: [treatmentId], references: [id])
+
+  @@index([treatmentId], map: "Notification_treatmentId_fkey")
 }
 
-// Modelo para preferencias de notificaciones del usuario
 model NotificationPreferences {
-  id          String   @id @default(cuid())
-  push        Boolean  @default(false)
-  sound       Boolean  @default(false)
-  email       Boolean  @default(false)
-  browser     Boolean  @default(false)
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// Modelo para suscripciones push
-model PushSubscription {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  endpoint  String   // URL del endpoint de push
-  p256dhKey String   // Clave pública P256DH
-  authKey   String   // Clave de autenticación
+  push      Boolean  @default(false)
+  sound     Boolean  @default(false)
+  email     Boolean  @default(false)
+  browser   Boolean  @default(false)
+  userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String
+  p256dhKey String
+  authKey   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, endpoint])
 }
 
-// Modelo para items de la lista de compras
 model ShoppingItem {
   id             String       @id @default(cuid())
   name           String
@@ -170,85 +165,99 @@ model ShoppingItem {
   laboratory     String?
   price          Float
   quantity       Int          @default(1)
-  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id])
   shoppingListId String
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id])
+
+  @@index([shoppingListId], map: "ShoppingItem_shoppingListId_fkey")
 }
 
-// Modelo para listas de compras
 model ShoppingList {
-  id           String         @id @default(cuid())
-  name         String
-  items        ShoppingItem[]
-  total        Float
-  isArchived   Boolean        @default(false)
-  user         User           @relation(fields: [userId], references: [id])
-  userId       String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id         String         @id @default(cuid())
+  name       String
+  total      Float
+  isArchived Boolean        @default(false)
+  userId     String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  items      ShoppingItem[]
+  user       User           @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "ShoppingList_userId_fkey")
 }
 
-// Modelo para grupos familiares
 model GrupoFamiliar {
-  id           String         @id @default(cuid())
-  nombre       String
-  creadorId    String
-  creador      User           @relation("GrupoCreador", fields: [creadorId], references: [id])
-  integrantes  User[]         // Usuarios adultos y menores con cuenta
-  perfilesMenores PerfilMenor[] // Perfiles de menores sin cuenta
-  tomas        Toma[]         // Todas las tomas del grupo
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id              String        @id @default(cuid())
+  nombre          String
+  creadorId       String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  creador         User          @relation("GrupoCreador", fields: [creadorId], references: [id])
+  perfilesMenores PerfilMenor[]
+  tomas           Toma[]
+  integrantes     User[]
+
+  @@index([creadorId], map: "GrupoFamiliar_creadorId_fkey")
 }
 
-// Modelo para perfiles de menores sin cuenta
 model PerfilMenor {
-  id              String         @id @default(cuid())
+  id              String        @id @default(cuid())
   nombre          String
-  dni             String         @unique
+  dni             String        @unique
   fechaNacimiento DateTime
   foto            String?
   grupoId         String
-  grupo           GrupoFamiliar  @relation(fields: [grupoId], references: [id])
-  tomas           Toma[]         @relation("TomaPerfilMenor")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  grupo           GrupoFamiliar @relation(fields: [grupoId], references: [id])
+  tomas           Toma[]        @relation("TomaPerfilMenor")
+
+  @@index([grupoId], map: "PerfilMenor_grupoId_fkey")
 }
 
-// Modelo para tomas de medicamentos
 model Toma {
-  id                    String         @id @default(cuid())
-  medicamentoId         String
-  medicamento           Medication     @relation(fields: [medicamentoId], references: [id])
-  consumidorUsuarioId   String?        // Usuario que tomó el medicamento (adulto o menor con cuenta)
-  consumidorUsuario     User?          @relation("TomaConsumidorUsuario", fields: [consumidorUsuarioId], references: [id])
-  consumidorPerfilId    String?        // Perfil de menor sin cuenta que tomó el medicamento
-  consumidorPerfil      PerfilMenor?   @relation("TomaPerfilMenor", fields: [consumidorPerfilId], references: [id])
-  registranteId         String         // Usuario que registró la toma
-  registrante           User           @relation("TomaRegistrante", fields: [registranteId], references: [id])
-  fechaHora             DateTime       @default(now())
-  grupoId               String
-  grupo                 GrupoFamiliar  @relation(fields: [grupoId], references: [id])
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  id                  String        @id @default(cuid())
+  medicamentoId       String
+  consumidorUsuarioId String?
+  consumidorPerfilId  String?
+  registranteId       String
+  fechaHora           DateTime      @default(now())
+  grupoId             String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  consumidorPerfil    PerfilMenor?  @relation("TomaPerfilMenor", fields: [consumidorPerfilId], references: [id])
+  consumidorUsuario   User?         @relation("TomaConsumidorUsuario", fields: [consumidorUsuarioId], references: [id])
+  grupo               GrupoFamiliar @relation(fields: [grupoId], references: [id])
+  medicamento         Medication    @relation(fields: [medicamentoId], references: [id])
+  registrante         User          @relation("TomaRegistrante", fields: [registranteId], references: [id])
+
+  @@index([consumidorPerfilId], map: "Toma_consumidorPerfilId_fkey")
+  @@index([consumidorUsuarioId], map: "Toma_consumidorUsuarioId_fkey")
+  @@index([grupoId], map: "Toma_grupoId_fkey")
+  @@index([medicamentoId], map: "Toma_medicamentoId_fkey")
+  @@index([registranteId], map: "Toma_registranteId_fkey")
 }
 
-// Modelo para historial de auditoría
 model Historial {
-  id                  String    @id @default(cuid())
-  usuarioId           String    // Usuario que realizó la acción
-  usuario             User      @relation(fields: [usuarioId], references: [id])
-  tipoAccion          String    // Tipo de acción: login, create, update, delete, search, etc.
-  entidadTipo         String    // Tipo de entidad: usuario, perfil, medicamento, toma, lista_compra, tratamiento, etc.
-  entidadId           String?   // ID del registro afectado (nullable si no aplica, ej: login)
-  datosPrevios        String?   // JSON con el estado anterior (opcional)
-  datosPosteriores    String?   // JSON con el estado posterior (opcional)
-  metadata            String?   // JSON con metadata adicional (IP, user-agent, etc.)
-  createdAt           DateTime  @default(now())
-  
+  id               String   @id @default(cuid())
+  usuarioId        String
+  tipoAccion       String
+  entidadTipo      String
+  entidadId        String?
+  datosPrevios     String?
+  datosPosteriores String?
+  metadata         String?
+  createdAt        DateTime @default(now())
+  usuario          User     @relation(fields: [usuarioId], references: [id])
+
   @@index([usuarioId])
   @@index([tipoAccion])
   @@index([entidadTipo, entidadId])
   @@index([createdAt])
+}
+
+enum UserRole {
+  ADULTO
+  MENOR
 }

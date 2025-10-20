@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "@/lib/auth";
-import { TipoAccion, TipoEntidad } from "@/lib/auditoria";
 
 // Tipos para filtros y paginación
 interface FiltrosHistorial {
@@ -161,7 +160,7 @@ export async function GET(request: NextRequest) {
 /**
  * Endpoint para obtener opciones de filtros
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Verificar autenticación
     const session = await getServerSession();

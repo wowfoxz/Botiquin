@@ -3,6 +3,9 @@ import prisma from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decrypt } from '@/lib/session';
+
+// Forzar renderizado dinámico
+export const dynamic = 'force-dynamic';
 import AuthWrapper from './components/AuthWrapper';
 import {
   Breadcrumb,

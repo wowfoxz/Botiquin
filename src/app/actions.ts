@@ -319,7 +319,7 @@ export async function updateMedicationQuantity(formData: FormData) {
     return;
   }
 
-  const medicamentoActualizado = await prisma.medication.update({
+  await prisma.medication.update({
     where: { id },
     data: {
       currentQuantity: newQuantity,

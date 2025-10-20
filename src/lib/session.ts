@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 // En producción, esta clave secreta debe ser una cadena larga y aleatoria,
 // guardada de forma segura en una variable de entorno.
-const secretKey = process.env.SESSION_SECRET;
+const secretKey = process.env.SESSION_SECRET || 'default-secret-key-for-development-only';
 
 if (!secretKey) {
   throw new Error('SESSION_SECRET no está definida en las variables de entorno');

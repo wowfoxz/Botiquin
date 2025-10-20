@@ -2,6 +2,9 @@ import React from 'react';
 import MedicationCard from '@/components/medication-card';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+
+// Forzar renderizado dinámico
+export const dynamic = 'force-dynamic';
 // import { Button } from '@/components/ui/button';
 import { Archive } from 'lucide-react';
 import {

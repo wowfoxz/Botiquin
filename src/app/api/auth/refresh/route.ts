@@ -1,8 +1,6 @@
-import { NextRequest } from "next/server";
 import { getSession, createSession } from "@/lib/session";
-import { cookies } from "next/headers";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getSession();
 
