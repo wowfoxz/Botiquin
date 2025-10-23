@@ -13,6 +13,7 @@ import UrlNotifications from "@/components/url-notifications";
 import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Cardio } from "ldrs/react";
 import "ldrs/react/Cardio.css";
+import { apiFetch } from "@/lib/api";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -52,7 +53,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
     const fetchUserData = async () => {
       try {
         const resolvedParams = await params;
-        const response = await fetch(`/api/usuario/${resolvedParams.id}`);
+        const response = await apiFetch(`/api/usuario/${resolvedParams.id}`);
         if (response.ok) {
           const userData = await response.json();
           setUsuarioAEditar(userData);

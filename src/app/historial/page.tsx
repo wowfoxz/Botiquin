@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 // import { Separator } from "@/components/ui/separator";
+import { apiFetch } from "@/lib/api";
 import { 
   Search, 
   Download, 
@@ -79,7 +80,7 @@ const HistorialPage = () => {
   // Cargar opciones de filtros
   const cargarOpcionesFiltros = async () => {
     try {
-      const response = await fetch("/api/historial", {
+      const response = await apiFetch("/api/historial", {
         method: "POST",
       });
       if (response.ok) {
@@ -106,7 +107,7 @@ const HistorialPage = () => {
       if (filtros.fechaDesde) params.append("fecha_desde", filtros.fechaDesde.toISOString());
       if (filtros.fechaHasta) params.append("fecha_hasta", filtros.fechaHasta.toISOString());
 
-      const response = await fetch(`/api/historial?${params}`);
+      const response = await apiFetch(`/api/historial?${params}`);
       if (response.ok) {
         const data = await response.json();
         setHistorial(data.data);
@@ -131,7 +132,7 @@ const HistorialPage = () => {
       if (filtros.fechaDesde) params.append("fecha_desde", filtros.fechaDesde.toISOString());
       if (filtros.fechaHasta) params.append("fecha_hasta", filtros.fechaHasta.toISOString());
 
-      const response = await fetch(`/api/historial/export?${params}`);
+      const response = await apiFetch(`/api/historial/export?${params}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);

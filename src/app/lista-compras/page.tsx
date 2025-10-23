@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { Cardio } from "ldrs/react";
 import 'ldrs/react/Cardio.css';
+import { apiFetch } from "@/lib/api";
 import SearchMedications from './components/SearchMedications';
 import MedicamentosTable from './components/MedicamentosTable';
 import ShoppingList from './components/ShoppingList';
@@ -73,7 +74,7 @@ const ListaComprasPage = () => {
 
   const loadShoppingLists = async () => {
     try {
-      const response = await fetch('/api/lista-compras', {
+      const response = await apiFetch('/api/lista-compras', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ const ListaComprasPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/medicamentos', {
+      const response = await apiFetch('/api/medicamentos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +191,7 @@ const ListaComprasPage = () => {
     }
 
     try {
-      const response = await fetch('/api/lista-compras', {
+      const response = await apiFetch('/api/lista-compras', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -298,7 +299,7 @@ const ListaComprasPage = () => {
 
   const deleteShoppingList = async (id: string) => {
     try {
-      const response = await fetch(`/api/lista-compras/${id}`, {
+      const response = await apiFetch(`/api/lista-compras/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

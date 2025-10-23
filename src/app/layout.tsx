@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 export const metadata: Metadata = {
   title: 'Botilyx - Gestor de Medicamentos',
   description: 'Sistema de gestión de medicamentos y tratamientos médicos',
-  manifest: '/manifest.json',
+  manifest: '/api/manifest',
   icons: {
     icon: [
       { url: '/icons/favicon.ico', sizes: 'any' },
@@ -68,7 +68,8 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
+                  const basePath = '${process.env.NEXT_PUBLIC_BASE_PATH || ''}';
+                  navigator.serviceWorker.register(basePath + '/sw.js')
                     .then(function(registration) {
                       console.log('Service Worker registrado exitosamente:', registration.scope);
                     })

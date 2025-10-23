@@ -13,6 +13,7 @@ import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-di
 import UrlNotifications from "@/components/url-notifications";
 import { Cardio } from "ldrs/react";
 import "ldrs/react/Cardio.css";
+import { apiFetch } from "@/lib/api";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -57,7 +58,7 @@ export default function GrupoFamiliarPage() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('/api/grupo-familiar');
+      const response = await apiFetch('/api/grupo-familiar');
       if (response.ok) {
         const grupoData = await response.json();
         setData(grupoData);

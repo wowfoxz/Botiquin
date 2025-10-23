@@ -1,17 +1,78 @@
-/.env
-/.env.local
 # Dependencies
 node_modules/
 
 # Next.js build output
 .next/
+out/
+
+# Production builds
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+env.production.secret
+
+# Database
+*.db
+*.db-journal
+dev.db
+prisma/dev.db
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # OS files
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Certificates and keys
+*.key
+*.crt
+*.pem
+ca.key
+ca.crt
+cert.key
+cert.crt
+
+# Testing
+coverage/
+.nyc_output
+
+# Misc
+.eslintcache
+tsconfig.tsbuildinfo
+
+# PWA files
+public/sw.js
+public/workbox-*.js
+
+# Development scripts
+start-dev.ps1
+
+# Cursor
+.cursorignore
+
+# Kubernetes (contienen información sensible)
+k8s/03-secret-botilyx.yaml

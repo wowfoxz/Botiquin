@@ -1,115 +1,87 @@
 # Dependencias
-node_modules
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Build outputs
-.next
-out
-dist
+# Build de Next.js
+.next/
+out/
+build/
+dist/
 
-# Archivos de desarrollo
+# Variables de entorno
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+env.production.secret
 
-# Logs
-logs
-*.log
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-node_modules/
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
+# Base de datos local (SQLite)
+*.db
+*.db-journal
+prisma/dev.db
 
 # Git
-.git
+.git/
 .gitignore
+.gitattributes
 
-# Docker
-Dockerfile*
-.dockerignore
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Kubernetes
-k8s/
-
-# Scripts
-scripts/
-
-# Documentation
-docs/
+# Documentación
 README.md
+docs/
+AGENTS.md
+LICENSE
 
 # Testing
 coverage/
-.nyc_output/
+.nyc_output
 
 # Misc
-*.md
-!package.json
+.DS_Store
+Thumbs.db
+*.log
+.eslintcache
+tsconfig.tsbuildinfo
+
+# Scripts de desarrollo
+start-dev.ps1
+scripts/test-*.js
+scripts/setup-*.sh
+scripts/deploy.sh
+
+# Certificados
+*.key
+*.crt
+*.pem
+ca.key
+ca.crt
+cert.key
+cert.crt
+
+# Archivos de Kubernetes
+k8s/
+*.yaml
+!components.json
+
+# Cursor
+.cursorignore
+
+# Imágenes de desarrollo (las de producción vendrán del volumen persistente)
+public/medications/*.jpeg
+public/medications/*.jpg
+public/medications/*.png
+public/treatment-images/*.jpeg
+public/treatment-images/*.jpg
+public/treatment-images/*.png
+

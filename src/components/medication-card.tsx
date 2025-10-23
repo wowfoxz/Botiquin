@@ -20,6 +20,7 @@ type Medication = {
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication, registrarTomaMedicamento } from '@/app/actions';
+import { apiFetch } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -96,7 +97,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   useEffect(() => {
     const fetchConsumidores = async () => {
       try {
-        const response = await fetch('/api/consumidores-grupo');
+        const response = await apiFetch('/api/consumidores-grupo');
         if (response.ok) {
           const data = await response.json();
           // La API devuelve { consumidores: [...] }, extraer el array

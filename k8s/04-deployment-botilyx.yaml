@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-web-botilyx
+  namespace: aplicaciones
+  labels:
+    k8s-app: dev-web-botilyx
+    app: botilyx
+    environment: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: dev-web-botilyx
+  template:
+    metadata:
+      name: dev-web-botilyx
+      labels:
+        k8s-app: dev-web-botilyx
+        app: botilyx
+    spec:
+      containers:
+      - name: dev-web-botilyx
+        image: upsti/dev-web-botilyx:v0.1.0
+        imagePullPolicy: Always
+        securityContext:
+          privileged: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        # Variables de entorno desde Secret
+        envFrom:
+        - secretRef:
+            name: secret-dev-web-botilyx
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /botilyx/api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /botilyx/api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Recursos
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Montaje de volúmenes para persistencia de imágenes
+        volumeMounts:
+        - name: botilyx-uploads
+          mountPath: /app/public/medications
+          subPath: medications
+        - name: botilyx-uploads
+          mountPath: /app/public/treatment-images
+          subPath: treatment-images
+      volumes:
+      - name: botilyx-uploads
+        persistentVolumeClaim:
+          claimName: pvc-dev-web-botilyx
+

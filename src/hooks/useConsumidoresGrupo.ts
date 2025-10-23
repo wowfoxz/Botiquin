@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { apiFetch } from "@/lib/api";
 
 export interface Consumidor {
   id: string;
@@ -25,7 +26,7 @@ export const useConsumidoresGrupo = () => {
         return;
       }
 
-      const response = await fetch("/api/consumidores-grupo");
+      const response = await apiFetch("/api/consumidores-grupo");
       if (!response.ok) {
         throw new Error("Error al obtener consumidores del grupo");
       }

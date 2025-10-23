@@ -16,8 +16,9 @@ export async function middleware(request: NextRequest) {
     "/api/historial",
   ];
 
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
+    request.nextUrl.pathname.startsWith(basePath + path)
   );
 
   if (isProtectedPath) {

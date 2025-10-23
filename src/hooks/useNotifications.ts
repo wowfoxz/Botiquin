@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api';
 
 interface NotificationPermissionState {
   permission: NotificationPermission;
@@ -118,7 +119,8 @@ export const useNotifications = () => {
 
     try {
       // Registrar service worker
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+      const registration = await navigator.serviceWorker.register(basePath + '/sw.js');
       // Esperar a que el service worker esté listo
       await navigator.serviceWorker.ready;
 
@@ -148,7 +150,7 @@ export const useNotifications = () => {
       };
 
       // Enviar suscripción al servidor
-      const response = await fetch('/api/notifications/subscribe', {
+      const response = await apiFetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +187,7 @@ export const useNotifications = () => {
         await subscription.unsubscribe();
         
         // Notificar al servidor
-        await fetch('/api/notifications/unsubscribe', {
+        await apiFetch('/api/notifications/unsubscribe', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -243,7 +245,8 @@ export const useNotifications = () => {
       // Manejar eventos de la notificación
       notification.onclick = function() {
         window.focus();
-        window.location.href = '/tratamientos';
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+        window.location.href = basePath + '/tratamientos';
         notification.close();
       };
 

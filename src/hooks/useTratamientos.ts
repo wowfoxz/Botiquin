@@ -7,6 +7,7 @@ import {
 } from "@/types/tratamientos";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from 'sonner';
+import { apiFetch } from "@/lib/api";
 
 // Hook para manejar tratamientos
 export const useTratamientos = () => {
@@ -26,7 +27,7 @@ export const useTratamientos = () => {
         return;
       }
 
-      const response = await fetch(`/api/tratamientos?userId=${user.id}`);
+      const response = await apiFetch(`/api/tratamientos?userId=${user.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener tratamientos");
       }
@@ -56,7 +57,7 @@ export const useTratamientos = () => {
     setError(null);
     try {
       console.log("Enviando solicitud para crear tratamiento:", tratamiento);
-      const response = await fetch("/api/tratamientos", {
+      const response = await apiFetch("/api/tratamientos", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +95,7 @@ export const useTratamientos = () => {
     tratamiento: Partial<Tratamiento>
   ) => {
     try {
-      const response = await fetch(`/api/tratamientos/${id}`, {
+      const response = await apiFetch(`/api/tratamientos/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +123,7 @@ export const useTratamientos = () => {
   // Eliminar un tratamiento
   const deleteTratamiento = async (id: string) => {
     try {
-      const response = await fetch(`/api/tratamientos/${id}`, {
+      const response = await apiFetch(`/api/tratamientos/${id}`, {
         method: "DELETE",
       });
 
@@ -176,7 +177,7 @@ export const useMedicinas = () => {
         return;
       }
 
-      const response = await fetch(`/api/medicinas?userId=${user.id}`);
+      const response = await apiFetch(`/api/medicinas?userId=${user.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener medicinas");
       }
@@ -213,7 +214,7 @@ export const useNotificaciones = () => {
         return;
       }
 
-      const response = await fetch(`/api/notificaciones?userId=${user.id}`);
+      const response = await apiFetch(`/api/notificaciones?userId=${user.id}`);
       if (!response.ok) {
         throw new Error("Error al obtener notificaciones");
       }
@@ -275,7 +276,7 @@ export const usePreferenciasNotificaciones = () => {
         throw new Error("Usuario no autenticado");
       }
 
-      const response = await fetch("/api/preferencias-notificaciones", {
+      const response = await apiFetch("/api/preferencias-notificaciones", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

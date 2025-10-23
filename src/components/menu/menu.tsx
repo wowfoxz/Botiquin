@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { logoutUser } from "@/app/actions";
 import { usePathname } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 import { 
   Home, 
   Package, 
@@ -24,7 +25,7 @@ const Menu = () => {
   // Función para verificar manualmente la autenticación
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/auth", { method: "GET" });
+      const response = await apiFetch("/api/auth", { method: "GET" });
       setIsAuthenticated(response.ok);
     } catch (error) {
       console.error("Error al verificar autenticación:", error);

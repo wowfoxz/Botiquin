@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpDown } from 'lucide-react';
 import { Cardio } from "ldrs/react";
 import 'ldrs/react/Cardio.css';
+import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import {
@@ -80,7 +81,7 @@ export default function PreciosPage() {
 
     try {
       // Usar API route en lugar de llamar directamente a la API externa para evitar CORS
-      const response = await fetch('/api/medicamentos', {
+      const response = await apiFetch('/api/medicamentos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

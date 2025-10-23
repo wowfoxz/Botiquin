@@ -10,6 +10,7 @@ import { Camera, Upload, FileImage, X, Eye, EyeOff, Sparkles, ChevronDown } from
 import Image from "next/image";
 import { Cardio } from "ldrs/react";
 import 'ldrs/react/Cardio.css';
+import { apiFetch } from "@/lib/api";
 
 interface TreatmentImage {
   id: string;
@@ -66,7 +67,7 @@ export function TreatmentImageUploader({
         uploadFormData.append('image', file);
         uploadFormData.append('imageType', imageType);
 
-        const uploadResponse = await fetch('/api/tratamientos/upload-image', {
+        const uploadResponse = await apiFetch('/api/tratamientos/upload-image', {
           method: 'POST',
           body: uploadFormData,
         });
@@ -120,7 +121,7 @@ export function TreatmentImageUploader({
 
 
       // Llamar a la API de análisis de IA
-      const response = await fetch('/api/tratamientos/analyze-image', {
+      const response = await apiFetch('/api/tratamientos/analyze-image', {
         method: 'POST',
         body: formData,
       });

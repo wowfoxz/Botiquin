@@ -44,12 +44,13 @@ export async function createSession(userId: string) {
   const sessionPayload = { userId, expires: expires.toISOString() };
 
   const session = await encrypt(sessionPayload);
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
   (await cookies()).set("session", session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     expires,
-    path: "/",
+    path: basePath || "/",
     sameSite: "lax",
   });
 }
@@ -80,11 +81,12 @@ export async function getSession() {
 
 export async function deleteSession() {
   // Borra la cookie de sesión
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   (await cookies()).set("session", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     expires: new Date(0),
-    path: "/",
+    path: basePath || "/",
     sameSite: "lax",
   });
 }

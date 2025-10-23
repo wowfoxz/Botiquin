@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aplicaciones
+  labels:
+    name: aplicaciones
+    environment: dev
+

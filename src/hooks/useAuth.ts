@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { apiFetch } from "@/lib/api";
 
 interface User {
   id: string;
@@ -20,7 +21,7 @@ export const useAuth = () => {
       setLoading(true);
       
       // Hacer una llamada a la API para obtener la información de la sesión
-      const response = await fetch("/api/auth", { 
+      const response = await apiFetch("/api/auth", { 
         method: "GET",
         credentials: 'include' // Asegurar que se incluyan las cookies
       });
@@ -61,14 +62,15 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       // Llamar a la acción de logout del servidor
-      const response = await fetch("/api/auth/logout", { 
+      const response = await apiFetch("/api/auth/logout", { 
         method: "POST",
         credentials: 'include' // Asegurar que se incluyan las cookies
       });
       if (response.ok) {
         setUser(null);
         // Redirigir al login después del logout
-        window.location.href = '/login';
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+        window.location.href = basePath + '/login';
       } else {
         console.error("Error al cerrar sesión:", response.status);
         // Aún así limpiar el usuario local
