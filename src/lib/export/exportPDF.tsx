@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, pdf, Image } from '@react-pdf/renderer';
+import { config } from '@/lib/config';
 
 const styles = StyleSheet.create({
   page: {
@@ -86,7 +87,7 @@ export const ListaPDF: React.FC<ListaPDFProps> = ({ name, items, total }) => (
       <View style={styles.logoContainer}>
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image
-          src="/Botilyx_negro.png"
+          src={`${config.BASE_PATH}/Botilyx_negro.png`}
           style={styles.logo}
         />
       </View>

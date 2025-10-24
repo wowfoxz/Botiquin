@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Image from 'next/image';
+import { config } from '@/lib/config';
 import { Cardio } from 'ldrs/react';
 import 'ldrs/react/Cardio.css';
 import { useForm } from 'react-hook-form';
@@ -79,7 +80,7 @@ export default function LoginForm() {
           <CardHeader className="text-center">
             <div className="flex justify-center">
               <Image
-                src="/Botilyx_color_2.svg"
+                src={`${config.BASE_PATH}/Botilyx_color_2.svg`}
                 alt="Logo de la aplicación"
                 width={64}
                 height={64}

@@ -30,21 +30,21 @@ export async function GET(
       // Obtener medicamentos
       const medications = await prisma.$queryRaw`
         SELECT tm.*, 
-               m."commercialName", 
-               m."activeIngredient",
+               m.commercialName, 
+               m.activeIngredient,
                m.unit,
                m.description,
-               m."intakeRecommendations"
-        FROM "TreatmentMedication" tm
-        LEFT JOIN "Medication" m ON tm."medicationId" = m.id
-        WHERE tm."treatmentId" = ${id}
+               m.intakeRecommendations
+        FROM TreatmentMedication tm
+        LEFT JOIN Medication m ON tm.medicationId = m.id
+        WHERE tm.treatmentId = ${id}
       ` as any[];
 
       // Obtener imágenes
       const images = await prisma.$queryRaw`
         SELECT *
-        FROM "TreatmentImage"
-        WHERE "treatmentId" = ${id}
+        FROM TreatmentImage
+        WHERE treatmentId = ${id}
       ` as any[];
 
       const tratamientoCompleto = {
@@ -205,22 +205,21 @@ export async function DELETE(
       );
     }
 
-    // Eliminar relaciones asociadas en orden
+    // Eliminar relaciones asociadas en orden (resuelve foreign key constraints)
     // 1. Eliminar notificaciones
     await prisma.notification.deleteMany({
       where: { treatmentId: id },
     });
 
-    // TODO: Eliminar medicamentos e imágenes cuando los modelos estén disponibles
     // 2. Eliminar medicamentos del tratamiento
-    // await prisma.treatmentMedication.deleteMany({
-    //   where: { treatmentId: id },
-    // });
+    await prisma.treatmentMedication.deleteMany({
+      where: { treatmentId: id },
+    });
 
     // 3. Eliminar imágenes del tratamiento
-    // await prisma.treatmentImage.deleteMany({
-    //   where: { treatmentId: id },
-    // });
+    await prisma.treatmentImage.deleteMany({
+      where: { treatmentId: id },
+    });
 
     // 4. Eliminar el tratamiento
     await prisma.treatment.delete({

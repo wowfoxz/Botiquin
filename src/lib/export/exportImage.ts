@@ -1,3 +1,5 @@
+import { config } from '@/lib/config';
+
 interface ShoppingItem {
   id: string;
   name: string;
@@ -60,7 +62,7 @@ export async function exportAsImage(
     // Cargar y dibujar el logo
     try {
       const logo = new Image();
-      logo.src = "/Botilyx_negro.png";
+      logo.src = `${config.BASE_PATH}/Botilyx_negro.png`;
 
       await new Promise<void>((resolve) => {
         logo.onload = () => {

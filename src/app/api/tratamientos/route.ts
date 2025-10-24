@@ -23,21 +23,21 @@ export async function GET(request: Request) {
           // Obtener medicamentos
           const medications = await prisma.$queryRaw`
             SELECT tm.*, 
-                   m."commercialName", 
-                   m."activeIngredient",
+                   m.commercialName, 
+                   m.activeIngredient,
                    m.unit,
                    m.description,
-                   m."intakeRecommendations"
-            FROM "TreatmentMedication" tm
-            LEFT JOIN "Medication" m ON tm."medicationId" = m.id
-            WHERE tm."treatmentId" = ${tratamiento.id}
+                   m.intakeRecommendations
+            FROM TreatmentMedication tm
+            LEFT JOIN Medication m ON tm.medicationId = m.id
+            WHERE tm.treatmentId = ${tratamiento.id}
           ` as any[];
 
           // Obtener imágenes
           const images = await prisma.$queryRaw`
             SELECT *
-            FROM "TreatmentImage"
-            WHERE "treatmentId" = ${tratamiento.id}
+            FROM TreatmentImage
+            WHERE treatmentId = ${tratamiento.id}
           ` as any[];
 
           return {

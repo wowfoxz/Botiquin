@@ -16,7 +16,7 @@ model User {
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   fechaNacimiento         DateTime
-  foto                    String?
+  foto                    String?                  @db.LongText
   grupoId                 String?
   rol                     UserRole                 @default(ADULTO)
   grupoCreado             GrupoFamiliar[]          @relation("GrupoCreador")
@@ -245,9 +245,9 @@ model Historial {
   tipoAccion       String
   entidadTipo      String
   entidadId        String?
-  datosPrevios     String?
-  datosPosteriores String?
-  metadata         String?
+  datosPrevios     String?  @db.LongText
+  datosPosteriores String?  @db.LongText
+  metadata         String?  @db.LongText
   createdAt        DateTime @default(now())
   usuario          User     @relation(fields: [usuarioId], references: [id])
 

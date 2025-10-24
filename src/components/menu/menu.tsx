@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { config } from "@/lib/config";
 import { logoutUser } from "@/app/actions";
 import { usePathname } from "next/navigation";
 import { apiFetch } from "@/lib/api";
@@ -128,7 +129,7 @@ const Menu = () => {
                 {/* Logo de la aplicación */}
                 <div className="h-25 w-full relative">
                   <Image
-                    src="/Botilyx_color_2.svg"
+                    src={`${config.BASE_PATH}/Botilyx_color_2.svg`}
                     alt="Logo de Botilyx"
                     fill
                     className="object-contain"
