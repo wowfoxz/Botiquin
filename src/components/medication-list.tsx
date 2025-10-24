@@ -3,6 +3,7 @@ import MedicationCard from './medication-card';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { decrypt } from '@/lib/session';
 // Definir tipo local para Medication
 type Medication = {
   id: string;
@@ -24,9 +25,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 const MedicationList = async ({ query }: { query: string }) => {
-  // Verificar si el usuario está autenticado
+  // ✅ CRÍTICO: Verificar autenticación y obtener userId
   const sessionCookie = (await cookies()).get('session')?.value;
   if (!sessionCookie) {
+    redirect('/login');
+  }
+
+  // ✅ CRÍTICO: Obtener userId de la sesión
+  const session = await decrypt(sessionCookie);
+  if (!session?.userId) {
     redirect('/login');
   }
 
@@ -38,7 +45,10 @@ const MedicationList = async ({ query }: { query: string }) => {
     // búsquedas vacías o con texto sin duplicar llamadas a la BD.
     // Usamos un Record<string, unknown> en lugar de 'any' para mantener flexibilidad
     // al construir dinámicamente la clausula WHERE sin perder toda la seguridad de tipo.
-    const whereClause: Record<string, unknown> = { archived: false };
+    const whereClause: Record<string, unknown> = { 
+      archived: false,
+      userId: session.userId as string // ✅ CRÍTICO: Filtrar por usuario
+    };
     const q = query?.trim();
     if (q) {
       whereClause.OR = [

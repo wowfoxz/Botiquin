@@ -36,6 +36,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# ✅ Copiar Prisma schema y node_modules (CRÍTICO para prisma db push)
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
 # Crear directorios para uploads con permisos correctos
 RUN mkdir -p /app/logs /app/public/medications /app/public/treatment-images && \
     chown -R nextjs:nodejs /app/logs /app/public/medications /app/public/treatment-images

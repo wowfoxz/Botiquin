@@ -70,7 +70,7 @@ export const medicationSchema = z.object({
   unit: z
     .string()
     .min(1, "La unidad es requerida")
-    .max(20, "La unidad no puede tener más de 20 caracteres"),
+    .max(50, "La unidad no puede tener más de 50 caracteres"),
   description: z
     .string()
     .max(500, "La descripción no puede tener más de 500 caracteres")

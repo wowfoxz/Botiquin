@@ -232,11 +232,14 @@ export const useNotifications = () => {
         throw new Error('Notification API no está disponible');
       }
       
+      // ✅ Importar config para basePath
+      const { config } = await import('@/lib/config');
+      
       // Usar la API nativa de notificaciones
       const notification = new Notification('🔔 Botilyx - Prueba', {
         body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
-        icon: '/icons/favicon.png',
-        badge: '/icons/favicon.png',
+        icon: config.BASE_PATH + '/icons/favicon.png', // ✅ Agregar basePath
+        badge: config.BASE_PATH + '/icons/favicon.png', // ✅ Agregar basePath
         tag: 'test-notification-' + Date.now(),
         requireInteraction: true,
         silent: false

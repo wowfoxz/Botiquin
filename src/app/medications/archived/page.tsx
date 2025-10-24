@@ -2,6 +2,9 @@ import React from 'react';
 import MedicationCard from '@/components/medication-card';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { decrypt } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 // Forzar renderizado dinámico
 export const dynamic = 'force-dynamic';
@@ -27,9 +30,22 @@ import {
 } from "@/components/ui/breadcrumb";
 
 const ArchivedMedicationsPage = async () => {
+  // ✅ CRÍTICO: Verificar autenticación y obtener userId
+  const sessionCookie = (await cookies()).get('session')?.value;
+  if (!sessionCookie) {
+    redirect('/login');
+  }
+
+  // ✅ CRÍTICO: Obtener userId de la sesión
+  const session = await decrypt(sessionCookie);
+  if (!session?.userId) {
+    redirect('/login');
+  }
+
   const medications = await prisma.medication.findMany({
     where: {
       archived: true,
+      userId: session.userId as string, // ✅ CRÍTICO: Filtrar por usuario
     },
     orderBy: {
       commercialName: 'asc',
