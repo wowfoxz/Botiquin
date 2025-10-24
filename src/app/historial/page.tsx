@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 // import { Separator } from "@/components/ui/separator";
 import { apiFetch } from "@/lib/api";
 import { 
-  Search, 
   Download, 
   Filter, 
   Calendar as CalendarIcon,

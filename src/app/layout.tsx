@@ -4,7 +4,6 @@ import Menu from '@/components/menu/menu';
 import { ThemeSwitch } from '@/components/providers/theme-switch';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
-import { getSession } from '@/lib/session';
 
 // Metadata con basePath hardcodeado para producción
 const basePath = process.env.NODE_ENV === 'production' ? '/botilyx' : '';

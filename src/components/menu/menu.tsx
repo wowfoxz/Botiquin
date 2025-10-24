@@ -23,17 +23,7 @@ const Menu = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const pathname = usePathname();
 
-  // No mostrar el menú en páginas de autenticación
-  const basePath = config.BASE_PATH;
-  const isAuthPage = pathname === `${basePath}/login` || 
-                     pathname === `${basePath}/register` ||
-                     pathname === '/login' || 
-                     pathname === '/register';
-  
-  if (isAuthPage) {
-    return null; // No renderizar el menú en páginas de auth
-  }
-
+  // ✅ HOOKS PRIMERO - Siempre llamar en el mismo orden
   // Función para verificar manualmente la autenticación
   const checkAuth = async () => {
     try {
@@ -55,14 +45,22 @@ const Menu = () => {
 
     window.addEventListener('user-login', handleUserLogin);
 
-    // Eliminar el intervalo para reducir la carga en el servidor
-    // Solo verificar cuando cambia la ruta o cuando se inicia sesión
-
     return () => {
       window.removeEventListener('user-login', handleUserLogin);
-      // clearInterval(interval); // Ya no es necesario
     };
   }, [pathname]); // Volver a verificar cuando cambia la ruta
+
+  // ✅ VERIFICACIONES DESPUÉS DE LOS HOOKS
+  // No mostrar el menú en páginas de autenticación
+  const basePath = config.BASE_PATH;
+  const isAuthPage = pathname === `${basePath}/login` || 
+                     pathname === `${basePath}/register` ||
+                     pathname === '/login' || 
+                     pathname === '/register';
+  
+  if (isAuthPage) {
+    return null; // No renderizar el menú en páginas de auth
+  }
  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
