@@ -119,6 +119,8 @@ export default function EditUserPage({ params }: EditUserPageProps) {
       }
 
       await actualizarUsuarioGrupo(submitFormData);
+      // Navegación manejada por el cliente para evitar duplicación de basePath
+      router.push('/configuracion/grupo-familiar?success=Usuario actualizado exitosamente');
     } catch (error) {
       console.error('Error al actualizar usuario:', error);
     } finally {

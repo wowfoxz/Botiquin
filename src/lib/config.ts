@@ -15,7 +15,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const PRODUCTION_CONFIG = {
   BASE_PATH: '/botilyx',
   API_URL: 'https://web.formosa.gob.ar/botilyx',
-  APP_VERSION: '0.0.7',
+  APP_VERSION: '0.0.8',
   VAPID_PUBLIC_KEY: 'BO63iDbR-YNn2So-X3dvBuFMRTLn0RMeWLz1BEfd-LhqgNBIra7rKqY9RuYdeNtZWOZs5SOWm12KXMewuw-hM9k',
   AUTH_USER: 'admin',
   AUTH_PASS: 'admin123',

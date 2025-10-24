@@ -142,14 +142,11 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       
       toast.success(`Toma registrada para ${consumidor?.name}`);
       
-      // No hacer router.refresh() aquí porque la acción del servidor ya redirige
-      // y el router.refresh() interfiere con la limpieza de URL
+      // Navegación manejada por el cliente (router.push agrega basePath automáticamente)
+      router.push('/botiquin?success=Toma registrada exitosamente');
     } catch (error: any) {
       console.error('Error al registrar toma:', error);
-      // Solo mostrar error si no es una redirección de Next.js
-      if (!error?.digest?.includes('NEXT_REDIRECT')) {
-        toast.error('Error al registrar la toma');
-      }
+      toast.error('Error al registrar la toma');
     }
   };
 

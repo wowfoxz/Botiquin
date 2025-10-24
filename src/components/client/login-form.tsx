@@ -159,6 +159,7 @@ export default function LoginForm() {
               </Link>
             </div>
 
+            {/* Forgot password deshabilitado temporalmente 
             <div className="text-center text-sm text-muted-foreground">
               <Link
                 href="/forgot-password"
@@ -167,6 +168,7 @@ export default function LoginForm() {
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
+            */}
           </CardFooter>
         </Card>
       </div>

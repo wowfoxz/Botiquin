@@ -23,6 +23,17 @@ const Menu = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const pathname = usePathname();
 
+  // No mostrar el menú en páginas de autenticación
+  const basePath = config.BASE_PATH;
+  const isAuthPage = pathname === `${basePath}/login` || 
+                     pathname === `${basePath}/register` ||
+                     pathname === '/login' || 
+                     pathname === '/register';
+  
+  if (isAuthPage) {
+    return null; // No renderizar el menú en páginas de auth
+  }
+
   // Función para verificar manualmente la autenticación
   const checkAuth = async () => {
     try {

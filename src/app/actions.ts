@@ -291,7 +291,7 @@ export async function addMedication(formData: FormData) {
     throw error;
   }
   
-  redirect("/botiquin?success=Medicamento agregado exitosamente");
+  // No usar redirect() - el cliente maneja la navegación
 }
 
 export async function updateMedicationQuantity(formData: FormData) {
@@ -791,7 +791,7 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Adulto agregado exitosamente");
+  // No usar redirect() - el cliente maneja la navegación
 }
 
 export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
@@ -878,7 +878,7 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Menor con cuenta agregado exitosamente");
+  // No usar redirect() - el cliente maneja la navegación
 }
 
 export async function agregarPerfilMenorAlGrupo(formData: FormData) {
@@ -957,7 +957,7 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Perfil de menor agregado exitosamente");
+  // No usar redirect() - el cliente maneja la navegación
 }
 
 export async function registrarTomaMedicamento(formData: FormData) {
@@ -1108,7 +1108,7 @@ export async function registrarTomaMedicamento(formData: FormData) {
   );
 
   revalidatePath("/botiquin");
-  redirect("/botiquin?success=Toma registrada exitosamente");
+  // No usar redirect() - el cliente maneja la navegación
 }
 
 export async function actualizarUsuarioGrupo(formData: FormData) {
@@ -1174,7 +1174,8 @@ export async function actualizarUsuarioGrupo(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Usuario actualizado exitosamente");
+  // No usar redirect() aquí - causa duplicación de basePath en producción
+  // El cliente debe manejar la navegación después de una respuesta exitosa
 }
 
 export async function eliminarUsuarioGrupo(formData: FormData) {
@@ -1288,7 +1289,7 @@ export async function actualizarPerfilMenor(formData: FormData) {
   );
 
   revalidatePath("/configuracion/grupo-familiar");
-  redirect("/configuracion/grupo-familiar?success=Perfil actualizado exitosamente");
+  // No usar redirect() - el cliente maneja la navegación
 }
 
 export async function eliminarPerfilMenor(formData: FormData) {

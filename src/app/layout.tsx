@@ -51,10 +51,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Verificar sesión para ocultar menú en páginas de login/register
-  const session = await getSession();
-  const showMenu = !!session?.userId;
-
   return (
     <html lang="es" suppressHydrationWarning>
       <body>
@@ -67,8 +63,8 @@ export default async function RootLayout({
           <div className="fixed top-4 right-4 z-50">
             <ThemeSwitch />
           </div>
-          {/* Solo mostrar menú si hay sesión activa */}
-          {showMenu && <Menu />}
+          {/* El menú decide internamente si renderizarse basándose en la ruta */}
+          <Menu />
           {children}
           <Toaster />
         </ThemeProvider>

@@ -114,6 +114,8 @@ export default function EditProfilePage({ params }: EditProfilePageProps) {
       }
 
       await actualizarPerfilMenor(submitFormData);
+      // Navegación manejada por el cliente para evitar duplicación de basePath
+      router.push('/configuracion/grupo-familiar?success=Perfil actualizado exitosamente');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
     } finally {
