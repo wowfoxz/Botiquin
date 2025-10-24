@@ -69,8 +69,8 @@ export const useAuth = () => {
       if (response.ok) {
         setUser(null);
         // Redirigir al login después del logout
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-        window.location.href = basePath + '/login';
+        const { config } = await import('@/lib/config');
+        window.location.href = config.BASE_PATH + '/login';
       } else {
         console.error("Error al cerrar sesión:", response.status);
         // Aún así limpiar el usuario local

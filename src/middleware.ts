@@ -16,7 +16,10 @@ export async function middleware(request: NextRequest) {
     "/api/historial",
   ];
 
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  // Hardcodeado para producción - detectar basePath del hostname
+  const isProduction = !request.nextUrl.hostname.includes('localhost') && 
+                       !request.nextUrl.hostname.includes('127.0.0.1');
+  const basePath = isProduction ? '/botilyx' : '';
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(basePath + path)
   );

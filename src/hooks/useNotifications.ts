@@ -119,16 +119,16 @@ export const useNotifications = () => {
 
     try {
       // Registrar service worker
-      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-      const registration = await navigator.serviceWorker.register(basePath + '/sw.js');
+      const { config } = await import('@/lib/config');
+      const registration = await navigator.serviceWorker.register(config.BASE_PATH + '/sw.js');
       // Esperar a que el service worker esté listo
       await navigator.serviceWorker.ready;
 
-      // Obtener clave VAPID
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BO63iDbR-YNn2So-X3dvBuFMRTLn0RMeWLz1BEfd-LhqgNBIra7rKqY9RuYdeNtZWOZs5SOWm12KXMewuw-hM9k';
+      // Obtener clave VAPID (hardcodeada en config)
+      const vapidKey = config.VAPID_PUBLIC_KEY;
 
       if (!vapidKey) {
-        throw new Error('NEXT_PUBLIC_VAPID_PUBLIC_KEY no está definida');
+        throw new Error('VAPID_PUBLIC_KEY no está definida en config');
       }
 
       // Crear suscripción push
@@ -243,10 +243,10 @@ export const useNotifications = () => {
       });
 
       // Manejar eventos de la notificación
-      notification.onclick = function() {
+      notification.onclick = async function() {
         window.focus();
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-        window.location.href = basePath + '/tratamientos';
+        const { config } = await import('@/lib/config');
+        window.location.href = config.BASE_PATH + '/tratamientos';
         notification.close();
       };
 

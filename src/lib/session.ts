@@ -44,7 +44,8 @@ export async function createSession(userId: string) {
   const sessionPayload = { userId, expires: expires.toISOString() };
 
   const session = await encrypt(sessionPayload);
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  // Hardcodeado para producción
+  const basePath = process.env.NODE_ENV === 'production' ? '/botilyx' : '';
 
   (await cookies()).set("session", session, {
     httpOnly: true,
@@ -81,7 +82,8 @@ export async function getSession() {
 
 export async function deleteSession() {
   // Borra la cookie de sesión
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  // Hardcodeado para producción
+  const basePath = process.env.NODE_ENV === 'production' ? '/botilyx' : '';
   (await cookies()).set("session", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

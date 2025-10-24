@@ -10,7 +10,7 @@ import {
   analyzeImageWithGemini,
   getDrugInfoWithGemini,
 } from "@/lib/ai-processor";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 export async function processUploadedImage(
@@ -43,13 +43,12 @@ export async function processUploadedImage(
     const extension = mimeType.split("/")[1] || "jpg";
     const fileName = `medication-${timestamp}-${randomString}.${extension}`;
 
+    // Crear directorio si no existe (importante para persistencia en Kubernetes)
+    const uploadDir = path.join(process.cwd(), "public", "medications");
+    await mkdir(uploadDir, { recursive: true });
+
     // Ruta donde se guardará la imagen
-    const publicPath = path.join(
-      process.cwd(),
-      "public",
-      "medications",
-      fileName
-    );
+    const publicPath = path.join(uploadDir, fileName);
 
     // Guardar la imagen
     await writeFile(publicPath, imageBuffer);

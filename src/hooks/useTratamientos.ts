@@ -253,7 +253,7 @@ export const usePreferenciasNotificaciones = () => {
         return;
       }
 
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/preferencias-notificaciones?userId=${user.id}`
       );
       if (!response.ok) {

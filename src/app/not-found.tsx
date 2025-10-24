@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import lottie, { AnimationItem } from 'lottie-web';
 import Link from 'next/link';
+import { config } from '@/lib/config';
 
 const Custom404 = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -14,7 +15,7 @@ const Custom404 = () => {
     (async () => {
       try {
         // Cargar el archivo JSON de animación directamente desde public
-        const response = await fetch('/animation/Caveman-404Page.json');
+        const response = await fetch(`${config.BASE_PATH}/animation/Caveman-404Page.json`);
         const animationData = await response.json();
 
         if (!mounted || !containerRef.current) return;

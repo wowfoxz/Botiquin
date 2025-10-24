@@ -68,7 +68,10 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  const basePath = '${process.env.NEXT_PUBLIC_BASE_PATH || ''}';
+                  // Hardcodeado para producción - detectar entorno
+                  const isProduction = window.location.hostname !== 'localhost' && 
+                                       window.location.hostname !== '127.0.0.1';
+                  const basePath = isProduction ? '/botilyx' : '';
                   navigator.serviceWorker.register(basePath + '/sw.js')
                     .then(function(registration) {
                       console.log('Service Worker registrado exitosamente:', registration.scope);

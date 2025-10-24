@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { config } from '@/lib/config';
 
 export async function GET() {
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  const basePath = config.BASE_PATH;
   
   const manifest = {
     name: "Botilyx - Gestor de Medicamentos",
