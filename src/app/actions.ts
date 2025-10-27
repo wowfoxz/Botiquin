@@ -12,6 +12,7 @@ import {
 } from "@/lib/ai-processor";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { config } from "@/lib/config";
 
 export async function processUploadedImage(
   imageBase64: string,
@@ -53,8 +54,8 @@ export async function processUploadedImage(
     // Guardar la imagen
     await writeFile(publicPath, imageBuffer);
 
-    // URL pública de la imagen
-    imageUrl = `/medications/${fileName}`;
+    // URL pública de la imagen (incluir basePath para producción)
+    imageUrl = `${config.BASE_PATH}/medications/${fileName}`;
   } catch (error) {
     console.error("Error al guardar la imagen:", error);
     // Continuar sin imagen si hay error
@@ -622,6 +623,18 @@ export async function deleteMedication(formData: FormData) {
     return;
   }
 
+  // ✅ CRÍTICO: Eliminar registros relacionados antes de eliminar el medicamento
+  // Eliminar registros de tomas del medicamento
+  await prisma.toma.deleteMany({
+    where: { medicamentoId: id },
+  });
+
+  // Eliminar medicamentos de tratamientos
+  await prisma.treatmentMedication.deleteMany({
+    where: { medicationId: id },
+  });
+
+  // Ahora sí, eliminar el medicamento
   await prisma.medication.delete({
     where: { id },
   });

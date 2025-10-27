@@ -14,8 +14,7 @@ import {
   Calendar, 
   ShoppingCart, 
   Settings, 
-  LogOut,
-  History
+  LogOut
 } from "lucide-react";
 
 const Menu = () => {
@@ -23,9 +22,21 @@ const Menu = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const pathname = usePathname();
 
-  // ✅ HOOKS PRIMERO - Siempre llamar en el mismo orden
+  // Determinar si estamos en una página de autenticación
+  const basePath = config.BASE_PATH;
+  const isAuthPage = pathname === `${basePath}/login` || 
+                     pathname === `${basePath}/register` ||
+                     pathname === '/login' || 
+                     pathname === '/register';
+
+  // ✅ HOOKS - Siempre llamar en el mismo orden
   // Función para verificar manualmente la autenticación
   const checkAuth = async () => {
+    // No verificar autenticación si estamos en una página de auth
+    if (isAuthPage) {
+      return;
+    }
+    
     try {
       const response = await apiFetch("/api/auth", { method: "GET" });
       setIsAuthenticated(response.ok);
@@ -36,28 +47,24 @@ const Menu = () => {
   };
 
   useEffect(() => {
-    checkAuth();
-
-    // Escuchar el evento de inicio de sesión
-    const handleUserLogin = () => {
+    // Solo verificar auth si NO estamos en páginas de autenticación
+    if (!isAuthPage) {
       checkAuth();
-    };
 
-    window.addEventListener('user-login', handleUserLogin);
+      // Escuchar el evento de inicio de sesión
+      const handleUserLogin = () => {
+        checkAuth();
+      };
 
-    return () => {
-      window.removeEventListener('user-login', handleUserLogin);
-    };
+      window.addEventListener('user-login', handleUserLogin);
+
+      return () => {
+        window.removeEventListener('user-login', handleUserLogin);
+      };
+    }
   }, [pathname]); // Volver a verificar cuando cambia la ruta
 
-  // ✅ VERIFICACIONES DESPUÉS DE LOS HOOKS
   // No mostrar el menú en páginas de autenticación
-  const basePath = config.BASE_PATH;
-  const isAuthPage = pathname === `${basePath}/login` || 
-                     pathname === `${basePath}/register` ||
-                     pathname === '/login' || 
-                     pathname === '/register';
-  
   if (isAuthPage) {
     return null; // No renderizar el menú en páginas de auth
   }
@@ -80,7 +87,6 @@ const Menu = () => {
     { name: "Botiquín", href: "/botiquin", icon: Package },
     { name: "Tratamientos", href: "/tratamientos", icon: Calendar },
     { name: "Lista de Compras", href: "/lista-compras", icon: ShoppingCart },
-    { name: "Historial", href: "/historial", icon: History },
     { name: "Configuración", href: "/configuracion", icon: Settings },
   ];
 

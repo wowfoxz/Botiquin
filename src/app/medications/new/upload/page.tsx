@@ -10,6 +10,7 @@ import Image from 'next/image';
 import BookLoader from '@/components/BookLoader';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { MobileDebugger } from '@/components/mobile-debug-panel';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -81,6 +82,19 @@ function UploadPageContent() {
 
   const startCamera = async () => {
     try {
+      MobileDebugger.log('📷 CAMERA', 'Intentando activar cámara...');
+      
+      // Verificar soporte de mediaDevices
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        MobileDebugger.error('📷 CAMERA', 'getUserMedia NO soportado', {
+          hasMediaDevices: !!navigator.mediaDevices,
+          userAgent: navigator.userAgent,
+        });
+        throw new Error('Tu navegador no soporta acceso a la cámara');
+      }
+
+      MobileDebugger.debug('📷 CAMERA', 'mediaDevices soportado, solicitando permisos...');
+      
       setIsCameraActive(true);
       setError('');
 
@@ -88,15 +102,28 @@ function UploadPageContent() {
         video: { facingMode: 'environment' } // Prefer rear camera if available
       });
 
+      MobileDebugger.log('📷 CAMERA', '✅ Cámara activada exitosamente', {
+        tracks: stream.getTracks().length,
+        videoTracks: stream.getVideoTracks().length,
+      });
+
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         // Try to play the video if autoplay is blocked
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch((playError) => {
+          MobileDebugger.warn('📷 CAMERA', 'Error al reproducir video (autoplay)', playError);
+        });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error accessing camera:', err);
+      MobileDebugger.error('📷 CAMERA', 'Error al acceder a la cámara', {
+        name: err?.name,
+        message: err?.message,
+        code: err?.code,
+        constraint: err?.constraint,
+      });
       setError('No se pudo acceder a la cámara. Por favor, selecciona una imagen.');
       setIsCameraActive(false);
     }

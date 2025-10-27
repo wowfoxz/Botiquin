@@ -17,7 +17,7 @@ import UrlNotifications from "@/components/url-notifications";
 import NotificationSettingsForm from './components/NotificationSettingsForm';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Settings } from "lucide-react";
+import { Users, Settings, History } from "lucide-react";
 import Link from "next/link";
 
 export default async function SettingsPage() {
@@ -111,6 +111,27 @@ export default async function SettingsPage() {
                   <Button className="w-full">
                     <Users className="w-4 h-4 mr-2" />
                     Administrar Grupo Familiar
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Historial de actividades */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Historial
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Revisa el historial completo de actividades y cambios en tu cuenta.
+                </p>
+                <Link href="/historial">
+                  <Button className="w-full">
+                    <History className="w-4 h-4 mr-2" />
+                    Ver Historial
                   </Button>
                 </Link>
               </CardContent>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { MobileDebugger } from '@/components/mobile-debug-panel';
 
 interface NotificationPermissionState {
   permission: NotificationPermission;
@@ -28,12 +29,26 @@ export const useNotifications = () => {
   // Verificar soporte y permisos al cargar
   useEffect(() => {
     const checkNotificationSupport = async () => {
+      MobileDebugger.log('🔔 PUSH', 'Verificando soporte de notificaciones...');
+      
       // Verificar soporte básico
       const hasNotification = 'Notification' in window;
       const hasServiceWorker = 'serviceWorker' in navigator;
       const hasPushManager = 'PushManager' in window;
 
+      MobileDebugger.debug('🔔 PUSH', 'Soporte APIs', {
+        Notification: hasNotification,
+        ServiceWorker: hasServiceWorker,
+        PushManager: hasPushManager,
+        userAgent: navigator.userAgent,
+      });
+
       if (!hasNotification || !hasServiceWorker || !hasPushManager) {
+        MobileDebugger.error('🔔 PUSH', 'Notificaciones NO soportadas en este navegador', {
+          hasNotification,
+          hasServiceWorker,
+          hasPushManager,
+        });
         setNotificationState(prev => ({ ...prev, isSupported: false }));
         return;
       }
@@ -47,7 +62,15 @@ export const useNotifications = () => {
                          location.hostname.startsWith('172.') ||
                          location.hostname.match(/^\d+\.\d+\.\d+\.\d+$/); // Cualquier IP local
       
+      MobileDebugger.debug('🔔 PUSH', 'Verificación HTTPS', {
+        protocol: location.protocol,
+        hostname: location.hostname,
+        isLocalhost,
+      });
+      
       if (location.protocol !== 'https:' && !isLocalhost) {
+        MobileDebugger.error('🔔 PUSH', 'HTTPS requerido para notificaciones push');
+
         setNotificationState(prev => ({ ...prev, isSupported: false }));
         return;
       }
