@@ -23,15 +23,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determinar la ruta de almacenamiento
-    // En desarrollo: Guarda en public/ local
-    // En producción (Kubernetes): Guarda en el volumen montado
-    const isProduction = process.env.NODE_ENV === 'production';
-    const uploadsBasePath = isProduction 
-      ? '/mnt/dev-web-botilyx'  // Kubernetes: volumen montado
-      : join(process.cwd(), "public");  // Desarrollo: carpeta local
-    
-    const uploadDir = join(uploadsBasePath, "treatment-images");
+          // Determinar la ruta de almacenamiento
+          // En desarrollo: Guarda en public/ local
+          // En producción (Kubernetes): Guarda en el volumen montado en /app/public/
+          const isProduction = process.env.NODE_ENV === 'production';
+          const uploadsBasePath = isProduction
+            ? join(process.cwd(), "public")  // Kubernetes: volumen montado en /app/public/
+            : join(process.cwd(), "public");  // Desarrollo: carpeta local
+
+          const uploadDir = join(uploadsBasePath, "treatment-images");
     
     console.log('📁 Guardando imágenes en:', uploadDir);
     await mkdir(uploadDir, { recursive: true });

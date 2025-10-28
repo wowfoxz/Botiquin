@@ -78,10 +78,30 @@ self.addEventListener('notificationclick', (event) => {
   
   event.notification.close();
 
-  // Abrir la app
+  // Obtener la URL completa (puede incluir basePath)
   const urlToOpen = event.notification.data?.url || '/tratamientos';
+  
   event.waitUntil(
-    clients.openWindow(urlToOpen)
+    // Primero intentar enfocar una ventana existente
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Si hay una ventana abierta, enfocarla
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            return client.focus().then(() => {
+              // Navegar a la URL deseada
+              return client.navigate(urlToOpen);
+            });
+          }
+        }
+        // Si no hay ventana abierta, abrir una nueva
+        return clients.openWindow(urlToOpen);
+      })
+      .catch((error) => {
+        console.error('Error al manejar click en notificación:', error);
+        // Fallback: abrir ventana nueva
+        return clients.openWindow(urlToOpen);
+      })
   );
 });
 

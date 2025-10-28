@@ -2,10 +2,10 @@
 
 ## 📋 Resumen Ejecutivo
 
-Las imágenes de medicamentos y tratamientos se guardan en diferentes ubicaciones según el entorno:
+Las imágenes de medicamentos y tratamientos se guardan en la carpeta `public/` del proyecto:
 
-- **Producción (Kubernetes)**: Se guardan en el volumen persistente `/mnt/dev-web-botilyx/`
-- **Desarrollo (Local)**: Se guardan en la carpeta `public/` del proyecto
+- **Producción (Kubernetes)**: Se guardan en el volumen persistente montado en `/app/public/` (que apunta a `/mnt/dev-web-botilyx/` en el host)
+- **Desarrollo (Local)**: Se guardan en la carpeta `public/` del proyecto local
 
 ---
 
@@ -13,8 +13,8 @@ Las imágenes de medicamentos y tratamientos se guardan en diferentes ubicacione
 
 | Tipo | Almacenamiento | Desarrollo | Producción |
 |------|---------------|------------|------------|
-| **Medicamentos** | Archivos | `public/medications/` | `/mnt/dev-web-botilyx/medications/` |
-| **Tratamientos** (recetas/instrucciones) | Archivos | `public/treatment-images/` | `/mnt/dev-web-botilyx/treatment-images/` |
+| **Medicamentos** | Archivos | `public/medications/` | `/app/public/medications/` (montado desde `/mnt/dev-web-botilyx/medications/`) |
+| **Tratamientos** (recetas/instrucciones) | Archivos | `public/treatment-images/` | `/app/public/treatment-images/` (montado desde `/mnt/dev-web-botilyx/treatment-images/`) |
 | **Fotos de Perfil** | Base64 en BD | Base64 en BD | Base64 en BD |
 
 ---
@@ -23,15 +23,19 @@ Las imágenes de medicamentos y tratamientos se guardan en diferentes ubicacione
 
 ### Producción (Kubernetes)
 
-El volumen `/mnt/dev-web-botilyx/` se monta automáticamente en el contenedor a través de la configuración en `k8s/04-deployment-botilyx.yaml`:
+El volumen `/mnt/dev-web-botilyx/` (host) se monta en `/app/public/` (contenedor) a través de la configuración en `k8s/04-deployment-botilyx.yaml`:
 
 ```yaml
 volumeMounts:
-  - name: botilyx-storage
-    mountPath: /mnt/dev-web-botilyx
+  - name: botilyx-uploads
+    mountPath: /app/public/medications
+    subPath: medications
+  - name: botilyx-uploads
+    mountPath: /app/public/treatment-images
+    subPath: treatment-images
 ```
 
-**No requiere configuración adicional.**
+**El código escribe en `/app/public/` que está montado al volumen persistente. No requiere configuración adicional.**
 
 ### Desarrollo (Local)
 
@@ -67,12 +71,14 @@ Las imágenes se guardan en la carpeta `public/` del proyecto:
 
 ```typescript
 const isProduction = process.env.NODE_ENV === 'production';
-const uploadsBasePath = isProduction 
-  ? '/mnt/dev-web-botilyx'  // Kubernetes: volumen montado
+const uploadsBasePath = isProduction
+  ? path.join(process.cwd(), "public")  // Kubernetes: volumen montado en /app/public/
   : path.join(process.cwd(), "public");  // Desarrollo: carpeta local
 
 const uploadDir = path.join(uploadsBasePath, "medications");
 ```
+
+**En ambos entornos se usa `public/`, pero en Kubernetes está montado al volumen persistente.**
 
 ### 2. Imágenes de Tratamientos
 
@@ -80,12 +86,14 @@ const uploadDir = path.join(uploadsBasePath, "medications");
 
 ```typescript
 const isProduction = process.env.NODE_ENV === 'production';
-const uploadsBasePath = isProduction 
-  ? '/mnt/dev-web-botilyx'  // Kubernetes: volumen montado
+const uploadsBasePath = isProduction
+  ? join(process.cwd(), "public")  // Kubernetes: volumen montado en /app/public/
   : join(process.cwd(), "public");  // Desarrollo: carpeta local
 
 const uploadDir = join(uploadsBasePath, "treatment-images");
 ```
+
+**En ambos entornos se usa `public/`, pero en Kubernetes está montado al volumen persistente.**
 
 ---
 
@@ -108,11 +116,18 @@ kubectl logs -n aplicaciones <nombre-del-pod> | grep "Guardando"
 Deberías ver:
 
 ```
-📁 Guardando imágenes en: /mnt/dev-web-botilyx/treatment-images
-📁 Guardando imagen de medicamento en: /mnt/dev-web-botilyx/medications
+📁 Guardando imágenes en: /app/public/treatment-images
+📁 Guardando imagen de medicamento en: /app/public/medications
 ```
 
-También puedes verificar directamente en el servidor:
+También puedes verificar directamente en el pod:
+
+```bash
+kubectl exec -it <nombre-del-pod> -n aplicaciones -- ls -la /app/public/medications/
+kubectl exec -it <nombre-del-pod> -n aplicaciones -- ls -la /app/public/treatment-images/
+```
+
+O verificar en el servidor físico (los archivos se sincronizan automáticamente):
 
 ```bash
 ls -la /mnt/dev-web-botilyx/medications/
@@ -123,10 +138,10 @@ ls -la /mnt/dev-web-botilyx/treatment-images/
 
 ## 🎯 Ventajas de esta Configuración
 
-✅ **Desarrollo simple**: No requiere configuración adicional de red
-✅ **Persistencia en producción**: Las imágenes no se pierden al reconstruir el contenedor
-✅ **Separación de entornos**: Desarrollo y producción tienen sus propias imágenes
-✅ **Fácil limpieza**: Puedes borrar `public/medications/` y `public/treatment-images/` localmente sin afectar producción
+✅ **Código unificado**: La misma ruta `public/` funciona en desarrollo y producción
+✅ **Persistencia en producción**: Las imágenes no se pierden al reconstruir el contenedor (volumen persistente)
+✅ **Transparente**: El código no necesita saber dónde está montado el volumen
+✅ **Fácil desarrollo**: No requiere configuración especial, solo `public/` local
 
 ---
 

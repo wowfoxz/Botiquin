@@ -242,49 +242,69 @@ export const useNotifications = () => {
     }
 
     try {
+      MobileDebugger.log('info', 'PUSH', 'Enviando notificación de prueba...');
+
       // Solicitar permisos explícitamente
       const permission = await Notification.requestPermission();
+      MobileDebugger.log('debug', 'PUSH', 'Permiso solicitado', { permission });
 
       if (permission !== 'granted') {
         toast.error('Permisos de notificación denegados. Actívalos en configuración del navegador.');
+        MobileDebugger.log('error', 'PUSH', 'Permiso denegado');
         return false;
-      }
-      
-      // Verificar si Notification está disponible
-      if (!window.Notification) {
-        throw new Error('Notification API no está disponible');
       }
       
       // ✅ Importar config para basePath
       const { config } = await import('@/lib/config');
       
-      // Usar la API nativa de notificaciones
-      const notification = new Notification('🔔 Botilyx - Prueba', {
-        body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
-        icon: config.BASE_PATH + '/icons/favicon.png', // ✅ Agregar basePath
-        badge: config.BASE_PATH + '/icons/favicon.png', // ✅ Agregar basePath
-        tag: 'test-notification-' + Date.now(),
-        requireInteraction: true,
-        silent: false
-      });
+      // ✅ Usar Service Worker (funciona en móviles Y desktop)
+      if ('serviceWorker' in navigator) {
+        MobileDebugger.log('info', 'PUSH', 'Usando Service Worker para notificación');
+        
+        const registration = await navigator.serviceWorker.ready;
+        
+        await registration.showNotification('🔔 Botilyx - Prueba', {
+          body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
+          icon: config.BASE_PATH + '/icons/favicon.png',
+          badge: config.BASE_PATH + '/icons/favicon.png',
+          tag: 'test-notification-' + Date.now(),
+          requireInteraction: false, // En móvil es mejor false
+          vibrate: [200, 100, 200], // Vibración para móviles
+          data: {
+            url: config.BASE_PATH + '/tratamientos'
+          }
+        });
 
-      // Manejar eventos de la notificación
-      notification.onclick = async function() {
-        window.focus();
-        const { config } = await import('@/lib/config');
-        window.location.href = config.BASE_PATH + '/tratamientos';
-        notification.close();
-      };
+        MobileDebugger.log('success', 'PUSH', 'Notificación enviada vía Service Worker');
+        toast.success('✅ Notificación de prueba enviada');
+        return true;
+      } else {
+        // Fallback para navegadores sin Service Worker (raro)
+        MobileDebugger.log('warn', 'PUSH', 'Service Worker no disponible, usando Notification API');
+        
+        const notification = new Notification('🔔 Botilyx - Prueba', {
+          body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
+          icon: config.BASE_PATH + '/icons/favicon.png',
+          badge: config.BASE_PATH + '/icons/favicon.png',
+          tag: 'test-notification-' + Date.now(),
+          requireInteraction: false,
+          silent: false
+        });
 
-      // Auto-cerrar después de 10 segundos
-      setTimeout(() => {
-        notification.close();
-      }, 10000);
+        // Manejar click
+        notification.onclick = function() {
+          window.focus();
+          window.location.href = config.BASE_PATH + '/tratamientos';
+          notification.close();
+        };
 
-      toast.success('✅ Notificación de prueba enviada');
-      return true;
+        toast.success('✅ Notificación de prueba enviada');
+        return true;
+      }
 
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      MobileDebugger.log('error', 'PUSH', 'Error al enviar notificación', { error: errorMessage });
       toast.error('Error al enviar notificación de prueba');
       return false;
     }
