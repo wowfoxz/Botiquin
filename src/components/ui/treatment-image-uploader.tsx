@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,14 +40,47 @@ export function TreatmentImageUploader({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const previousImagesCount = useRef<number>(0);
+  const imagesRef = useRef<TreatmentImage[]>(images); // ✅ Ref para mantener el valor actual
 
+  // ✅ Actualizar el ref cuando cambian las imágenes
+  useEffect(() => {
+    imagesRef.current = images;
+    console.log('📦 imagesRef actualizado:', images.length);
+  }, [images]);
 
-    const handleFileSelect = async (file: File, imageType: "receta" | "instrucciones") => {
+  // ✅ Efecto para expandir automáticamente nuevas imágenes
+  useEffect(() => {
+    if (images.length > previousImagesCount.current) {
+      // Se agregó una nueva imagen
+      const newImage = images[images.length - 1];
+      console.log('🆕 Nueva imagen detectada en useEffect:', newImage.id);
+      
+      setExpandedImages(prev => {
+        const updated = { ...prev, [newImage.id]: true };
+        console.log('🔵 expandedImages actualizado desde useEffect:', updated);
+        return updated;
+      });
+      
+      setShowAnalysis(prev => {
+        const updated = { ...prev, [newImage.id]: true };
+        console.log('🔵 showAnalysis actualizado desde useEffect:', updated);
+        return updated;
+      });
+    }
+    previousImagesCount.current = images.length;
+  }, [images]);
+
+  const handleFileSelect = async (file: File, imageType: "receta" | "instrucciones") => {
+      console.log('📸 handleFileSelect llamado:', { fileName: file.name, fileType: file.type, imageType });
+      
       if (!file.type.startsWith('image/')) {
+        console.error('❌ Archivo no es una imagen:', file.type);
         alert('Por favor selecciona un archivo de imagen válido');
         return;
       }
 
+      console.log('✅ Archivo válido, creando imagen temporal...');
 
       // Crear imagen temporal para mostrar mientras se sube
       const tempImageUrl = URL.createObjectURL(file);
@@ -59,7 +92,25 @@ export function TreatmentImageUploader({
         isAnalyzing: true,
       };
 
-      onImagesChange([...images, newImage]);
+      console.log('📦 Nueva imagen creada:', { id: newImage.id, imageType, tempImageUrl });
+      
+      // ✅ Expandir la imagen y mostrar el análisis automáticamente
+      setExpandedImages(prev => ({
+        ...prev,
+        [newImage.id]: true
+      }));
+      
+      setShowAnalysis(prev => ({
+        ...prev,
+        [newImage.id]: true
+      }));
+
+      // ✅ CRÍTICO: Usar imagesRef.current para evitar closure stale
+      console.log('📦 Array de imágenes ANTES de agregar (ref):', imagesRef.current.length);
+      const updatedImages = [...imagesRef.current, newImage];
+      console.log('📦 Array de imágenes DESPUÉS de agregar:', updatedImages.length);
+      onImagesChange(updatedImages);
+      console.log('🔵 Imagen agregada, expandedImages y showAnalysis activados para:', newImage.id);
 
       try {
         // Subir imagen al servidor
@@ -77,17 +128,19 @@ export function TreatmentImageUploader({
         }
 
         const uploadResult = await uploadResponse.json();
+        console.log('✅ Imagen subida al servidor:', uploadResult.imageUrl); // ✅ Log
 
-        // Actualizar la imagen con la URL permanente
-        const updatedImages = images.map(img => 
+        // ✅ CRÍTICO: Usar imagesRef.current para evitar closure stale
+        const updatedImages = imagesRef.current.map(img => 
           img.id === newImage.id 
             ? { 
                 ...img, 
-                imageUrl: uploadResult.imageUrl,
+                imageUrl: uploadResult.imageUrl, // URL del servidor
                 isAnalyzing: false
               }
             : img
         );
+        console.log('📦 Imágenes después de actualizar URL del servidor:', updatedImages.length); // ✅ Log
         onImagesChange(updatedImages);
 
         // Ahora hacer el análisis con IA
@@ -95,10 +148,10 @@ export function TreatmentImageUploader({
         analyzeImageWithAI(updatedImage);
 
       } catch (error) {
-        console.error('Error al subir imagen:', error);
+        console.error('❌ Error al subir imagen:', error);
         
-        // En caso de error, mantener la imagen temporal pero marcar como error
-        const errorImages = images.map(img => 
+        // ✅ CRÍTICO: Usar imagesRef.current
+        const errorImages = imagesRef.current.map(img => 
           img.id === newImage.id 
             ? { 
                 ...img, 
@@ -132,8 +185,8 @@ export function TreatmentImageUploader({
 
       const analysis = await response.json();
       
-      // Usar el estado actual de imágenes
-      const updatedImages = images.map(img => 
+      // ✅ Usar imagesRef.current para evitar closure stale
+      const updatedImages = imagesRef.current.map(img => 
         img.id === image.id 
           ? { 
               ...img, 
@@ -144,10 +197,16 @@ export function TreatmentImageUploader({
           : img
       );
       onImagesChange(updatedImages);
+      
+      // ✅ Mostrar automáticamente el análisis cuando termina
+      setShowAnalysis(prev => ({
+        ...prev,
+        [image.id]: true
+      }));
     } catch (error) {
       console.error('Error al analizar imagen:', error);
-      // Usar el estado actual de imágenes
-      const errorImages = images.map(img => 
+      // ✅ Usar imagesRef.current
+      const errorImages = imagesRef.current.map(img => 
         img.id === image.id 
           ? { 
               ...img, 
@@ -162,7 +221,8 @@ export function TreatmentImageUploader({
   };
 
   const removeImage = (imageId: string) => {
-    const updatedImages = images.filter(img => img.id !== imageId);
+    // ✅ Usar imagesRef.current
+    const updatedImages = imagesRef.current.filter(img => img.id !== imageId);
     onImagesChange(updatedImages);
   };
 
@@ -181,19 +241,23 @@ export function TreatmentImageUploader({
   };
 
   const startCamera = async () => {
+    console.log('📷 startCamera llamado');
     try {
       setIsCameraActive(true);
+      console.log('📷 Solicitando permiso de cámara...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }
       });
 
+      console.log('✅ Permiso de cámara concedido, stream:', stream);
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
+        console.log('✅ Video iniciado');
       }
     } catch (err) {
-      console.error('Error accessing camera:', err);
+      console.error('❌ Error accessing camera:', err);
       setIsCameraActive(false);
     }
   };
@@ -290,7 +354,11 @@ export function TreatmentImageUploader({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    console.log('🔴 Botón "Subir Receta" clickeado');
+                    console.log('fileInputRef.current:', fileInputRef.current);
+                    fileInputRef.current?.click();
+                  }}
                   disabled={disabled}
                   className="flex-1"
                 >
@@ -301,7 +369,10 @@ export function TreatmentImageUploader({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={startCamera}
+                  onClick={() => {
+                    console.log('📷 Botón "Foto Receta" clickeado');
+                    startCamera();
+                  }}
                   disabled={disabled}
                   className="flex-1"
                 >
@@ -336,7 +407,11 @@ export function TreatmentImageUploader({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => cameraInputRef.current?.click()}
+                  onClick={() => {
+                    console.log('🟡 Botón "Subir Instrucciones" clickeado');
+                    console.log('cameraInputRef.current:', cameraInputRef.current);
+                    cameraInputRef.current?.click();
+                  }}
                   disabled={disabled}
                   className="flex-1"
                 >
@@ -347,7 +422,10 @@ export function TreatmentImageUploader({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={startCamera}
+                  onClick={() => {
+                    console.log('📷 Botón "Foto Instrucciones" clickeado');
+                    startCamera();
+                  }}
                   disabled={disabled}
                   className="flex-1"
                 >
@@ -414,6 +492,14 @@ export function TreatmentImageUploader({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {images.map((image) => {
               const isExpanded = expandedImages[image.id];
+              const showAnalysisFor = showAnalysis[image.id];
+              console.log(`🔍 Renderizando imagen ${image.id}:`, {
+                isExpanded,
+                showAnalysisFor,
+                isAnalyzing: image.isAnalyzing,
+                hasExtractedText: !!image.extractedText,
+                hasAiAnalysis: !!image.aiAnalysis
+              });
               
               return (
                 <Card key={image.id} className="border-2">
@@ -507,23 +593,24 @@ export function TreatmentImageUploader({
                           onClick={() => toggleAnalysis(image.id)}
                           className="gap-1"
                         >
-                          {showAnalysis[image.id] ? (
+                          {showAnalysisFor ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
                             <Eye className="h-4 w-4" />
                           )}
-                          {showAnalysis[image.id] ? "Ocultar" : "Ver"}
+                          {showAnalysisFor ? "Ocultar" : "Ver"}
                         </Button>
                       </div>
                       
-                      {showAnalysis[image.id] && (
+                      {showAnalysisFor && (
                         <div className="space-y-3">
                           <div>
                             <Label className="text-xs text-muted-foreground">Texto Extraído</Label>
                             <Textarea
                               value={image.extractedText}
                               onChange={(e) => {
-                                const updatedImages = images.map(img => 
+                                // ✅ CRÍTICO: Usar imagesRef.current
+                                const updatedImages = imagesRef.current.map(img => 
                                   img.id === image.id 
                                     ? { ...img, extractedText: e.target.value }
                                     : img
@@ -543,7 +630,8 @@ export function TreatmentImageUploader({
                               <Textarea
                                 value={image.aiAnalysis}
                                 onChange={(e) => {
-                                  const updatedImages = images.map(img => 
+                                  // ✅ CRÍTICO: Usar imagesRef.current
+                                  const updatedImages = imagesRef.current.map(img => 
                                     img.id === image.id 
                                       ? { ...img, aiAnalysis: e.target.value }
                                       : img
@@ -577,8 +665,14 @@ export function TreatmentImageUploader({
         type="file"
         accept="image/*"
         onChange={(e) => {
+          console.log('🔵 Input file (receta) onChange disparado');
           const file = e.target.files?.[0];
-          if (file) handleFileSelect(file, "receta");
+          if (file) {
+            console.log('✅ Archivo seleccionado (receta):', file.name);
+            handleFileSelect(file, "receta");
+          } else {
+            console.log('❌ No se seleccionó ningún archivo (receta)');
+          }
         }}
         className="hidden"
       />
@@ -587,8 +681,14 @@ export function TreatmentImageUploader({
         type="file"
         accept="image/*"
         onChange={(e) => {
+          console.log('🟢 Input file (instrucciones) onChange disparado');
           const file = e.target.files?.[0];
-          if (file) handleFileSelect(file, "instrucciones");
+          if (file) {
+            console.log('✅ Archivo seleccionado (instrucciones):', file.name);
+            handleFileSelect(file, "instrucciones");
+          } else {
+            console.log('❌ No se seleccionó ningún archivo (instrucciones)');
+          }
         }}
         className="hidden"
       />

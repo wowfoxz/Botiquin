@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { addMedication, getDescriptionFromAI, getIntakeRecommendationsFromAI } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,6 @@ import Link from 'next/link';
 
 export default function MedicationForm() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [isDescriptionLoading, setIsDescriptionLoading] = useState(false);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -163,8 +162,8 @@ export default function MedicationForm() {
 
       await addMedication(formData);
       toast.success('Medicamento agregado exitosamente');
-      // Navegación manejada por el cliente (router.push agrega basePath automáticamente)
-      router.push('/botiquin?success=Medicamento agregado exitosamente');
+      // Recargar la página para mostrar el medicamento agregado
+      window.location.href = '/botiquin';
     } catch (error: any) {
       console.error('Error al agregar medicamento:', error);
       toast.error('Error al agregar el medicamento');

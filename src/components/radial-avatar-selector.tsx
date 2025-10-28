@@ -32,7 +32,9 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible' | 'exiting' | 'selecting'>('entering');
   const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const avatarRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Calcular posiciones de los avatares en círculo
   const getAvatarPosition = (index: number, total: number) => {
@@ -47,6 +49,24 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius,
     };
+  };
+
+  // ✅ Detectar qué avatar está bajo el cursor/dedo durante el arrastre
+  const getAvatarUnderPosition = (x: number, y: number): string | null => {
+    for (const [id, element] of avatarRefs.current.entries()) {
+      if (!element) continue;
+      
+      const rect = element.getBoundingClientRect();
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
+        return id;
+      }
+    }
+    return null;
   };
 
   // Manejar la animación de entrada
@@ -74,17 +94,41 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
     }, 300); // Duración de la animación de selección
   };
 
+  // ✅ MOUSE: Press (iniciar arrastre)
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsMouseDown(true);
+    setDragPosition({ x: e.clientX, y: e.clientY });
   };
 
+  // ✅ MOUSE: Drag (arrastrar y detectar avatar bajo cursor)
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown) return;
+    
+    e.preventDefault();
+    setDragPosition({ x: e.clientX, y: e.clientY });
+    
+    // Detectar qué avatar está bajo el cursor
+    const avatarId = getAvatarUnderPosition(e.clientX, e.clientY);
+    setHoveredAvatar(avatarId);
+  };
+
+  // ✅ MOUSE: Release (soltar y seleccionar avatar si está sobre uno)
   const handleMouseUp = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsMouseDown(false);
+    setDragPosition(null);
     
-    // Si se suelta el mouse sin seleccionar un avatar, cerrar el selector
-    onClose();
+    // Detectar qué avatar está bajo el cursor al soltar
+    const avatarId = getAvatarUnderPosition(e.clientX, e.clientY);
+    
+    if (avatarId) {
+      // Seleccionar el avatar
+      handleAvatarClick(avatarId);
+    } else {
+      // Si no hay avatar bajo el cursor, cerrar el selector
+      onClose();
+    }
   };
 
   const handleMouseLeave = () => {
@@ -92,9 +136,54 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
     // Permitir que el usuario mantenga el selector abierto
   };
 
-  // Cerrar si se hace clic fuera del contenedor
+  // ✅ TOUCH: Press (iniciar arrastre)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsMouseDown(true);
+    
+    const touch = e.touches[0];
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
+  };
+
+  // ✅ TOUCH: Drag (arrastrar y detectar avatar bajo dedo)
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMouseDown) return;
+    
+    e.preventDefault();
+    const touch = e.touches[0];
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    
+    // Detectar qué avatar está bajo el dedo
+    const avatarId = getAvatarUnderPosition(touch.clientX, touch.clientY);
+    setHoveredAvatar(avatarId);
+  };
+
+  // ✅ TOUCH: Release (soltar y seleccionar avatar si está sobre uno)
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsMouseDown(false);
+    
+    // Usar la última posición conocida del dedo
+    if (dragPosition) {
+      const avatarId = getAvatarUnderPosition(dragPosition.x, dragPosition.y);
+      
+      if (avatarId) {
+        // Seleccionar el avatar
+        handleAvatarClick(avatarId);
+      } else {
+        // Si no hay avatar bajo el dedo, cerrar el selector
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+    
+    setDragPosition(null);
+  };
+
+  // Cerrar si se hace clic/toque fuera del contenedor
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         onClose();
       }
@@ -102,8 +191,10 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
       };
     }
   }, [isOpen, onClose]);
@@ -124,8 +215,12 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
           backgroundColor: 'rgba(0, 0, 0, 0.3)',
         }}
         onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div
           className="absolute flex items-center justify-center"
@@ -188,25 +283,21 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
               <Tooltip key={consumidor.id}>
                 <TooltipTrigger asChild>
                   <div
+                    ref={(el) => {
+                      if (el) {
+                        avatarRefs.current.set(consumidor.id, el);
+                      } else {
+                        avatarRefs.current.delete(consumidor.id);
+                      }
+                    }}
                     className={`absolute cursor-pointer transform hover:scale-110 ${
-                      hoveredAvatar === consumidor.id ? 'z-10' : 'z-0'
+                      hoveredAvatar === consumidor.id ? 'z-10 scale-125' : 'z-0'
                     } ${
                       animationPhase === 'selecting' 
                         ? 'transition-all duration-300 ease-in-out' 
                         : 'transition-all duration-500 ease-out'
                     }`}
                     style={getAnimationStyles()}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onMouseUp={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleAvatarClick(consumidor.id);
-                    }}
-                    onMouseEnter={() => setHoveredAvatar(consumidor.id)}
-                    onMouseLeave={() => setHoveredAvatar(null)}
                   >
                     <Avatar className={`w-16 h-16 bg-white ${
                       animationPhase === 'selecting' && selectedAvatarId === consumidor.id

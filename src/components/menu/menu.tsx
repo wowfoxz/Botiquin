@@ -64,6 +64,20 @@ const Menu = () => {
     }
   }, [pathname]); // Volver a verificar cuando cambia la ruta
 
+  // ✅ Agregar padding-left al body cuando el usuario está autenticado para evitar que elementos queden detrás del botón
+  useEffect(() => {
+    if (isAuthenticated && !isAuthPage) {
+      document.body.style.paddingLeft = '70px'; // Espacio para el botón del menú
+    } else {
+      document.body.style.paddingLeft = '0';
+    }
+
+    // Cleanup al desmontar
+    return () => {
+      document.body.style.paddingLeft = '0';
+    };
+  }, [isAuthenticated, isAuthPage]);
+
   // No mostrar el menú en páginas de autenticación
   if (isAuthPage) {
     return null; // No renderizar el menú en páginas de auth

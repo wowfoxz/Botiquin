@@ -112,8 +112,8 @@ model TreatmentImage {
   imageUrl      String
   imageType     String
   createdAt     DateTime  @default(now())
-  aiAnalysis    String?
-  extractedText String?
+  aiAnalysis    String?   @db.LongText
+  extractedText String?   @db.LongText
   updatedAt     DateTime  @updatedAt
   treatment     Treatment @relation(fields: [treatmentId], references: [id])
 

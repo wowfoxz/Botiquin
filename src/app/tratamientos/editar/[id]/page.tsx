@@ -11,6 +11,7 @@ import { Cardio } from "ldrs/react";
 import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { config } from "@/lib/config";
 import 'ldrs/react/Cardio.css';
 
 export default function EditarTratamientoPage() {
@@ -103,7 +104,7 @@ export default function EditarTratamientoPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/tratamientos">
+              <BreadcrumbLink href={`${config.BASE_PATH}/tratamientos`}>
                 Tratamientos
               </BreadcrumbLink>
             </BreadcrumbItem>

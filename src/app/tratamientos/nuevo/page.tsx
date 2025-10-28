@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Cardio } from "ldrs/react";
 import 'ldrs/react/Cardio.css';
+import { config } from "@/lib/config";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -25,6 +26,8 @@ export default function NuevoTratamientoPage() {
   const { user, isAuthenticated } = useAuth();
   const { medicinas, loading: loadingMedicinas, error: errorMedicinas } = useMedicinas();
   const { createTratamiento } = useTratamientos();
+
+  console.log('🔵 NuevoTratamientoPage - Componente renderizado');
 
   const handleCreate = async (tratamiento: {
     name: string;
@@ -110,7 +113,7 @@ export default function NuevoTratamientoPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/tratamientos">
+              <BreadcrumbLink href={`${config.BASE_PATH}/tratamientos`}>
                 Tratamientos
               </BreadcrumbLink>
             </BreadcrumbItem>

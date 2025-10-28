@@ -46,6 +46,8 @@ interface TratamientoFormProps {
 }
 
 export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initialData }: TratamientoFormProps) {
+  console.log('🟣 TratamientoForm - Componente renderizado/re-renderizado');
+  
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!initialData; // Determinar si está en modo edición
@@ -58,8 +60,22 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
   const [medications, setMedications] = useState<TreatmentMedicationFormData[]>([]);
   const [images, setImages] = useState<TreatmentImage[]>([]);
 
+  // ✅ Log para detectar montaje/desmontaje del componente
+  useEffect(() => {
+    console.log('✅ TratamientoForm - Componente MONTADO');
+    return () => {
+      console.log('❌ TratamientoForm - Componente DESMONTADO');
+    };
+  }, []);
+
+  // ✅ Log para debug: detectar cambios en images
+  useEffect(() => {
+    console.log('🔴 TratamientoForm - Estado images cambió:', images.length);
+  }, [images]);
+
   // Inicializar datos cuando se está editando
   useEffect(() => {
+    console.log('🟡 TratamientoForm - useEffect initialData disparado:', !!initialData);
     if (initialData) {
       // Configurar paciente seleccionado
       if (initialData.patientId && initialData.patientType) {
@@ -258,7 +274,11 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
             {/* Carga de imágenes */}
             <TreatmentImageUploader
               images={images}
-              onImagesChange={setImages}
+              onImagesChange={(newImages) => {
+                console.log('🟢 TratamientoForm - setImages llamado desde TreatmentImageUploader, de', images.length, 'a', newImages.length);
+                console.trace('🔍 Stack trace de setImages');
+                setImages(newImages);
+              }}
               disabled={isSubmitting}
             />
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { agregarMenorConCuentaSchema, agregarPerfilMenorSchema, type AgregarMenorConCuentaFormData, type AgregarPerfilMenorFormData } from "@/lib/validations";
 import { agregarMenorConCuentaAlGrupo, agregarPerfilMenorAlGrupo } from "@/app/actions";
@@ -15,9 +16,11 @@ import { PhotoUpload } from "@/components/ui/photo-upload";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Cardio } from "ldrs/react";
+import { toast } from "sonner";
 import "ldrs/react/Cardio.css";
 
 export default function AgregarMenorPage() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [tipoMenor, setTipoMenor] = useState<"con-cuenta" | "sin-cuenta">("con-cuenta");
@@ -58,11 +61,15 @@ export default function AgregarMenorPage() {
       }
 
       await agregarMenorConCuentaAlGrupo(formData);
+      toast.success("Menor agregado exitosamente");
+      router.push("/configuracion/grupo-familiar");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
+        toast.error(err.message);
       } else {
         setError("Error al agregar el menor. Por favor, inténtalo de nuevo.");
+        toast.error("Error al agregar el menor. Por favor, inténtalo de nuevo.");
       }
     } finally {
       setIsLoading(false);
@@ -83,11 +90,15 @@ export default function AgregarMenorPage() {
       }
 
       await agregarPerfilMenorAlGrupo(formData);
+      toast.success("Perfil agregado exitosamente");
+      router.push("/configuracion/grupo-familiar");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
+        toast.error(err.message);
       } else {
         setError("Error al agregar el perfil. Por favor, inténtalo de nuevo.");
+        toast.error("Error al agregar el perfil. Por favor, inténtalo de nuevo.");
       }
     } finally {
       setIsLoading(false);

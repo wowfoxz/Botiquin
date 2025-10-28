@@ -18,6 +18,7 @@ import 'ldrs/react/Cardio.css';
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { config } from "@/lib/config";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -187,7 +188,7 @@ export default function PreciosPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/botiquin">Mi Botiquín</BreadcrumbLink>
+              <BreadcrumbLink href={`${config.BASE_PATH}/botiquin`}>Mi Botiquín</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
               <BreadcrumbPage>Consulta de Precios</BreadcrumbPage>

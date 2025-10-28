@@ -14,6 +14,7 @@ import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Cardio } from "ldrs/react";
 import "ldrs/react/Cardio.css";
 import { apiFetch } from "@/lib/api";
+import { config } from "@/lib/config";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -131,10 +132,10 @@ export default function EditProfilePage({ params }: EditProfilePageProps) {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/configuracion">Configuración</BreadcrumbLink>
+              <BreadcrumbLink href={`${config.BASE_PATH}/configuracion`}>Configuración</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/configuracion/grupo-familiar">Grupo Familiar</BreadcrumbLink>
+              <BreadcrumbLink href={`${config.BASE_PATH}/configuracion/grupo-familiar`}>Grupo Familiar</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
               <BreadcrumbPage>Editar Perfil</BreadcrumbPage>

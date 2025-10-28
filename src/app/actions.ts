@@ -44,8 +44,17 @@ export async function processUploadedImage(
     const extension = mimeType.split("/")[1] || "jpg";
     const fileName = `medication-${timestamp}-${randomString}.${extension}`;
 
-    // Crear directorio si no existe (importante para persistencia en Kubernetes)
-    const uploadDir = path.join(process.cwd(), "public", "medications");
+    // Determinar la ruta de almacenamiento
+    // En desarrollo: Guarda en public/ local
+    // En producción (Kubernetes): Guarda en el volumen montado
+    const isProduction = process.env.NODE_ENV === 'production';
+    const uploadsBasePath = isProduction 
+      ? '/mnt/dev-web-botilyx'  // Kubernetes: volumen montado
+      : path.join(process.cwd(), "public");  // Desarrollo: carpeta local
+    
+    const uploadDir = path.join(uploadsBasePath, "medications");
+    
+    console.log('📁 Guardando imagen de medicamento en:', uploadDir);
     await mkdir(uploadDir, { recursive: true });
 
     // Ruta donde se guardará la imagen

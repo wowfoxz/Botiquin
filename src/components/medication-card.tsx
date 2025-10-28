@@ -18,8 +18,7 @@ type Medication = {
   userId: string;
 };
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { updateMedicationQuantity, toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication, registrarTomaMedicamento } from '@/app/actions';
+import { toggleMedicationArchiveStatus, unarchiveMedicationWithNewExpiration, deleteMedication, updateArchivedMedication, registrarTomaMedicamento } from '@/app/actions';
 import { apiFetch } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,7 +40,6 @@ type MedicationCardProps = {
 };
 
 const MedicationCard = ({ medication }: MedicationCardProps) => {
-  const router = useRouter();
   const {
     id,
     commercialName,
@@ -141,9 +139,6 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       setSelectedConsumidor('');
       
       toast.success(`Toma registrada para ${consumidor?.name}`);
-      
-      // Navegación manejada por el cliente (router.push agrega basePath automáticamente)
-      router.push('/botiquin?success=Toma registrada exitosamente');
     } catch (error: any) {
       console.error('Error al registrar toma:', error);
       toast.error('Error al registrar la toma');

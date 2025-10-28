@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { config } from "@/lib/config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +23,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear directorio si no existe
-    const uploadDir = join(process.cwd(), "public", "treatment-images");
+    // Determinar la ruta de almacenamiento
+    // En desarrollo: Guarda en public/ local
+    // En producción (Kubernetes): Guarda en el volumen montado
+    const isProduction = process.env.NODE_ENV === 'production';
+    const uploadsBasePath = isProduction 
+      ? '/mnt/dev-web-botilyx'  // Kubernetes: volumen montado
+      : join(process.cwd(), "public");  // Desarrollo: carpeta local
+    
+    const uploadDir = join(uploadsBasePath, "treatment-images");
+    
+    console.log('📁 Guardando imágenes en:', uploadDir);
     await mkdir(uploadDir, { recursive: true });
 
     // Generar nombre único para el archivo
@@ -39,8 +49,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(filePath, buffer);
 
-    // URL pública del archivo
-    const imageUrl = `/treatment-images/${fileName}`;
+    // URL pública del archivo (incluir basePath para producción)
+    const imageUrl = `${config.BASE_PATH}/treatment-images/${fileName}`;
 
     return NextResponse.json({
       success: true,

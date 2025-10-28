@@ -14,6 +14,7 @@ import UrlNotifications from "@/components/url-notifications";
 import { Cardio } from "ldrs/react";
 import "ldrs/react/Cardio.css";
 import { apiFetch } from "@/lib/api";
+import { config } from "@/lib/config";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -107,7 +108,7 @@ export default function GrupoFamiliarPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/configuracion">Configuración</BreadcrumbLink>
+              <BreadcrumbLink href={`${config.BASE_PATH}/configuracion`}>Configuración</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
               <BreadcrumbPage>Grupo Familiar</BreadcrumbPage>
