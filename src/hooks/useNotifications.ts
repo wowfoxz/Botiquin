@@ -263,20 +263,26 @@ export const useNotifications = () => {
         
         const registration = await navigator.serviceWorker.ready;
         
-        // @ts-expect-error - vibrate existe en NotificationOptions pero TypeScript no lo reconoce
-        await registration.showNotification('🔔 Botilyx - Prueba', {
+        // Configuración de notificación con vibración
+        const notificationOptions = {
           body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
           icon: config.BASE_PATH + '/icons/favicon.png',
           badge: config.BASE_PATH + '/icons/favicon.png',
           tag: 'test-notification-' + Date.now(),
           requireInteraction: false, // En móvil es mejor false
-          vibrate: [200, 100, 200], // Vibración para móviles
           data: {
             url: config.BASE_PATH + '/tratamientos'
           }
-        });
+        } as NotificationOptions & { vibrate?: number[] };
+        
+        // Agregar vibración si es móvil
+        if ('vibrate' in navigator) {
+          (notificationOptions as { vibrate: number[] }).vibrate = [200, 100, 200];
+        }
+        
+        await registration.showNotification('🔔 Botilyx - Prueba', notificationOptions);
 
-        MobileDebugger.log('success', 'PUSH', 'Notificación enviada vía Service Worker');
+        MobileDebugger.log('info', 'PUSH', '✅ Notificación enviada vía Service Worker');
         toast.success('✅ Notificación de prueba enviada');
         return true;
       } else {
