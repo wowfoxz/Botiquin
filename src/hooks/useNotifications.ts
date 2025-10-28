@@ -263,6 +263,7 @@ export const useNotifications = () => {
         
         const registration = await navigator.serviceWorker.ready;
         
+        // @ts-expect-error - vibrate existe en NotificationOptions pero TypeScript no lo reconoce
         await registration.showNotification('🔔 Botilyx - Prueba', {
           body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
           icon: config.BASE_PATH + '/icons/favicon.png',
