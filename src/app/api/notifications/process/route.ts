@@ -2,6 +2,37 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import webpush from 'web-push';
 
+// Tipos para las funciones internas
+type TreatmentMedication = {
+  medicationId: string;
+  frequencyHours: number;
+  specificStartTime?: Date | string | null;
+  createdAt: Date | string;
+  endDate: Date | string;
+  dosage: string;
+  isActive: boolean;
+  medication: {
+    commercialName: string;
+  };
+};
+
+type Treatment = {
+  id: string;
+  userId: string;
+  patientId?: string | null;
+  patient?: string | null;
+};
+
+type UserWithSubscriptions = {
+  email: string;
+  pushSubscriptions: Array<{
+    id: string;
+    endpoint: string;
+    p256dhKey: string;
+    authKey: string;
+  }>;
+};
+
 // Configurar VAPID keys
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BO63iDbR-YNn2So-X3dvBuFMRTLn0RMeWLz1BEfd-LhqgNBIra7rKqY9RuYdeNtZWOZs5SOWm12KXMewuw-hM9k';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'oKM3Kkf-JsBTlQI1_tGY02Cj03FvAdnfIQAHTFPaVBE';
@@ -188,7 +219,7 @@ async function processTreatmentReminders() {
 }
 
 // Calcular próxima dosis
-function calculateNextDose(treatmentMed: any, now: Date): Date | null {
+function calculateNextDose(treatmentMed: TreatmentMedication, now: Date): Date | null {
   const frequencyHours = treatmentMed.frequencyHours;
   const startDate = treatmentMed.specificStartTime 
     ? new Date(treatmentMed.specificStartTime)
@@ -219,7 +250,7 @@ function isTimeForReminder(nextDose: Date, now: Date): boolean {
 }
 
 // Verificar si ya se tomó la dosis
-async function checkIfDoseTaken(treatment: any, treatmentMed: any, nextDose: Date): Promise<boolean> {
+async function checkIfDoseTaken(treatment: Treatment, treatmentMed: TreatmentMedication, nextDose: Date): Promise<boolean> {
   // Buscar tomas en un rango de ±30 minutos alrededor de la hora programada
   const startRange = new Date(nextDose.getTime() - 30 * 60 * 1000);
   const endRange = new Date(nextDose.getTime() + 30 * 60 * 1000);
@@ -242,7 +273,7 @@ async function checkIfDoseTaken(treatment: any, treatmentMed: any, nextDose: Dat
 }
 
 // Enviar notificación push a todas las suscripciones del usuario
-async function sendPushNotification(user: any, message: string) {
+async function sendPushNotification(user: UserWithSubscriptions, message: string) {
   if (!user.pushSubscriptions || user.pushSubscriptions.length === 0) {
     console.log(`ℹ️ Usuario ${user.email} no tiene suscripciones push`);
     return;
@@ -259,21 +290,21 @@ async function sendPushNotification(user: any, message: string) {
     }
   });
 
-  const promises = user.pushSubscriptions.map(async (subscription: any) => {
+  const promises = user.pushSubscriptions.map(async (subscription) => {
     try {
       const pushSubscription = {
         endpoint: subscription.endpoint,
         keys: {
-          p256dh: subscription.p256dh,
-          auth: subscription.auth
+          p256dh: subscription.p256dhKey,
+          auth: subscription.authKey
         }
       };
 
       await webpush.sendNotification(pushSubscription, payload);
       console.log(`✅ Notificación enviada a ${user.email}`);
-    } catch (error: any) {
+    } catch (error) {
       // Si la suscripción expiró o es inválida, eliminarla
-      if (error.statusCode === 410) {
+      if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 410) {
         console.log(`🗑️ Eliminando suscripción expirada para ${user.email}`);
         await prisma.pushSubscription.delete({
           where: { id: subscription.id }
