@@ -408,7 +408,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
       </CardContent>
 
       <CardFooter className="flex justify-end gap-2">
-        {quantity <= 0 && (
+        {(quantity <= 0 || isExpired) && (
           <>
             {archived ? (
               <>

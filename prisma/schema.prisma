@@ -38,8 +38,8 @@ model Medication {
   id                    String                @id @default(cuid())
   commercialName        String
   activeIngredient      String?
-  description           String?
-  intakeRecommendations String?
+  description           String?               @db.Text
+  intakeRecommendations String?               @db.Text
   imageUrl              String?
   initialQuantity       Float
   currentQuantity       Float

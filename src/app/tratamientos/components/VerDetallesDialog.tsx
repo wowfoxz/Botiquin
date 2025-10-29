@@ -272,10 +272,13 @@ export function VerDetallesDialog({ tratamiento, medicinas }: VerDetallesDialogP
 
       {/* Modal fullscreen para ver imágenes */}
       <Dialog open={imageViewerOpen} onOpenChange={setImageViewerOpen}>
-        <DialogContent className="max-w-[100vw] w-screen h-screen max-h-screen p-0 overflow-hidden bg-black/95 border-0">
+        <DialogContent className="max-w-[100vw] w-screen h-screen max-h-screen p-0 overflow-hidden bg-black/95 border-0" aria-describedby="image-viewer-description">
           <DialogTitle className="sr-only">
             Visor de imágenes - {selectedImage?.imageType === "receta" ? "Receta Médica" : "Instrucciones"}
           </DialogTitle>
+          <p id="image-viewer-description" className="sr-only">
+            Vista ampliada de {selectedImage?.imageType === "receta" ? "la receta médica" : "las instrucciones"} del tratamiento. Use las flechas para navegar entre imágenes.
+          </p>
           
           {/* Header */}
           <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 to-transparent p-4 flex items-center justify-between">

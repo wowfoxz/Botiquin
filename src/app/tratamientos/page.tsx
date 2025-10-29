@@ -3,20 +3,16 @@
 import { useState, useEffect } from "react";
 import {
   useTratamientos,
-  useMedicinas,
-  useNotificaciones,
-  usePreferenciasNotificaciones
+  useMedicinas
 } from "@/hooks/useTratamientos";
 import { useAuth } from "@/hooks/useAuth";
 import { CrearTratamientoDialog } from "./components/CrearTratamientoDialog";
 import { TratamientosActivos } from "./components/TratamientosActivos";
 import { TratamientosHistoricos } from "./components/TratamientosHistoricos";
-import { NotificacionesTab } from "./components/NotificacionesTab";
 import { useRouter } from "next/navigation";
 import {
   Pill,
-  History,
-  Bell
+  History
 } from 'lucide-react';
 import { Dock, DockItem, DockLabel, DockIcon } from '@/components/ui/dock';
 import {
@@ -29,7 +25,7 @@ import { Cardio } from "ldrs/react";
 import 'ldrs/react/Cardio.css'
 
 export default function TratamientosPage() {
-  const [activeTab, setActiveTab] = useState<"activos" | "historicos" | "notificaciones">("activos");
+  const [activeTab, setActiveTab] = useState<"activos" | "historicos">("activos");
   const [initialLoading, setInitialLoading] = useState(true);
   const router = useRouter();
 
@@ -51,17 +47,6 @@ export default function TratamientosPage() {
     error: errorMedicinas
   } = useMedicinas();
 
-  const {
-    notificaciones
-  } = useNotificaciones();
-
-  const {
-    preferencias,
-    loading: loadingPreferencias,
-    error: errorPreferencias,
-    updatePreferencias
-  } = usePreferenciasNotificaciones();
-
   // Verificar autenticación
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -71,16 +56,16 @@ export default function TratamientosPage() {
 
   // Controlar el estado de carga inicial
   useEffect(() => {
-    if (!authLoading && !loadingTratamientos && !loadingMedicinas && !loadingPreferencias) {
+    if (!authLoading && !loadingTratamientos && !loadingMedicinas) {
       // Pequeño delay para evitar parpadeos
       const timer = setTimeout(() => {
         setInitialLoading(false);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [authLoading, loadingTratamientos, loadingMedicinas, loadingPreferencias]);
+  }, [authLoading, loadingTratamientos, loadingMedicinas]);
 
-  if (authLoading || loadingTratamientos || loadingMedicinas || loadingPreferencias || initialLoading) {
+  if (authLoading || loadingTratamientos || loadingMedicinas || initialLoading) {
     return (
       <div style={{ display: 'grid', placeContent: 'center', height: '100vh' }}>
         <Cardio
@@ -93,11 +78,11 @@ export default function TratamientosPage() {
     );
   }
 
-  if (errorTratamientos || errorMedicinas || errorPreferencias) {
+  if (errorTratamientos || errorMedicinas) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-error">
-          Error: {errorTratamientos?.toString() || errorMedicinas?.toString() || errorPreferencias?.toString()}
+          Error: {errorTratamientos?.toString() || errorMedicinas?.toString()}
         </div>
       </div>
     );
@@ -116,7 +101,7 @@ export default function TratamientosPage() {
     return medicina ? medicina.commercialName : "Medicamento no encontrado";
   };
   // Datos para el dock
-  const dockItems: { title: string; icon: React.ReactNode; id: "activos" | "historicos" | "notificaciones" }[] = [
+  const dockItems: { title: string; icon: React.ReactNode; id: "activos" | "historicos" }[] = [
     {
       title: 'Activos',
       icon: (
@@ -130,13 +115,6 @@ export default function TratamientosPage() {
         <History className='h-full w-full text-primary-foreground dark:primary-foreground' />
       ),
       id: 'historicos'
-    },
-    {
-      title: 'Notificaciones',
-      icon: (
-        <Bell className='h-full w-full text-primary-foreground dark:text-primary-foreground' />
-      ),
-      id: 'notificaciones'
     }
   ];
 
@@ -155,9 +133,7 @@ export default function TratamientosPage() {
 
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Gestión de Tratamientos</h1>
-        {activeTab !== "notificaciones" && (
-          <CrearTratamientoDialog />
-        )}
+        <CrearTratamientoDialog />
       </div>
 
       {/* Contenido según la pestaña activa */}
@@ -178,15 +154,6 @@ export default function TratamientosPage() {
             medicinas={medicinas}
             userId={user.id}
             onDelete={deleteTratamiento}
-          />
-        )}
-
-        {activeTab === "notificaciones" && (
-          <NotificacionesTab
-            preferencias={preferencias}
-            notificaciones={notificaciones}
-            tratamientos={tratamientosUsuario}
-            onUpdatePreferencias={updatePreferencias}
           />
         )}
       </div>

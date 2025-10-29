@@ -20,6 +20,6 @@ export default async function Home() {
     redirect('/login');
   }
 
-  // Redirigir directamente al botiquín
-  redirect('/botiquin');
+  // Redirigir directamente al inicio
+  redirect('/inicio');
 }

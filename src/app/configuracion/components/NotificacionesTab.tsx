@@ -3,24 +3,14 @@
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Tratamiento, PreferenciasNotificaciones, Notificacion } from "@/types/tratamientos";
-import { Bell, BellOff, Calendar, Clock, Smartphone, TestTube, Info } from "lucide-react";
+import { PreferenciasNotificaciones } from "@/types/tratamientos";
+import { BellOff, Clock, Smartphone, TestTube, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,15 +18,13 @@ import { toast } from "sonner";
 
 interface NotificacionesTabProps {
   preferencias: PreferenciasNotificaciones | null;
-  notificaciones: Notificacion[];
-  tratamientos: Tratamiento[];
+  notificaciones: never[];
+  tratamientos: never[];
   onUpdatePreferencias: (newPreferencias: Partial<PreferenciasNotificaciones>) => Promise<void>;
 }
 
 export function NotificacionesTab({
   preferencias,
-  notificaciones,
-  tratamientos,
   onUpdatePreferencias
 }: NotificacionesTabProps) {
   const { user } = useAuth();
@@ -63,11 +51,6 @@ export function NotificacionesTab({
     
     setDeviceInfo({ isMobile, isPWA });
   }, []);
-
-  // Obtener tratamiento por ID
-  const obtenerTratamiento = (id: string) => {
-    return tratamientos.find(t => t.id === id);
-  };
 
   // Manejar cambio en preferencias de push
   const handlePushToggle = async (checked: boolean) => {
@@ -298,68 +281,6 @@ export function NotificacionesTab({
               aria-label="Alternar sonido de notificaciones"
             />
           </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Notificaciones Recientes</h3>
-
-          {notificaciones.length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="h-12 w-12 mx-auto text-muted-foreground" />
-              <h4 className="mt-4 text-lg font-medium">No hay notificaciones recientes</h4>
-              <p className="mt-2 text-muted-foreground">
-                Las notificaciones importantes aparecerán aquí
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Tratamiento</TableHead>
-                    <TableHead>Fecha Programada</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notificaciones.slice(0, 5).map((notificacion) => {
-                    const tratamiento = obtenerTratamiento(notificacion.treatmentId);
-                    return (
-                      <TableRow key={notificacion.id}>
-                        <TableCell>
-                          <Badge variant={
-                            notificacion.type === 'recordatorio' ? 'default' :
-                            notificacion.type === 'vencimiento' ? 'destructive' : 'secondary'
-                          }>
-                            {notificacion.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {tratamiento ? tratamiento.name : 'Tratamiento no encontrado'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span>
-                              {new Date(notificacion.scheduledDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={notificacion.sent ? 'default' : 'secondary'}>
-                            {notificacion.sent ? 'Enviado' : 'Pendiente'}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

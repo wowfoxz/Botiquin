@@ -97,7 +97,7 @@ const Menu = () => {
   };
 
   const menuItems = [
-    { name: "Inicio", href: "/", icon: Home },
+    { name: "Inicio", href: "/inicio", icon: Home },
     { name: "Botiquín", href: "/botiquin", icon: Package },
     { name: "Tratamientos", href: "/tratamientos", icon: Calendar },
     { name: "Lista de Compras", href: "/lista-compras", icon: ShoppingCart },

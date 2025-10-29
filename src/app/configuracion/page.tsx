@@ -17,8 +17,9 @@ import UrlNotifications from "@/components/url-notifications";
 import NotificationSettingsForm from './components/NotificationSettingsForm';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Settings, History } from "lucide-react";
+import { Users, Settings, History, Bell } from "lucide-react";
 import Link from "next/link";
+import { config } from "@/lib/config";
 
 export default async function SettingsPage() {
   // Verificar si el usuario está autenticado
@@ -92,6 +93,27 @@ export default async function SettingsPage() {
                   daysBeforeExpiration={daysBeforeExpiration}
                   lowStockThreshold={lowStockThreshold}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Preferencias de notificaciones push */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="w-5 h-5" />
+                  Notificaciones Push
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Configura notificaciones push, recordatorios por email y preferencias de sonido.
+                </p>
+                <Link href={`${config.BASE_PATH}/configuracion/notificaciones`}>
+                  <Button className="w-full">
+                    <Bell className="w-4 h-4 mr-2" />
+                    Gestionar Preferencias
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
