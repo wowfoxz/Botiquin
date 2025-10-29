@@ -1,340 +1,288 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import webpush from "web-push";
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import webpush from 'web-push';
 
-// Configurar web-push (esto debería ir en variables de entorno)
-if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-  console.warn("VAPID keys no configuradas. Las notificaciones push no funcionarán.");
-}
+// Configurar VAPID keys
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BO63iDbR-YNn2So-X3dvBuFMRTLn0RMeWLz1BEfd-LhqgNBIra7rKqY9RuYdeNtZWOZs5SOWm12KXMewuw-hM9k';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'oKM3Kkf-JsBTlQI1_tGY02Cj03FvAdnfIQAHTFPaVBE';
 
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    'mailto:tu-email@ejemplo.com', // Este email debería ser de tu aplicación
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-}
+webpush.setVapidDetails(
+  'mailto:admin@botilyx.com',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    // Verificar que es una llamada autorizada (podrías agregar autenticación aquí)
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.NOTIFICATION_PROCESSOR_SECRET}`) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
-    }
-
     const now = new Date();
+    console.log(`🔔 [${now.toISOString()}] Procesando notificaciones automáticas...`);
 
-    // Obtener notificaciones pendientes que deben enviarse
-    const notificacionesPendientes = await prisma.notification.findMany({
-      where: {
-        sent: false,
-        scheduledDate: {
-          lte: now // Fecha programada menor o igual a ahora
-        }
-      },
-      include: {
-        treatment: {
-          include: {
-            user: true,
-            medications: {
-              include: {
-                medication: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        scheduledDate: 'asc'
-      },
-      take: 50 // Procesar máximo 50 notificaciones por vez
-    });
+    // 1️⃣ Detectar medicamentos vencidos o por vencer
+    await processMedicationExpirations();
 
+    // 2️⃣ Detectar medicamentos con stock bajo
+    await processLowStock();
 
-    const resultados: Array<{
-      id: string;
-      success: boolean;
-      message?: string;
-      resultados?: any[];
-      error?: string;
-    }> = [];
+    // 3️⃣ Procesar recordatorios de tratamientos
+    await processTreatmentReminders();
 
-    for (const notificacion of notificacionesPendientes) {
-      try {
-        const resultado = await procesarNotificacion(notificacion);
-        resultados.push(resultado);
-      } catch (error) {
-        console.error(`Error al procesar notificación ${notificacion.id}:`, error);
-        resultados.push({
-          id: notificacion.id,
-          success: false,
-          error: error instanceof Error ? error.message : 'Error desconocido'
-        });
-      }
-    }
-
-    return NextResponse.json({
-      message: "Procesamiento completado",
-      procesadas: notificacionesPendientes.length,
-      resultados: resultados
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Notificaciones procesadas exitosamente',
+      timestamp: now.toISOString()
     });
 
   } catch (error) {
-    console.error("Error en el procesador de notificaciones:", error);
+    console.error('❌ Error procesando notificaciones:', error);
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: 'Error procesando notificaciones' },
       { status: 500 }
     );
   }
 }
 
-async function procesarNotificacion(notificacion: {
-  id: string;
-  type: string;
-  treatment: any;
-}) {
-  const { treatment, type } = notificacion;
-  const { user, medications } = treatment;
+// 1️⃣ Detectar medicamentos vencidos o por vencer
+async function processMedicationExpirations() {
+  try {
+    // Obtener todos los usuarios con sus configuraciones
+    const users = await prisma.user.findMany({
+      include: {
+        notificationSettings: true,
+        pushSubscriptions: true,
+        medications: {
+          where: {
+            archived: false
+          }
+        }
+      }
+    });
 
-  // Crear mensaje de notificación
-  const mensaje = generarMensajeNotificacion(treatment, medications, type);
+    for (const user of users) {
+      if (!user.notificationSettings) continue;
 
-  // Procesar según el tipo de notificación
-  switch (type) {
-    case 'push':
-      return await enviarNotificacionPush(user.id, mensaje, notificacion.id);
-    
-    case 'email':
-      return await enviarNotificacionEmail(user.email, mensaje, notificacion.id);
-    
-    case 'browser':
-      return await enviarNotificacionNavegador(user.id, mensaje, notificacion.id);
-    
-    case 'sound':
-      return await procesarNotificacionSonora(user.id, mensaje, notificacion.id);
-    
-    default:
-      throw new Error(`Tipo de notificación no soportado: ${type}`);
+      const daysBeforeExpiration = user.notificationSettings.daysBeforeExpiration;
+      const thresholdDate = new Date();
+      thresholdDate.setDate(thresholdDate.getDate() + daysBeforeExpiration);
+
+      // Medicamentos que vencen pronto o ya vencieron
+      const expiringMedications = user.medications.filter(med => {
+        const expirationDate = new Date(med.expirationDate);
+        return expirationDate <= thresholdDate;
+      });
+
+      for (const medication of expiringMedications) {
+        const expirationDate = new Date(medication.expirationDate);
+        const isExpired = expirationDate < new Date();
+        
+        const message = isExpired
+          ? `⚠️ El medicamento "${medication.commercialName}" ya venció el ${expirationDate.toLocaleDateString('es-AR')}`
+          : `⏰ El medicamento "${medication.commercialName}" vence en ${Math.ceil((expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} días`;
+
+        // Enviar notificación push
+        await sendPushNotification(user, message);
+      }
+    }
+  } catch (error) {
+    console.error('Error procesando vencimientos:', error);
   }
 }
 
-async function enviarNotificacionPush(userId: string, mensaje: {
-  title: string;
-  body: string;
-  icon: string;
-  badge: string;
-  tag: string;
-  requireInteraction: boolean;
-  data: any;
-  actions?: any[];
-}, notificacionId: string) {
+// 2️⃣ Detectar medicamentos con stock bajo
+async function processLowStock() {
   try {
-    // Obtener suscripciones push del usuario
-    const suscripciones = await prisma.pushSubscription.findMany({
-      where: { userId }
+    const users = await prisma.user.findMany({
+      include: {
+        notificationSettings: true,
+        pushSubscriptions: true,
+        medications: {
+          where: {
+            archived: false
+          }
+        }
+      }
     });
 
-    if (suscripciones.length === 0) {
-      // Marcar como enviada aunque no haya suscripciones
-      await prisma.notification.update({
-        where: { id: notificacionId },
-        data: { sent: true }
-      });
-      return {
-        id: notificacionId,
-        success: true,
-        message: "No hay suscripciones push activas"
-      };
-    }
+    for (const user of users) {
+      if (!user.notificationSettings) continue;
 
-    const payload = JSON.stringify(mensaje);
-    const resultados: Array<{
-      suscripcion: string;
-      success: boolean;
-      error?: string;
-    }> = [];
+      const lowStockThreshold = user.notificationSettings.lowStockThreshold;
 
-    for (const suscripcion of suscripciones) {
-      try {
-        await webpush.sendNotification({
-          endpoint: suscripcion.endpoint,
-          keys: {
-            p256dh: suscripcion.p256dhKey,
-            auth: suscripcion.authKey
-          }
-        }, payload);
+      // Medicamentos con stock bajo
+      const lowStockMedications = user.medications.filter(med =>
+        med.currentQuantity <= lowStockThreshold && med.currentQuantity > 0
+      );
+
+      for (const medication of lowStockMedications) {
+        const message = `📦 Stock bajo: "${medication.commercialName}" - Quedan ${medication.currentQuantity} ${medication.unit}`;
         
-        resultados.push({ suscripcion: suscripcion.id, success: true });
-            } catch (error: unknown) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
-              console.error(`Error al enviar push a suscripción ${suscripcion.id}:`, error);
-              resultados.push({ suscripcion: suscripcion.id, success: false, error: errorMessage });
-              
-              // Si la suscripción ya no es válida, eliminarla
-              if (error && typeof error === 'object' && 'statusCode' in error && (error as any).statusCode === 410) {
-          await prisma.pushSubscription.delete({
-            where: { id: suscripcion.id }
-          });
+        // Enviar notificación push
+        await sendPushNotification(user, message);
+      }
+    }
+  } catch (error) {
+    console.error('Error procesando stock bajo:', error);
+  }
+}
+
+// 3️⃣ Procesar recordatorios de tratamientos
+async function processTreatmentReminders() {
+  try {
+    const now = new Date();
+
+    // Obtener tratamientos activos
+    const activeTreatments = await prisma.treatment.findMany({
+      where: {
+        isActive: true,
+        endDate: {
+          gte: now
+        }
+      },
+      include: {
+        user: {
+          include: {
+            pushSubscriptions: true
+          }
+        },
+        medications: {
+          include: {
+            medication: true
+          }
+        }
+      }
+    });
+
+    for (const treatment of activeTreatments) {
+      for (const treatmentMed of treatment.medications) {
+        if (!treatmentMed.isActive) continue;
+
+        // Calcular siguiente toma
+        const nextDose = calculateNextDose(treatmentMed, now);
+        
+        if (nextDose && isTimeForReminder(nextDose, now)) {
+          // Verificar si ya se tomó
+          const wasTaken = await checkIfDoseTaken(treatment, treatmentMed, nextDose);
+          
+          if (!wasTaken) {
+            const patientName = treatment.patient || 'el paciente';
+            const message = `💊 Recordatorio: Es hora de que ${patientName} tome ${treatmentMed.dosage} de ${treatmentMed.medication.commercialName}`;
+            
+            // Enviar notificación
+            await sendPushNotification(treatment.user, message);
+            
+            // Registrar que se envió la notificación
+            await prisma.notification.create({
+              data: {
+                type: 'recordatorio',
+                treatmentId: treatment.id,
+                scheduledDate: nextDose,
+                sent: true
+              }
+            });
+          }
         }
       }
     }
-
-    // Marcar notificación como enviada si al menos una suscripción fue exitosa
-    const exitosa = resultados.some(r => r.success);
-    await prisma.notification.update({
-      where: { id: notificacionId },
-      data: { sent: exitosa }
-    });
-
-    return {
-      id: notificacionId,
-      success: exitosa,
-      resultados: resultados
-    };
-
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Error al enviar notificación push: ${errorMessage}`);
+  } catch (error) {
+    console.error('Error procesando recordatorios:', error);
   }
 }
 
-async function enviarNotificacionEmail(email: string, mensaje: {
-  title: string;
-  body: string;
-}, notificacionId: string) {
-  try {
-    // Aquí implementarías el envío de email usando Nodemailer, Resend, etc.
-    // Por ahora, simulamos el envío
-    
-    // TODO: Implementar envío real de email
-    // await enviarEmail(email, mensaje.title, mensaje.body);
-    
-    await prisma.notification.update({
-      where: { id: notificacionId },
-      data: { sent: true }
-    });
+// Calcular próxima dosis
+function calculateNextDose(treatmentMed: any, now: Date): Date | null {
+  const frequencyHours = treatmentMed.frequencyHours;
+  const startDate = treatmentMed.specificStartTime 
+    ? new Date(treatmentMed.specificStartTime)
+    : new Date(treatmentMed.createdAt);
 
-    return {
-      id: notificacionId,
-      success: true,
-      message: "Email enviado (simulado)"
-    };
-
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Error al enviar email: ${errorMessage}`);
+  // Calcular cuántas horas han pasado desde el inicio
+  const hoursSinceStart = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+  
+  // Calcular el número de dosis que ya deberían haberse tomado
+  const dosesCompleted = Math.floor(hoursSinceStart / frequencyHours);
+  
+  // Calcular la siguiente dosis
+  const nextDose = new Date(startDate.getTime() + (dosesCompleted + 1) * frequencyHours * 60 * 60 * 1000);
+  
+  // Verificar que esté dentro del período activo
+  const endDate = new Date(treatmentMed.endDate);
+  if (nextDose > endDate) {
+    return null;
   }
+  
+  return nextDose;
 }
 
-async function enviarNotificacionNavegador(userId: string, mensaje: {
-  title: string;
-  body: string;
-}, notificacionId: string) {
-  try {
-    // Las notificaciones del navegador se manejan desde el cliente
-    // Aquí solo marcamos como enviada y registramos el evento
-    
-    await prisma.notification.update({
-      where: { id: notificacionId },
-      data: { sent: true }
-    });
-
-    return {
-      id: notificacionId,
-      success: true,
-      message: "Notificación de navegador programada"
-    };
-
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Error al procesar notificación de navegador: ${errorMessage}`);
-  }
+// Verificar si es hora de enviar recordatorio (dentro de los próximos 5 minutos)
+function isTimeForReminder(nextDose: Date, now: Date): boolean {
+  const minutesUntilDose = (nextDose.getTime() - now.getTime()) / (1000 * 60);
+  return minutesUntilDose >= 0 && minutesUntilDose <= 5;
 }
 
-async function procesarNotificacionSonora(userId: string, mensaje: {
-  title: string;
-  body: string;
-}, notificacionId: string) {
-  try {
-    // Las notificaciones sonoras se manejan desde el cliente
-    // Aquí solo marcamos como enviada y registramos el evento
-    
-    await prisma.notification.update({
-      where: { id: notificacionId },
-      data: { sent: true }
-    });
+// Verificar si ya se tomó la dosis
+async function checkIfDoseTaken(treatment: any, treatmentMed: any, nextDose: Date): Promise<boolean> {
+  // Buscar tomas en un rango de ±30 minutos alrededor de la hora programada
+  const startRange = new Date(nextDose.getTime() - 30 * 60 * 1000);
+  const endRange = new Date(nextDose.getTime() + 30 * 60 * 1000);
 
-    return {
-      id: notificacionId,
-      success: true,
-      message: "Notificación sonora programada"
-    };
+  const tomas = await prisma.toma.findMany({
+    where: {
+      medicamentoId: treatmentMed.medicationId,
+      OR: [
+        { consumidorUsuarioId: treatment.userId },
+        { consumidorPerfilId: treatment.patientId }
+      ],
+      fechaHora: {
+        gte: startRange,
+        lte: endRange
+      }
+    }
+  });
 
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Error al procesar notificación sonora: ${errorMessage}`);
-  }
+  return tomas.length > 0;
 }
 
-function generarMensajeNotificacion(treatment: {
-  id: string;
-}, medications: Array<{
-  medication: {
-    commercialName?: string;
-  };
-  dosage?: string;
-}>, type: string) {
-  const medicamento = medications[0]?.medication;
-  const nombreMedicamento = medicamento?.commercialName || 'Medicamento';
-  const dosis = medications[0]?.dosage || '1 dosis';
+// Enviar notificación push a todas las suscripciones del usuario
+async function sendPushNotification(user: any, message: string) {
+  if (!user.pushSubscriptions || user.pushSubscriptions.length === 0) {
+    console.log(`ℹ️ Usuario ${user.email} no tiene suscripciones push`);
+    return;
+  }
 
-  const mensaje = {
-    title: 'Botilyx - Recordatorio',
-    body: `Es hora de tomar ${dosis} de ${nombreMedicamento}`,
+  const payload = JSON.stringify({
+    title: '🔔 Botilyx - Recordatorio',
+    body: message,
     icon: '/icons/favicon.png',
     badge: '/icons/favicon.png',
-    tag: `medication-${treatment.id}`,
-    requireInteraction: true,
+    vibrate: [200, 100, 200],
     data: {
-      treatmentId: treatment.id,
-      type: type,
-      url: '/tratamientos'
-    },
-    actions: [
-      {
-        action: 'take-medication',
-        title: 'Marcar como tomado',
-        icon: '/icons/favicon.png'
-      },
-      {
-        action: 'snooze',
-        title: 'Posponer 10 min',
-        icon: '/icons/favicon.png'
+      url: '/botiquin'
+    }
+  });
+
+  const promises = user.pushSubscriptions.map(async (subscription: any) => {
+    try {
+      const pushSubscription = {
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: subscription.p256dh,
+          auth: subscription.auth
+        }
+      };
+
+      await webpush.sendNotification(pushSubscription, payload);
+      console.log(`✅ Notificación enviada a ${user.email}`);
+    } catch (error: any) {
+      // Si la suscripción expiró o es inválida, eliminarla
+      if (error.statusCode === 410) {
+        console.log(`🗑️ Eliminando suscripción expirada para ${user.email}`);
+        await prisma.pushSubscription.delete({
+          where: { id: subscription.id }
+        });
+      } else {
+        console.error(`❌ Error enviando notificación a ${user.email}:`, error);
       }
-    ]
-  };
+    }
+  });
 
-  // Personalizar según el tipo
-  switch (type) {
-    case 'push':
-      mensaje.title = '💊 Botilyx';
-      break;
-    case 'email':
-      mensaje.title = `Recordatorio de medicamento - ${nombreMedicamento}`;
-      break;
-    case 'browser':
-      mensaje.title = 'Recordatorio de medicamento';
-      break;
-    case 'sound':
-      mensaje.title = '¡Es hora de tu medicamento!';
-      break;
-  }
-
-  return mensaje;
+  await Promise.allSettled(promises);
 }
-
-

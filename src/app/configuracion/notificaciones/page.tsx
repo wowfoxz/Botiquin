@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { NotificacionesTab } from "../components/NotificacionesTab";
-import { useNotificaciones, usePreferenciasNotificaciones } from "@/hooks/useTratamientos";
-import { useTratamientos } from "@/hooks/useTratamientos";
+import { usePreferenciasNotificaciones } from "@/hooks/useTratamientos";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import {
@@ -25,8 +24,6 @@ export default function NotificacionesPage() {
   // Obtener el usuario autenticado
   const { user, loading: authLoading, isAuthenticated } = useAuth();
 
-  const { tratamientos, loading: loadingTratamientos } = useTratamientos();
-  const { notificaciones } = useNotificaciones();
   const {
     preferencias,
     loading: loadingPreferencias,
@@ -43,15 +40,15 @@ export default function NotificacionesPage() {
 
   // Controlar el estado de carga inicial
   useEffect(() => {
-    if (!authLoading && !loadingTratamientos && !loadingPreferencias) {
+    if (!authLoading && !loadingPreferencias) {
       const timer = setTimeout(() => {
         setInitialLoading(false);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [authLoading, loadingTratamientos, loadingPreferencias]);
+  }, [authLoading, loadingPreferencias]);
 
-  if (authLoading || loadingTratamientos || loadingPreferencias || initialLoading) {
+  if (authLoading || loadingPreferencias || initialLoading) {
     return (
       <div style={{ display: 'grid', placeContent: 'center', height: '100vh' }}>
         <Cardio
@@ -76,9 +73,6 @@ export default function NotificacionesPage() {
 
   if (!user) return null;
 
-  // Filtrar tratamientos por usuario
-  const tratamientosUsuario = tratamientos.filter(t => t.userId === user.id);
-
   return (
     <div className="container mx-auto p-4 md:p-6">
       {/* Breadcrumb */}
@@ -100,8 +94,6 @@ export default function NotificacionesPage() {
 
       <NotificacionesTab
         preferencias={preferencias}
-        notificaciones={notificaciones}
-        tratamientos={tratamientosUsuario}
         onUpdatePreferencias={updatePreferencias}
       />
     </div>

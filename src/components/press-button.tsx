@@ -73,7 +73,7 @@ const PressButton: React.FC<PressButtonProps> = ({
   const handleTouchStart = (event: React.TouchEvent) => {
     if (disabled) return;
     
-    event.preventDefault();
+    // ✅ NO preventDefault aquí para permitir que el RadialAvatarSelector capture eventos táctiles
     setIsPressed(true);
     
     // Obtener posición del botón
@@ -86,8 +86,8 @@ const PressButton: React.FC<PressButtonProps> = ({
 
     // Crear un evento similar al mouse para compatibilidad
     const mouseEvent = {
-      preventDefault: () => event.preventDefault(),
-      stopPropagation: () => event.stopPropagation(),
+      preventDefault: () => {},
+      stopPropagation: () => {},
       buttonPosition: buttonRef.current ? {
         x: buttonRef.current.getBoundingClientRect().left + buttonRef.current.getBoundingClientRect().width / 2,
         y: buttonRef.current.getBoundingClientRect().top + buttonRef.current.getBoundingClientRect().height / 2
@@ -100,7 +100,7 @@ const PressButton: React.FC<PressButtonProps> = ({
   const handleTouchEnd = (event: React.TouchEvent) => {
     if (disabled) return;
     
-    event.preventDefault();
+    // ✅ NO preventDefault aquí
     setIsPressed(false);
     
     // NO llamar onRelease aquí - el selector se cierra solo cuando se selecciona un avatar

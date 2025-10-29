@@ -136,26 +136,35 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
     // Permitir que el usuario mantenga el selector abierto
   };
 
-  // ✅ TOUCH: Press (iniciar arrastre)
+  // ✅ TOUCH: Press (iniciar arrastre) - Se ejecuta automáticamente cuando se abre
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
+    // NO preventDefault para permitir que los eventos fluyan
     setIsMouseDown(true);
     
     const touch = e.touches[0];
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    if (touch) {
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+      
+      // Detectar inmediatamente qué avatar está bajo el dedo inicial
+      const avatarId = getAvatarUnderPosition(touch.clientX, touch.clientY);
+      setHoveredAvatar(avatarId);
+    }
   };
 
   // ✅ TOUCH: Drag (arrastrar y detectar avatar bajo dedo)
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isMouseDown) return;
+    // Siempre permitir el arrastre cuando el selector está abierto
+    e.preventDefault(); // Prevenir scroll mientras arrastra
     
-    e.preventDefault();
     const touch = e.touches[0];
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
-    
-    // Detectar qué avatar está bajo el dedo
-    const avatarId = getAvatarUnderPosition(touch.clientX, touch.clientY);
-    setHoveredAvatar(avatarId);
+    if (touch) {
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+      setIsMouseDown(true); // Asegurar que está en modo arrastre
+      
+      // Detectar qué avatar está bajo el dedo
+      const avatarId = getAvatarUnderPosition(touch.clientX, touch.clientY);
+      setHoveredAvatar(avatarId);
+    }
   };
 
   // ✅ TOUCH: Release (soltar y seleccionar avatar si está sobre uno)
@@ -179,7 +188,55 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
     }
     
     setDragPosition(null);
+    setHoveredAvatar(null);
   };
+
+  // ✅ Capturar eventos táctiles globalmente cuando está abierto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      e.preventDefault(); // Prevenir scroll
+      const touch = e.touches[0];
+      if (touch) {
+        setDragPosition({ x: touch.clientX, y: touch.clientY });
+        setIsMouseDown(true);
+        
+        const avatarId = getAvatarUnderPosition(touch.clientX, touch.clientY);
+        setHoveredAvatar(avatarId);
+      }
+    };
+
+    const handleGlobalTouchEnd = (e: TouchEvent) => {
+      setIsMouseDown(false);
+      
+      // Usar changedTouches para el último punto de contacto
+      const touch = e.changedTouches[0];
+      if (touch) {
+        const avatarId = getAvatarUnderPosition(touch.clientX, touch.clientY);
+        
+        if (avatarId) {
+          handleAvatarClick(avatarId);
+        } else {
+          onClose();
+        }
+      } else {
+        onClose();
+      }
+      
+      setDragPosition(null);
+      setHoveredAvatar(null);
+    };
+
+    // Agregar listeners globales con { passive: false } para poder preventDefault
+    document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+    document.addEventListener('touchend', handleGlobalTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchmove', handleGlobalTouchMove);
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
+    };
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cerrar si se hace clic/toque fuera del contenedor
   useEffect(() => {

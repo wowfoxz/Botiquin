@@ -18,8 +18,6 @@ import { toast } from "sonner";
 
 interface NotificacionesTabProps {
   preferencias: PreferenciasNotificaciones | null;
-  notificaciones: never[];
-  tratamientos: never[];
   onUpdatePreferencias: (newPreferencias: Partial<PreferenciasNotificaciones>) => Promise<void>;
 }
 

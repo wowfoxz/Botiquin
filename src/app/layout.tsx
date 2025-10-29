@@ -5,6 +5,7 @@ import { ThemeSwitch } from '@/components/providers/theme-switch';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import MobileDebugPanel from '@/components/mobile-debug-panel';
+import { NotificationProcessor } from '@/components/notification-processor';
 
 // Metadata con basePath hardcodeado para producción
 const basePath = process.env.NODE_ENV === 'production' ? '/botilyx' : '';
@@ -68,6 +69,7 @@ export default async function RootLayout({
           {children}
           <Toaster />
           <MobileDebugPanel />
+          <NotificationProcessor />
         </ThemeProvider>
         <script
           dangerouslySetInnerHTML={{
