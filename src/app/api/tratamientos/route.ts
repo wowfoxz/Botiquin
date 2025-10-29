@@ -31,14 +31,14 @@ export async function GET(request: Request) {
             FROM TreatmentMedication tm
             LEFT JOIN Medication m ON tm.medicationId = m.id
             WHERE tm.treatmentId = ${tratamiento.id}
-          ` as any[];
+          ` as unknown[]; // Prisma $queryRaw returns unknown[]
 
           // Obtener imágenes
           const images = await prisma.$queryRaw`
             SELECT *
             FROM TreatmentImage
             WHERE treatmentId = ${tratamiento.id}
-          ` as any[];
+          ` as unknown[]; // Prisma $queryRaw returns unknown[]
 
           return {
             ...tratamiento,
@@ -141,7 +141,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Crear medicamentos del tratamiento
-    const treatmentMedications: any[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const treatmentMedications: any[] = []; // TreatmentMedication[] from Prisma
     for (const medicationData of body.medications) {
       // Determinar fecha de inicio para este medicamento
       let medicationStartDate = now;

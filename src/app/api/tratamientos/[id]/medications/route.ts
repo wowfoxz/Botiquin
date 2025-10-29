@@ -20,7 +20,7 @@ export async function GET(
       FROM "TreatmentMedication" tm
       LEFT JOIN "Medication" m ON tm."medicationId" = m.id
       WHERE tm."treatmentId" = ${id}
-    ` as any[];
+    ` as unknown[]; // Prisma $queryRaw returns unknown[]
 
     return NextResponse.json(medications);
   } catch (error) {

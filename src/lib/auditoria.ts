@@ -7,7 +7,7 @@ export interface MetadataAuditoria {
   userAgent?: string;
   dispositivo?: string;
   ubicacion?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DatosAuditoria {
@@ -15,8 +15,8 @@ export interface DatosAuditoria {
   tipoAccion: TipoAccion;
   entidadTipo: TipoEntidad;
   entidadId?: string;
-  datosPrevios?: any;
-  datosPosteriores?: any;
+  datosPrevios?: unknown;
+  datosPosteriores?: unknown;
   metadata?: MetadataAuditoria;
 }
 
@@ -100,8 +100,8 @@ export async function registrarAccionCRUD(
   tipoAccion: TipoAccion,
   entidadTipo: TipoEntidad,
   entidadId: string,
-  datosPrevios?: any,
-  datosPosteriores?: any,
+  datosPrevios?: unknown,
+  datosPosteriores?: unknown,
   metadata?: MetadataAuditoria
 ): Promise<void> {
   await registrarAuditoria({

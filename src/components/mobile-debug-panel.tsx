@@ -25,7 +25,7 @@ export class MobileDebugger {
   private static logs: LogEntry[] = [];
   private static listeners: Array<(logs: LogEntry[]) => void> = [];
 
-  static log(level: 'info' | 'warn' | 'error' | 'debug', category: string, message: string, data?: any) {
+  static log(level: 'info' | 'warn' | 'error' | 'debug', category: string, message: string, data?: unknown) {
     const logEntry: LogEntry = {
       timestamp: new Date().toLocaleTimeString(),
       level,

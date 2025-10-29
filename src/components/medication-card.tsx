@@ -61,8 +61,9 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   const [newExpirationDate, setNewExpirationDate] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isUseDialogOpen, setIsUseDialogOpen] = useState(false);
-  const [consumidores, setConsumidores] = useState<any[]>([]);
+  // Eliminado: isUseDialogOpen no se usa
+  type RadialConsumidor = { id: string; name: string; tipo: 'usuario' | 'perfil'; rol?: string; foto?: string };
+  const [consumidores, setConsumidores] = useState<RadialConsumidor[]>([]);
   const [selectedConsumidor, setSelectedConsumidor] = useState<string>('');
   
   // Estados para el selector radial
@@ -96,11 +97,21 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
     const fetchConsumidores = async () => {
       try {
         const response = await apiFetch('/api/consumidores-grupo');
-        if (response.ok) {
+      if (response.ok) {
           const data = await response.json();
-          // La API devuelve { consumidores: [...] }, extraer el array
-          const consumidoresArray = data.consumidores || [];
-          setConsumidores(Array.isArray(consumidoresArray) ? consumidoresArray : []);
+          // La API devuelve { consumidores: [...] }, normalizar a la forma esperada por RadialAvatarSelector
+          const consumidoresArray = Array.isArray(data.consumidores) ? data.consumidores : [];
+          const normalizados: RadialConsumidor[] = consumidoresArray.map((c: unknown) => {
+            const item = c as Record<string, unknown>;
+            return {
+              id: String(item.id),
+              name: typeof item.name === 'string' && item.name.length > 0 ? item.name : (typeof item.email === 'string' ? String(item.email) : ''),
+              tipo: item.tipo === 'perfil' ? 'perfil' : 'usuario',
+              rol: typeof item.rol === 'string' ? item.rol : undefined,
+              foto: typeof item.foto === 'string' ? item.foto : undefined,
+            };
+          });
+          setConsumidores(normalizados);
         } else {
           console.error('Error en la respuesta:', response.status);
           setConsumidores([]);
@@ -134,12 +145,12 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
 
       await registrarTomaMedicamento(formData);
       
-      setIsUseDialogOpen(false);
+      // cerrar selector radial
       setIsRadialSelectorOpen(false);
       setSelectedConsumidor('');
       
-      toast.success(`Toma registrada para ${consumidor?.name}`);
-    } catch (error: any) {
+      toast.success(`Toma registrada para ${consumidor?.name ?? 'miembro'}`);
+    } catch (error) {
       console.error('Error al registrar toma:', error);
       toast.error('Error al registrar la toma');
     }

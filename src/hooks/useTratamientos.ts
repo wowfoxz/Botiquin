@@ -48,8 +48,8 @@ export const useTratamientos = () => {
       patientId?: string;
       patientType?: string;
       symptoms?: string;
-      medications: any[];
-      images?: any[];
+      medications: unknown[];
+      images?: unknown[];
       userId: string;
     }
   ) => {

@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EditarTratamientoDialog } from "./EditarTratamientoDialog";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
-import { CheckCircle, XCircle, Eye } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { VerDetallesDialog } from "./VerDetallesDialog";
 
 interface TratamientosActivosProps {

@@ -18,6 +18,8 @@ interface VerDetallesDialogProps {
 }
 
 export function VerDetallesDialog({ tratamiento, medicinas }: VerDetallesDialogProps) {
+  // Evitar warning por prop no utilizada actualmente
+  void medicinas;
   const [open, setOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);

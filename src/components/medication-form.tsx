@@ -2,14 +2,12 @@
 
 import { addMedication } from '@/app/actions';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 
 interface MedicationFormProps {
   children: React.ReactNode;
 }
 
 export default function MedicationForm({ children }: MedicationFormProps) {
-  const router = useRouter();
 
   const handleSubmit = async (formData: FormData) => {
     try {

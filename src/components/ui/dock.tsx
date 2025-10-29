@@ -43,7 +43,6 @@ type DockItemProps = {
 type DockLabelProps = {
   className?: string;
   children: React.ReactNode;
-  width?: MotionValue<number>;
   isHovered?: MotionValue<number>;
 };
 
@@ -137,10 +136,10 @@ function Dock({
   );
 }
 
-function DockItem({ children, className, onClick, onKeyDown, onDrag, onDragEnd, onDragStart, onAnimationStart, ...props }: DockItemProps) {
+function DockItem({ children, className, onClick, onKeyDown, ...props }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
 
-  const { distance, magnification, mouseX, spring } = useDock();
+  const { distance, magnification, mouseX } = useDock();
 
   const isHovered = useMotionValue(0);
 
@@ -157,12 +156,17 @@ function DockItem({ children, className, onClick, onKeyDown, onDrag, onDragEnd, 
 
   const width = useSpring(widthTransform, { mass: 0.1, stiffness: 150, damping: 20 });
 
-  // Excluir onDrag, onDragEnd, onDragStart y onAnimationStart para evitar conflicto de tipos con Framer Motion
+  // Excluir onDrag*, onAnimationStart de props para evitar conflicto de tipos con Framer Motion, sin crear variables no usadas
+  const restProps = { ...(props as Record<string, unknown>) };
+  delete (restProps as Record<string, unknown>).onDrag;
+  delete (restProps as Record<string, unknown>).onDragStart;
+  delete (restProps as Record<string, unknown>).onDragEnd;
+  delete (restProps as Record<string, unknown>).onAnimationStart;
   const motionDivProps = {
     onClick,
     onKeyDown,
-    ...props
-  };
+    ...restProps,
+  } as React.ComponentProps<typeof motion.div>;
 
   return (
     <motion.div
@@ -191,7 +195,7 @@ function DockItem({ children, className, onClick, onKeyDown, onDrag, onDragEnd, 
   );
 }
 
-function DockLabel({ children, className, width, isHovered }: DockLabelProps) {
+function DockLabel({ children, className, isHovered }: DockLabelProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

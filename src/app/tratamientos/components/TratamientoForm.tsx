@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Tratamiento, Medicamento, TratamientoImagen } from "@/types/tratamientos";
+import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { PatientSelector } from "@/components/ui/patient-selector";
 import { MedicationSelector } from "@/components/ui/medication-selector";
 import { TreatmentImageUploader } from "@/components/ui/treatment-image-uploader";
@@ -365,7 +365,7 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
                     <p className="font-medium">Información requerida</p>
                     <p className="text-sm mt-1">
                       Para crear el tratamiento, debes agregar al menos un medicamento. 
-                      Haz clic en "Agregar Medicamento" para continuar.
+                      Haz clic en &quot;Agregar Medicamento&quot; para continuar.
                     </p>
                   </div>
                 </div>

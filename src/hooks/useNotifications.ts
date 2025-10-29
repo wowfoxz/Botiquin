@@ -9,13 +9,7 @@ interface NotificationPermissionState {
   isSubscribed: boolean;
 }
 
-interface PushSubscription {
-  endpoint: string;
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
-}
+// Eliminado tipo local PushSubscription no utilizado
 
 export const useNotifications = () => {
   const [notificationState, setNotificationState] = useState<NotificationPermissionState>({

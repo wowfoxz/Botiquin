@@ -79,7 +79,7 @@ export function DeleteConfirmationDialog({
         <div className="space-y-4">
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
             <p className="text-sm font-medium text-destructive">
-              ¿Estás seguro de que quieres eliminar "{itemName}"?
+              ¿Estás seguro de que quieres eliminar &quot;{itemName}&quot;?
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Esta acción no se puede deshacer.

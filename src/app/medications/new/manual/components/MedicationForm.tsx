@@ -64,7 +64,7 @@ export default function MedicationForm() {
         form.setValue(key as keyof MedicationFormData, value);
       });
     }
-  }, [searchParams]); // Remover 'form' de las dependencias para evitar re-renders innecesarios
+  }, [searchParams, form]); // Incluir 'form' para cumplir con exhaustive-deps
 
   // Determinar si viene de la IA
   const isFromAI = Object.values(form.getValues()).some(value => value !== '');
@@ -164,7 +164,7 @@ export default function MedicationForm() {
       toast.success('Medicamento agregado exitosamente');
       // Recargar la página para mostrar el medicamento agregado
       window.location.href = '/botiquin';
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error al agregar medicamento:', error);
       toast.error('Error al agregar el medicamento');
     } finally {

@@ -38,14 +38,14 @@ export async function GET(
         FROM TreatmentMedication tm
         LEFT JOIN Medication m ON tm.medicationId = m.id
         WHERE tm.treatmentId = ${id}
-      ` as any[];
+      ` as unknown[]; // Prisma $queryRaw returns unknown[]
 
       // Obtener imágenes
       const images = await prisma.$queryRaw`
         SELECT *
         FROM TreatmentImage
         WHERE treatmentId = ${id}
-      ` as any[];
+      ` as unknown[]; // Prisma $queryRaw returns unknown[]
 
       const tratamientoCompleto = {
         ...tratamiento,
@@ -100,26 +100,24 @@ export async function PUT(
     }
 
     // Calcular nueva fecha de finalización si cambia la duración
-    let endDate = tratamientoExistente.endDate;
-    if (body.durationDays) {
-      // Usar la fecha de inicio existente o la específica si está configurada
-      const startDate = new Date(tratamientoExistente.startDate);
-      // Ajustar startDate a la zona horaria local
-      const adjustedStartDate = new Date(
-        startDate.getTime() - startDate.getTimezoneOffset() * 60000
-      );
-      endDate = new Date(
-        adjustedStartDate.getTime() +
-          parseInt(body.durationDays) * 24 * 60 * 60 * 1000
-      );
-      // Ajustar endDate a la zona horaria local
-      endDate = new Date(
-        endDate.getTime() - endDate.getTimezoneOffset() * 60000
-      );
-    }
+    // const endDate = tratamientoExistente.endDate;
+    // if (body.durationDays) {
+    //   // Usar la fecha de inicio existente o la específica si está configurada
+    //   const startDate = new Date(tratamientoExistente.startDate);
+    //   // Ajustar startDate a la zona horaria local
+    //   const adjustedStartDate = new Date(
+    //     startDate.getTime() - startDate.getTimezoneOffset() * 60000
+    //   );
+    //   // endDate calculado pero no usado en la actualización
+    //   const endDate = new Date(
+    //     adjustedStartDate.getTime() +
+    //       parseInt(body.durationDays) * 24 * 60 * 60 * 1000
+    //   );
+    // }
 
     // Preparar datos para actualización con la nueva estructura
-    const datosUpdate: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const datosUpdate: any = { // Prisma TreatmentUpdateInput type
       name: body.name,
       patient: body.patient,
       patientId: body.patientId,

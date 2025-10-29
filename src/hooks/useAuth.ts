@@ -7,10 +7,6 @@ interface User {
   name: string;
 }
 
-interface Session {
-  userId: string;
-  expires: string;
-}
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -27,8 +23,8 @@ export const useAuth = () => {
       });
       
       if (response.ok) {
-        const { user, session }: { user: User; session: Session } = await response.json();
-        setUser(user);
+        const { user: userResponse }: { user: User } = await response.json();
+        setUser(userResponse);
       } else if (response.status === 401) {
         // Sesión expirada o no válida, limpiar usuario
         setUser(null);

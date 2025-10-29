@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tratamiento, Medicamento } from "@/types/tratamientos";
-import { XCircle, Calendar, Eye } from "lucide-react";
+import { XCircle, Calendar } from "lucide-react";
 import { History } from "lucide-react";
 import { VerDetallesDialog } from "./VerDetallesDialog";
 
@@ -34,6 +34,8 @@ export function TratamientosHistoricos({
   userId,
   onDelete
 }: TratamientosHistoricosProps) {
+  // Evitar warning por prop no utilizada
+  void userId;
   return (
     <Card className="border-0 shadow-none pl-5 pr-5">
       <CardHeader className="px-0">

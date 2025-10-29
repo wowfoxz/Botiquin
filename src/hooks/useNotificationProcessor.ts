@@ -6,12 +6,21 @@ import { apiFetch } from '@/lib/api';
 /**
  * Hook para procesar notificaciones automáticas en segundo plano
  * Se ejecuta cada 5 minutos mientras la app esté abierta
+ * Solo se ejecuta en producción para evitar spam en desarrollo
  */
 export function useNotificationProcessor() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
 
   useEffect(() => {
+    // Solo ejecutar en producción
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (!isProduction) {
+      console.log('ℹ️ NotificationProcessor: Deshabilitado en desarrollo');
+      return;
+    }
+
     const processNotifications = async () => {
       // Evitar llamadas concurrentes
       if (isProcessingRef.current) {

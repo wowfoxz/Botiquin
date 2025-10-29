@@ -2,14 +2,14 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import type { Tratamiento } from "@/types/tratamientos";
 import { useMedicinas, useTratamientos } from "@/hooks/useTratamientos";
 import { TratamientoForm } from "../../components/TratamientoForm";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbList } from "@/components/ui/breadcrumb";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cardio } from "ldrs/react";
 import { ArrowLeft, Pencil } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
 import 'ldrs/react/Cardio.css';
@@ -32,8 +32,22 @@ export default function EditarTratamientoPage() {
     patientId?: string;
     patientType?: string;
     symptoms?: string;
-    medications: any[];
-    images?: any[];
+    medications: Array<{
+      medicationId: string;
+      dosage: number | string;
+      frequencyHours: number | string;
+      durationDays: number | string;
+      startOption?: string;
+      specificStartTime?: string | Date;
+    }>;
+    images?: Array<{
+      id?: string;
+      imageUrl: string;
+      imageType: string;
+      extractedText?: string;
+      aiAnalysis?: string;
+      createdAt?: Date | string;
+    }>;
     userId: string;
   }) => {
     try {
@@ -56,7 +70,7 @@ export default function EditarTratamientoPage() {
       };
       
       
-      await updateTratamiento(tratamientoId, processedTreatment);
+      await updateTratamiento(tratamientoId, processedTreatment as Partial<Tratamiento>);
       
       toast.success("Tratamiento actualizado exitosamente");
       

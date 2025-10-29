@@ -31,7 +31,7 @@ const Menu = () => {
 
   // ✅ HOOKS - Siempre llamar en el mismo orden
   // Función para verificar manualmente la autenticación
-  const checkAuth = async () => {
+  const checkAuth = React.useCallback(async () => {
     // No verificar autenticación si estamos en una página de auth
     if (isAuthPage) {
       return;
@@ -44,7 +44,7 @@ const Menu = () => {
       console.error("Error al verificar autenticación:", error);
       setIsAuthenticated(false);
     }
-  };
+  }, [isAuthPage]);
 
   useEffect(() => {
     // Solo verificar auth si NO estamos en páginas de autenticación
@@ -62,7 +62,7 @@ const Menu = () => {
         window.removeEventListener('user-login', handleUserLogin);
       };
     }
-  }, [pathname]); // Volver a verificar cuando cambia la ruta
+  }, [pathname, isAuthPage, checkAuth]); // Volver a verificar cuando cambia la ruta
 
   // ✅ Agregar padding-left al body cuando el usuario está autenticado para evitar que elementos queden detrás del botón
   useEffect(() => {

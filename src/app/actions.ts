@@ -776,7 +776,8 @@ export async function agregarAdultoAlGrupo(formData: FormData) {
   const hashedPassword = await bcrypt.hash(dni, 10); // Contraseña por defecto es el DNI
 
   // Preparar datos de creación
-  const createData: any = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createData: any = { // Prisma UserCreateInput type
     name,
     email,
     dni,
@@ -863,7 +864,8 @@ export async function agregarMenorConCuentaAlGrupo(formData: FormData) {
   const hashedPassword = await bcrypt.hash(dni, 10); // Contraseña por defecto es el DNI
 
   // Preparar datos de creación
-  const createData: any = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createData: any = { // Prisma UserCreateInput type
     name,
     email,
     dni,
@@ -946,7 +948,8 @@ export async function agregarPerfilMenorAlGrupo(formData: FormData) {
   }
 
   // Preparar datos de creación
-  const createData: any = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createData: any = { // Prisma PerfilMenorCreateInput type
     nombre: name,
     dni,
     fechaNacimiento: new Date(fechaNacimiento),
@@ -1161,7 +1164,8 @@ export async function actualizarUsuarioGrupo(formData: FormData) {
   }
 
   // Preparar datos de actualización
-  const updateData: any = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateData: any = { // Prisma UserUpdateInput type
     name,
     email,
     dni,
@@ -1278,7 +1282,8 @@ export async function actualizarPerfilMenor(formData: FormData) {
   }
 
   // Preparar datos de actualización
-  const updateData: any = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateData: any = { // Prisma PerfilMenorUpdateInput type
     nombre,
     dni,
     fechaNacimiento: new Date(fechaNacimiento),

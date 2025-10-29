@@ -42,21 +42,22 @@ async function ejecutarConReintentos<T>(
   maxReintentos: number = 3,
   delayInicial: number = 1000
 ): Promise<T> {
-  let ultimoError: any;
+  let ultimoError: unknown;
   
   for (let intento = 0; intento <= maxReintentos; intento++) {
     try {
       return await operacion();
-    } catch (error: any) {
+    } catch (error) {
       ultimoError = error;
       
       // Verificar si es un error recuperable (503, 429, timeout)
+      const errorTyped = error as { status?: number; message?: string };
       const esErrorRecuperable = 
-        error?.status === 503 || 
-        error?.status === 429 ||
-        error?.message?.includes('overloaded') ||
-        error?.message?.includes('timeout') ||
-        error?.message?.includes('network');
+        errorTyped?.status === 503 || 
+        errorTyped?.status === 429 ||
+        errorTyped?.message?.includes('overloaded') ||
+        errorTyped?.message?.includes('timeout') ||
+        errorTyped?.message?.includes('network');
       
       if (!esErrorRecuperable || intento === maxReintentos) {
         throw error;
@@ -125,17 +126,18 @@ export async function analyzeImageWithGemini(
     });
 
     return resultado;
-  } catch (error: any) {
+  } catch (error) {
+    const errorTyped = error as { status?: number; message?: string };
     console.error("Error al analizar la imagen con Gemini:", error);
     
     // Determinar el mensaje de error apropiado
     let mensajeError = "No se pudo analizar la imagen.";
     
-    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+    if (errorTyped?.status === 503 || errorTyped?.message?.includes('overloaded')) {
       mensajeError = "El servicio de análisis de imágenes está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
-    } else if (error?.status === 429) {
+    } else if (errorTyped?.status === 429) {
       mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
-    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+    } else if (errorTyped?.message?.includes('network') || errorTyped?.message?.includes('timeout')) {
       mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
     }
     
@@ -201,20 +203,21 @@ export async function getDrugInfoWithGemini(
     });
 
     return resultado;
-  } catch (error: any) {
+  } catch (error) {
     console.error(
       "Error al obtener información del medicamento con Gemini:",
       error
     );
     
     // Determinar el mensaje de error apropiado
+    const errorTyped = error as { status?: number; message?: string };
     let mensajeError = "No se pudo obtener la información del medicamento.";
     
-    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+    if (errorTyped?.status === 503 || errorTyped?.message?.includes('overloaded')) {
       mensajeError = "El servicio de información farmacéutica está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
-    } else if (error?.status === 429) {
+    } else if (errorTyped?.status === 429) {
       mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
-    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+    } else if (errorTyped?.message?.includes('network') || errorTyped?.message?.includes('timeout')) {
       mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
     }
     
@@ -259,20 +262,21 @@ export async function getDescriptionWithGemini(
     });
 
     return resultado;
-  } catch (error: any) {
+  } catch (error) {
     console.error(
       "Error al obtener descripción del medicamento con Gemini:",
       error
     );
     
     // Determinar el mensaje de error apropiado
+    const errorTyped = error as { status?: number; message?: string };
     let mensajeError = "No se pudo obtener la descripción del medicamento.";
     
-    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+    if (errorTyped?.status === 503 || errorTyped?.message?.includes('overloaded')) {
       mensajeError = "El servicio de información farmacéutica está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
-    } else if (error?.status === 429) {
+    } else if (errorTyped?.status === 429) {
       mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
-    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+    } else if (errorTyped?.message?.includes('network') || errorTyped?.message?.includes('timeout')) {
       mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
     }
     
@@ -325,20 +329,21 @@ Responde ÚNICAMENTE con las recomendaciones de dosis en texto plano simple.`;
     });
 
     return resultado;
-  } catch (error: any) {
+  } catch (error) {
     console.error(
       "Error al obtener recomendaciones de ingesta con Gemini:",
       error
     );
     
     // Determinar el mensaje de error apropiado
+    const errorTyped = error as { status?: number; message?: string };
     let mensajeError = "No se pudo obtener las recomendaciones de ingesta.";
     
-    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+    if (errorTyped?.status === 503 || errorTyped?.message?.includes('overloaded')) {
       mensajeError = "El servicio de información farmacéutica está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
-    } else if (error?.status === 429) {
+    } else if (errorTyped?.status === 429) {
       mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
-    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+    } else if (errorTyped?.message?.includes('network') || errorTyped?.message?.includes('timeout')) {
       mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
     }
     
@@ -453,17 +458,18 @@ Responde ÚNICAMENTE con un objeto JSON válido:
     });
 
     return resultado;
-  } catch (error: any) {
+  } catch (error) {
+    const errorTyped = error as { status?: number; message?: string };
     console.error("Error al analizar imagen de tratamiento con Gemini:", error);
     
     // Determinar el mensaje de error apropiado
     let mensajeError = "No se pudo analizar la imagen.";
     
-    if (error?.status === 503 || error?.message?.includes('overloaded')) {
+    if (errorTyped?.status === 503 || errorTyped?.message?.includes('overloaded')) {
       mensajeError = "El servicio de análisis de imágenes está temporalmente sobrecargado. Por favor, inténtalo de nuevo en unos momentos.";
-    } else if (error?.status === 429) {
+    } else if (errorTyped?.status === 429) {
       mensajeError = "Se han excedido los límites de uso del servicio. Por favor, espera un momento antes de intentar de nuevo.";
-    } else if (error?.message?.includes('network') || error?.message?.includes('timeout')) {
+    } else if (errorTyped?.message?.includes('network') || errorTyped?.message?.includes('timeout')) {
       mensajeError = "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
     }
     

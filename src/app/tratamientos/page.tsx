@@ -36,7 +36,6 @@ export default function TratamientosPage() {
     tratamientos,
     loading: loadingTratamientos,
     error: errorTratamientos,
-    createTratamiento,
     updateTratamiento,
     deleteTratamiento
   } = useTratamientos();
@@ -95,11 +94,6 @@ export default function TratamientosPage() {
   const tratamientosActivos = tratamientosUsuario.filter(t => t.isActive === true);
   const tratamientosHistoricos = tratamientosUsuario.filter(t => t.isActive === false);
 
-  // Obtener nombre de medicamento por ID
-  const obtenerNombreMedicamento = (id: string) => {
-    const medicina = medicinas.find(m => m.id === id);
-    return medicina ? medicina.commercialName : "Medicamento no encontrado";
-  };
   // Datos para el dock
   const dockItems: { title: string; icon: React.ReactNode; id: "activos" | "historicos" }[] = [
     {

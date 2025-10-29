@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus } from "lucide-react";
-import { Tratamiento, Medicamento } from "@/types/tratamientos";
 import { TratamientoForm } from "../components/TratamientoForm";
 import { useMedicinas, useTratamientos } from "@/hooks/useTratamientos";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,8 +33,20 @@ export default function NuevoTratamientoPage() {
     patientId?: string;
     patientType?: string;
     symptoms?: string;
-    medications: any[];
-    images?: any[];
+    medications: Array<{
+      medicationId: string;
+      dosage: number | string;
+      frequencyHours: number | string;
+      durationDays: number | string;
+      startOption?: string;
+      specificStartTime?: string | Date;
+    }>;
+    images?: Array<{
+      imageUrl: string;
+      imageType: string;
+      extractedText?: string;
+      aiAnalysis?: string;
+    }>;
     userId: string;
   }) => {
     try {

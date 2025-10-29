@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Construir condiciones de filtro
-    const whereConditions: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereConditions: any = {}; // Prisma HistorialWhereInput type
 
     // Solo mostrar eventos del grupo familiar del usuario
     if (usuario.grupoId) {
@@ -184,7 +185,8 @@ export async function POST() {
     }
 
     // Obtener opciones para filtros
-    const whereConditions: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereConditions: any = {}; // Prisma HistorialWhereInput type
     if (usuario.grupoId) {
       whereConditions.usuario = {
         grupoId: usuario.grupoId,

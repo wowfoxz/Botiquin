@@ -116,13 +116,14 @@ function UploadPageContent() {
           MobileDebugger.log('warn', 'CAMERA', 'Error al reproducir video (autoplay)', playError);
         });
       }
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as Error & { code?: unknown; constraint?: unknown };
       console.error('Error accessing camera:', err);
       MobileDebugger.log('error', 'CAMERA', 'Error al acceder a la cámara', {
-        name: err?.name,
-        message: err?.message,
-        code: err?.code,
-        constraint: err?.constraint,
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+        constraint: error?.constraint,
       });
       setError('No se pudo acceder a la cámara. Por favor, selecciona una imagen.');
       setIsCameraActive(false);
@@ -134,7 +135,7 @@ function UploadPageContent() {
       streamRef.current.getTracks().forEach((track) => {
         try {
           track.stop();
-        } catch (e) {
+        } catch {
           // ignore errors when stopping tracks
         }
       });
@@ -146,7 +147,7 @@ function UploadPageContent() {
       try {
         // Clear srcObject in a type-safe way
         (videoRef.current as HTMLVideoElement).srcObject = null;
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -221,9 +222,10 @@ function UploadPageContent() {
       const pureBase64 = imageBase64.split(',')[1];
       // Usar await para esperar la respuesta del servidor
       await processUploadedImage(pureBase64, file.type);
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { digest?: string };
       // Verificar si es una redirección de Next.js (comportamiento normal)
-      if (err?.digest?.includes('NEXT_REDIRECT')) {
+      if (error?.digest?.includes('NEXT_REDIRECT')) {
         // Es una redirección normal, no un error real
         clearInterval(progressInterval);
         return;

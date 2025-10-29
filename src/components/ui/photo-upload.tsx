@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Camera, X, User } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface PhotoUploadProps {
   currentPhoto?: string | null;
@@ -118,10 +118,13 @@ export function PhotoUpload({ currentPhoto, onPhotoChange, disabled = false }: P
       <div className="flex items-center gap-4">
         <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
           {preview ? (
-            <img 
-              src={preview} 
-              alt="Foto de perfil" 
-              className="w-full h-full object-cover"
+            <Image
+              src={preview}
+              alt="Foto de perfil"
+              fill
+              className="object-cover"
+              sizes="96px"
+              unoptimized
             />
           ) : (
             <User className="w-8 h-8 text-muted-foreground" />

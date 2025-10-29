@@ -131,7 +131,7 @@ export function AdvancedConfirmationModal({
               <Info className="w-4 h-4 mt-0.5 text-muted-foreground" />
               <div className="space-y-2">
                 <p className={`text-sm font-medium ${styles.textColor}`}>
-                  ¿Estás seguro de que quieres eliminar "{itemName}"?
+                  ¿Estás seguro de que quieres eliminar &quot;{itemName}&quot;?
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Esta acción afectará el {itemType} y no se puede deshacer.

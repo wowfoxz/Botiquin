@@ -14,7 +14,7 @@ export async function GET(
       SELECT *
       FROM "TreatmentImage"
       WHERE "treatmentId" = ${id}
-    ` as any[];
+    ` as unknown[]; // Prisma $queryRaw returns unknown[]
 
     return NextResponse.json(images);
   } catch (error) {

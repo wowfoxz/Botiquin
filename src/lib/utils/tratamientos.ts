@@ -1,5 +1,4 @@
 import {
-  Tratamiento,
   Notificacion,
   PreferenciasNotificaciones,
 } from "@/types/tratamientos";

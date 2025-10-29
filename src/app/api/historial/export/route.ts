@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
 
     // Obtener parámetros de query para filtros
     const { searchParams } = new URL(request.url);
-    const filtros: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filtros: any = {}; // Prisma HistorialWhereInput type
 
     // Solo mostrar eventos del grupo familiar del usuario
     if (usuario.grupoId) {

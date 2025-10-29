@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,9 @@ interface HistorialItem {
   tipoAccion: string;
   entidadTipo: string;
   entidadId: string | null;
-  datosPrevios: any;
-  datosPosteriores: any;
-  metadata: any;
+  datosPrevios: unknown;
+  datosPosteriores: unknown;
+  metadata: unknown;
   createdAt: string;
 }
 
@@ -77,7 +78,7 @@ const HistorialPage = () => {
   const [itemSeleccionado, setItemSeleccionado] = useState<HistorialItem | null>(null);
 
   // Cargar opciones de filtros
-  const cargarOpcionesFiltros = async () => {
+  const cargarOpcionesFiltros = useCallback(async () => {
     try {
       const response = await apiFetch("/api/historial", {
         method: "POST",
@@ -89,10 +90,10 @@ const HistorialPage = () => {
     } catch (error) {
       console.error("Error al cargar opciones de filtros:", error);
     }
-  };
+  }, []);
 
   // Cargar historial
-  const cargarHistorial = async (pagina: number = 1) => {
+  const cargarHistorial = useCallback(async (pagina: number = 1) => {
     setCargando(true);
     try {
       const params = new URLSearchParams({
@@ -119,10 +120,10 @@ const HistorialPage = () => {
     } finally {
       setCargando(false);
     }
-  };
+  }, [filtros, paginacion.limit]);
 
   // Exportar historial
-  const exportarHistorial = async () => {
+  const exportarHistorial = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (filtros.usuarioId) params.append("usuario_id", filtros.usuarioId);
@@ -146,24 +147,24 @@ const HistorialPage = () => {
     } catch (error) {
       console.error("Error al exportar historial:", error);
     }
-  };
+  }, [filtros]);
 
   // Limpiar filtros
-  const limpiarFiltros = () => {
+  const limpiarFiltros = useCallback(() => {
     setFiltros({});
     cargarHistorial(1);
-  };
+  }, [cargarHistorial]);
 
   // Aplicar filtros
-  const aplicarFiltros = () => {
+  const aplicarFiltros = useCallback(() => {
     cargarHistorial(1);
     setMostrarFiltros(false);
-  };
+  }, [cargarHistorial]);
 
   useEffect(() => {
     cargarOpcionesFiltros();
     cargarHistorial();
-  }, []);
+  }, [cargarOpcionesFiltros, cargarHistorial]);
 
   const formatearTipoAccion = (tipo: string) => {
     const traducciones: { [key: string]: string } = {
@@ -199,25 +200,31 @@ const HistorialPage = () => {
   };
 
   // Función para detectar si un valor es una imagen base64
-  const esImagenBase64 = (valor: any): boolean => {
+  const esImagenBase64 = (valor: unknown): boolean => {
     return typeof valor === 'string' && valor.startsWith('data:image/');
   };
 
   // Función para renderizar datos de manera inteligente
-  const renderizarDatos = (datos: any) => {
+  const renderizarDatos = (datos: unknown) => {
     if (!datos) return null;
+    if (typeof datos !== 'object' || datos === null) return null;
 
-    return Object.entries(datos).map(([clave, valor]) => {
+    return Object.entries(datos as Record<string, unknown>).map(([clave, valor]) => {
       if (esImagenBase64(valor)) {
         return (
           <div key={clave} className="mb-3">
             <Label className="text-xs font-medium">{clave}</Label>
             <div className="mt-1">
-              <img 
-                src={valor as string} 
-                alt={`${clave}`}
-                className="w-24 h-24 rounded-lg object-cover border"
-              />
+              <div className="relative w-24 h-24 rounded-lg overflow-hidden border">
+                <Image
+                  src={valor as string}
+                  alt={`${clave}`}
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                  unoptimized
+                />
+              </div>
             </div>
           </div>
         );
@@ -240,10 +247,11 @@ const HistorialPage = () => {
   };
 
   // Función para filtrar datos que ya se muestran visualmente
-  const filtrarDatosParaJSON = (datos: any) => {
+  const filtrarDatosParaJSON = (datos: unknown) => {
     if (!datos) return datos;
+    if (typeof datos !== 'object' || datos === null) return datos;
 
-    const datosFiltrados = { ...datos };
+    const datosFiltrados: Record<string, unknown> = { ...datos as Record<string, unknown> };
     
     // Remover campos de foto que ya se muestran visualmente
     Object.keys(datosFiltrados).forEach(clave => {
@@ -588,39 +596,45 @@ const HistorialPage = () => {
                   </p>
                 </div>
 
-                {itemSeleccionado.datosPrevios && (
+                {Boolean(itemSeleccionado.datosPrevios) && (
                   <div>
                     <Label>Datos Previos</Label>
                     <div className="space-y-3">
                       {renderizarDatos(itemSeleccionado.datosPrevios)}
-                      {filtrarDatosParaJSON(itemSeleccionado.datosPrevios) && (
+                      {(() => {
+                        const filtrado = filtrarDatosParaJSON(itemSeleccionado.datosPrevios);
+                        return Boolean(filtrado) && (
                         <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                          {JSON.stringify(filtrarDatosParaJSON(itemSeleccionado.datosPrevios), null, 2)}
+                          {JSON.stringify(filtrado as unknown, null, 2)}
                         </pre>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
 
-                {itemSeleccionado.datosPosteriores && (
+                {Boolean(itemSeleccionado.datosPosteriores) && (
                   <div>
                     <Label>Datos Posteriores</Label>
                     <div className="space-y-3">
                       {renderizarDatos(itemSeleccionado.datosPosteriores)}
-                      {filtrarDatosParaJSON(itemSeleccionado.datosPosteriores) && (
+                      {(() => {
+                        const filtrado = filtrarDatosParaJSON(itemSeleccionado.datosPosteriores);
+                        return Boolean(filtrado) && (
                         <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                          {JSON.stringify(filtrarDatosParaJSON(itemSeleccionado.datosPosteriores), null, 2)}
+                          {JSON.stringify(filtrado as unknown, null, 2)}
                         </pre>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
 
-                {itemSeleccionado.metadata && (
+                {Boolean(itemSeleccionado.metadata) && (
                   <div>
                     <Label>Metadata</Label>
                     <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                      {JSON.stringify(itemSeleccionado.metadata, null, 2)}
+                      {JSON.stringify(itemSeleccionado.metadata as unknown, null, 2)}
                     </pre>
                   </div>
                 )}
