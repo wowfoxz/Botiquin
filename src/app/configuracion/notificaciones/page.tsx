@@ -64,7 +64,7 @@ export default function NotificacionesPage() {
   if (errorPreferencias) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-error">
+        <div className="text-[var(--color-error)]">
           Error: {errorPreferencias?.toString()}
         </div>
       </div>

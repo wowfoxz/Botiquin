@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
-import { MobileDebugger } from '@/components/mobile-debug-panel';
 
 interface NotificationPermissionState {
   permission: NotificationPermission;
@@ -23,26 +22,12 @@ export const useNotifications = () => {
   // Verificar soporte y permisos al cargar
   useEffect(() => {
     const checkNotificationSupport = async () => {
-      MobileDebugger.log('info', 'PUSH', 'Verificando soporte de notificaciones...');
-      
       // Verificar soporte básico
       const hasNotification = 'Notification' in window;
       const hasServiceWorker = 'serviceWorker' in navigator;
       const hasPushManager = 'PushManager' in window;
 
-      MobileDebugger.log('debug', 'PUSH', 'Soporte APIs', {
-        Notification: hasNotification,
-        ServiceWorker: hasServiceWorker,
-        PushManager: hasPushManager,
-        userAgent: navigator.userAgent,
-      });
-
       if (!hasNotification || !hasServiceWorker || !hasPushManager) {
-        MobileDebugger.log('error', 'PUSH', 'Notificaciones NO soportadas en este navegador', {
-          hasNotification,
-          hasServiceWorker,
-          hasPushManager,
-        });
         setNotificationState(prev => ({ ...prev, isSupported: false }));
         return;
       }
@@ -56,14 +41,8 @@ export const useNotifications = () => {
                          location.hostname.startsWith('172.') ||
                          location.hostname.match(/^\d+\.\d+\.\d+\.\d+$/); // Cualquier IP local
       
-      MobileDebugger.log('debug', 'PUSH', 'Verificación HTTPS', {
-        protocol: location.protocol,
-        hostname: location.hostname,
-        isLocalhost,
-      });
       
       if (location.protocol !== 'https:' && !isLocalhost) {
-        MobileDebugger.log('error', 'PUSH', 'HTTPS requerido para notificaciones push');
 
         setNotificationState(prev => ({ ...prev, isSupported: false }));
         return;
@@ -236,25 +215,18 @@ export const useNotifications = () => {
     }
 
     try {
-      MobileDebugger.log('info', 'PUSH', 'Enviando notificación de prueba...');
-
       // Solicitar permisos explícitamente
       const permission = await Notification.requestPermission();
-      MobileDebugger.log('debug', 'PUSH', 'Permiso solicitado', { permission });
 
       if (permission !== 'granted') {
         toast.error('Permisos de notificación denegados. Actívalos en configuración del navegador.');
-        MobileDebugger.log('error', 'PUSH', 'Permiso denegado');
         return false;
       }
       
-      // ✅ Importar config para basePath
       const { config } = await import('@/lib/config');
       
-      // ✅ Usar Service Worker (funciona en móviles Y desktop)
+      // Usar Service Worker (funciona en móviles Y desktop)
       if ('serviceWorker' in navigator) {
-        MobileDebugger.log('info', 'PUSH', 'Usando Service Worker para notificación');
-        
         const registration = await navigator.serviceWorker.ready;
         
         // Configuración de notificación con vibración
@@ -276,13 +248,10 @@ export const useNotifications = () => {
         
         await registration.showNotification('🔔 Botilyx - Prueba', notificationOptions);
 
-        MobileDebugger.log('info', 'PUSH', '✅ Notificación enviada vía Service Worker');
-        toast.success('✅ Notificación de prueba enviada');
+        toast.success('Notificación de prueba enviada');
         return true;
       } else {
         // Fallback para navegadores sin Service Worker (raro)
-        MobileDebugger.log('warn', 'PUSH', 'Service Worker no disponible, usando Notification API');
-        
         const notification = new Notification('🔔 Botilyx - Prueba', {
           body: '¡Notificación funcionando! Las notificaciones push están activas correctamente.',
           icon: config.BASE_PATH + '/icons/favicon.png',
@@ -299,13 +268,11 @@ export const useNotifications = () => {
           notification.close();
         };
 
-        toast.success('✅ Notificación de prueba enviada');
+        toast.success('Notificación de prueba enviada');
         return true;
       }
 
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      MobileDebugger.log('error', 'PUSH', 'Error al enviar notificación', { error: errorMessage });
+    } catch {
       toast.error('Error al enviar notificación de prueba');
       return false;
     }

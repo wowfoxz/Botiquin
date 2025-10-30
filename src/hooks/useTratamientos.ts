@@ -56,7 +56,6 @@ export const useTratamientos = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log("Enviando solicitud para crear tratamiento:", tratamiento);
       const response = await apiFetch("/api/tratamientos", {
         method: "POST",
         headers: {
@@ -65,16 +64,12 @@ export const useTratamientos = () => {
         body: JSON.stringify(tratamiento),
       });
 
-      console.log("Respuesta del servidor:", response.status, response.statusText);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error del servidor:", errorData);
         throw new Error(errorData.error || `Error del servidor: ${response.status}`);
       }
 
       const newTratamiento = await response.json();
-      console.log("Tratamiento creado exitosamente:", newTratamiento);
       setTratamientos((prev) => [...prev, newTratamiento]);
       // No mostrar toast aquí, se maneja en la página
       return newTratamiento;

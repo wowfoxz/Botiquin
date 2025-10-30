@@ -43,10 +43,9 @@ export function TreatmentImageUploader({
   const previousImagesCount = useRef<number>(0);
   const imagesRef = useRef<TreatmentImage[]>(images); // ✅ Ref para mantener el valor actual
 
-  // ✅ Actualizar el ref cuando cambian las imágenes
+  // Actualizar el ref cuando cambian las imágenes
   useEffect(() => {
     imagesRef.current = images;
-    console.log('📦 imagesRef actualizado:', images.length);
   }, [images]);
 
   // ✅ Efecto para expandir automáticamente nuevas imágenes
@@ -54,33 +53,17 @@ export function TreatmentImageUploader({
     if (images.length > previousImagesCount.current) {
       // Se agregó una nueva imagen
       const newImage = images[images.length - 1];
-      console.log('🆕 Nueva imagen detectada en useEffect:', newImage.id);
-      
-      setExpandedImages(prev => {
-        const updated = { ...prev, [newImage.id]: true };
-        console.log('🔵 expandedImages actualizado desde useEffect:', updated);
-        return updated;
-      });
-      
-      setShowAnalysis(prev => {
-        const updated = { ...prev, [newImage.id]: true };
-        console.log('🔵 showAnalysis actualizado desde useEffect:', updated);
-        return updated;
-      });
+      setExpandedImages(prev => ({ ...prev, [newImage.id]: true }));
+      setShowAnalysis(prev => ({ ...prev, [newImage.id]: true }));
     }
     previousImagesCount.current = images.length;
   }, [images]);
 
   const handleFileSelect = async (file: File, imageType: "receta" | "instrucciones") => {
-      console.log('📸 handleFileSelect llamado:', { fileName: file.name, fileType: file.type, imageType });
-      
       if (!file.type.startsWith('image/')) {
-        console.error('❌ Archivo no es una imagen:', file.type);
         alert('Por favor selecciona un archivo de imagen válido');
         return;
       }
-
-      console.log('✅ Archivo válido, creando imagen temporal...');
 
       // Crear imagen temporal para mostrar mientras se sube
       const tempImageUrl = URL.createObjectURL(file);
@@ -92,9 +75,7 @@ export function TreatmentImageUploader({
         isAnalyzing: true,
       };
 
-      console.log('📦 Nueva imagen creada:', { id: newImage.id, imageType, tempImageUrl });
-      
-      // ✅ Expandir la imagen y mostrar el análisis automáticamente
+      // Expandir la imagen y mostrar el análisis automáticamente
       setExpandedImages(prev => ({
         ...prev,
         [newImage.id]: true
@@ -105,12 +86,9 @@ export function TreatmentImageUploader({
         [newImage.id]: true
       }));
 
-      // ✅ CRÍTICO: Usar imagesRef.current para evitar closure stale
-      console.log('📦 Array de imágenes ANTES de agregar (ref):', imagesRef.current.length);
+      // Usar imagesRef.current para evitar closure stale
       const updatedImages = [...imagesRef.current, newImage];
-      console.log('📦 Array de imágenes DESPUÉS de agregar:', updatedImages.length);
       onImagesChange(updatedImages);
-      console.log('🔵 Imagen agregada, expandedImages y showAnalysis activados para:', newImage.id);
 
       try {
         // Subir imagen al servidor

@@ -67,8 +67,8 @@ export function PatientSelector({
 
   if (consumidores.length === 0) {
     return (
-      <div className="p-4 border border-warning/20 bg-warning/10 rounded-md">
-        <p className="text-sm text-warning-foreground">
+      <div className="p-4 border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 rounded-md">
+        <p className="text-sm text-[var(--color-warning)]">
           No hay pacientes disponibles en el grupo familiar
         </p>
       </div>

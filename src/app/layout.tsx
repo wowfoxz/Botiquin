@@ -4,7 +4,6 @@ import Menu from '@/components/menu/menu';
 import { ThemeSwitch } from '@/components/providers/theme-switch';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
-import MobileDebugPanel from '@/components/mobile-debug-panel';
 import { NotificationProcessor } from '@/components/notification-processor';
 
 // Metadata con basePath hardcodeado para producción
@@ -47,11 +46,7 @@ export const viewport = {
   themeColor: '#3b82f6',
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children, }: { children: React.ReactNode; }) {
   return (
     <html lang="es" suppressHydrationWarning>
       <body>
@@ -68,7 +63,6 @@ export default async function RootLayout({
           <Menu />
           {children}
           <Toaster />
-          <MobileDebugPanel />
           <NotificationProcessor />
         </ThemeProvider>
         <script
@@ -76,17 +70,11 @@ export default async function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  // Hardcodeado para producción - detectar entorno
-                  const isProduction = window.location.hostname !== 'localhost' && 
-                                       window.location.hostname !== '127.0.0.1';
+                  const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
                   const basePath = isProduction ? '/botilyx' : '';
                   navigator.serviceWorker.register(basePath + '/sw.js')
-                    .then(function(registration) {
-                      console.log('Service Worker registrado exitosamente:', registration.scope);
-                    })
-                    .catch(function(error) {
-                      console.log('Error al registrar Service Worker:', error);
-                    });
+                    .then(function(registration) {})
+                    .catch(function(error) {});
                 });
               }
             `,

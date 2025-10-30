@@ -197,7 +197,7 @@ export default function PreciosPage() {
         </Breadcrumb>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6 text-text-primary">Consulta de Precios de Medicamentos</h1>
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Consulta de Precios de Medicamentos</h1>
 
       <Card className="mb-8 shadow-lg transition-all duration-300 hover:shadow-xl">
         <CardContent className="p-6">
@@ -214,7 +214,7 @@ export default function PreciosPage() {
             </div>
             <Button
               type="submit"
-              className="w-full sm:w-auto px-6 py-2 bg-primary-500 hover:bg-primary-500/90 text-text-inverse font-medium transition-all duration-200"
+              className="w-full sm:w-auto px-6 py-2 bg-[var(--color-primary-soft-blue)] hover:opacity-90 text-[var(--color-primary-foreground)] font-medium transition-all duration-200"
               disabled={loading || !searchTerm.trim()}
             >
               {loading ? 'Buscando...' : 'Buscar'}
@@ -233,14 +233,14 @@ export default function PreciosPage() {
               color="var(--color-info)"
             />
           </div>
-          <p className="text-text-secondary mt-4">Buscando medicamentos...</p>
+          <p className="text-muted-foreground mt-4">Buscando medicamentos...</p>
         </div>
       )}
 
       {error && (
-        <Card className="mb-8 shadow-lg border border-error/20 bg-error/5">
+        <Card className="mb-8 shadow-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/5">
           <CardContent className="p-6">
-            <p className="text-center text-error font-medium">{error}</p>
+            <p className="text-center text-[var(--color-error)] font-medium">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -251,78 +251,78 @@ export default function PreciosPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-surface-secondary">
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                  <TableRow className="bg-muted">
+                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Medicamento
                     </TableHead>
                     <TableHead
-                      className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider hidden md:table-cell cursor-pointer hover:bg-surface-interactive/30 transition-colors"
+                      className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell cursor-pointer hover:bg-accent/30 transition-colors"
                       onClick={() => handleSort('presentacion')}
                     >
                       <span className="flex items-center">
                         Presentación {sortField === 'presentacion' && getSortIcon('presentacion')}
                       </span>
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider hidden lg:table-cell">
+                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                       Laboratorio
                     </TableHead>
                     <TableHead
-                      className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:bg-surface-interactive/30 transition-colors"
+                      className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-accent/30 transition-colors"
                       onClick={() => handleSort('precio')}
                     >
                       <span className="flex items-center">
                         Precio {sortField === 'precio' && getSortIcon('precio')}
                       </span>
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider hidden sm:table-cell">
+                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
                       Fecha
                     </TableHead>
                   </TableRow>
                 </TableHeader>
 
-                <TableBody className="divide-y divide-border-secondary">
+                <TableBody className="divide-y divide-border">
                   {sortedMedicamentos.map((med, index) => (
                     <TableRow
                       key={index}
-                      className={`transition-colors duration-200 ${index % 2 === 0 ? 'bg-surface-primary' : 'bg-surface-secondary'} hover:bg-surface-interactive/30`}
+                      className={`transition-colors duration-200 ${index % 2 === 0 ? 'bg-card' : 'bg-muted'} hover:bg-accent/30`}
                     >
                       <TableCell className="px-4 py-4">
-                        <div className="font-medium text-text-primary">{med.NOMBRE}</div>
+                        <div className="font-medium text-foreground">{med.NOMBRE}</div>
                         {med.DROGA && med.DROGA !== med.NOMBRE && (
-                          <div className="text-sm text-text-secondary mt-1">({med.DROGA})</div>
+                          <div className="text-sm text-muted-foreground mt-1">({med.DROGA})</div>
                         )}
 
                         {/* Responsive details */}
-                        <div className="text-sm text-text-tertiary mt-1 md:hidden">
+                        <div className="text-sm text-muted-foreground mt-1 md:hidden">
                           <span className="font-medium">Presentación:</span> {med.PRESENTACION}
                         </div>
-                        <div className="text-sm text-text-tertiary mt-1 lg:hidden">
+                        <div className="text-sm text-muted-foreground mt-1 lg:hidden">
                           <span className="font-medium">Laboratorio:</span> {med.LABORATORIO}
                         </div>
-                        <div className="text-sm text-text-tertiary mt-1 sm:hidden">
+                        <div className="text-sm text-muted-foreground mt-1 sm:hidden">
                           <span className="font-medium">Fecha:</span> {med.FECHA}
                         </div>
 
                         {med.ACCION && (
-                          <div className="text-sm italic text-text-tertiary mt-1">{med.ACCION} - {med.VIA}</div>
+                          <div className="text-sm italic text-muted-foreground mt-1">{med.ACCION} - {med.VIA}</div>
                         )}
                       </TableCell>
 
-                      <TableCell className="px-4 py-4 text-text-primary hidden md:table-cell">
+                      <TableCell className="px-4 py-4 text-foreground hidden md:table-cell">
                         {med.PRESENTACION}
                       </TableCell>
 
-                      <TableCell className="px-4 py-4 text-text-primary hidden lg:table-cell">
+                      <TableCell className="px-4 py-4 text-foreground hidden lg:table-cell">
                         {med.LABORATORIO}
                       </TableCell>
 
-                      <TableCell className="px-4 py-4 text-text-primary font-medium">
-                        <span className="bg-success/10 text-success px-2 py-1 rounded-md">
+                      <TableCell className="px-4 py-4 text-foreground font-medium">
+                        <span className="bg-[var(--color-success)]/10 text-[var(--color-success)] px-2 py-1 rounded-md">
                           ${med.PRECIO}
                         </span>
                       </TableCell>
 
-                      <TableCell className="px-4 py-4 text-text-primary hidden sm:table-cell">
+                      <TableCell className="px-4 py-4 text-foreground hidden sm:table-cell">
                         {med.FECHA}
                       </TableCell>
                     </TableRow>
@@ -337,7 +337,7 @@ export default function PreciosPage() {
           <Card className="shadow-lg">
             <CardContent className="p-12 text-center">
               <div className="text-5xl mb-4">💊</div>
-              <p className="text-text-secondary max-w-md mx-auto">
+              <p className="text-muted-foreground max-w-md mx-auto">
                 {searchTerm ? 'No se encontraron medicamentos para su búsqueda.' : 'Ingrese el nombre de un medicamento en el campo de búsqueda para consultar sus precios.'}
               </p>
             </CardContent>
@@ -349,7 +349,7 @@ export default function PreciosPage() {
       {medicamentos.length > 0 && (
         <Card className="mt-6 shadow-lg">
           <CardContent className="p-4">
-            <div className="text-xs text-yellow-200">
+            <div className="text-xs text-[var(--color-warning)] bg-[var(--color-warning)]/10 p-3 rounded-md border border-[var(--color-warning)]/20">
               <p className="font-semibold mb-1">Aviso importante:</p>
               <p>
                 Los precios mostrados son exclusivamente de referencia y no constituyen un precio de venta obligatorio.

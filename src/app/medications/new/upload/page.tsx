@@ -10,7 +10,6 @@ import Image from 'next/image';
 import BookLoader from '@/components/BookLoader';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { MobileDebugger } from '@/components/mobile-debug-panel';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -82,18 +81,10 @@ function UploadPageContent() {
 
   const startCamera = async () => {
     try {
-      MobileDebugger.log('info', 'CAMERA', 'Intentando activar cámara...');
-      
       // Verificar soporte de mediaDevices
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        MobileDebugger.log('error', 'CAMERA', 'getUserMedia NO soportado', {
-          hasMediaDevices: !!navigator.mediaDevices,
-          userAgent: navigator.userAgent,
-        });
         throw new Error('Tu navegador no soporta acceso a la cámara');
       }
-
-      MobileDebugger.log('debug', 'CAMERA', 'mediaDevices soportado, solicitando permisos...');
       
       setIsCameraActive(true);
       setError('');
@@ -102,29 +93,16 @@ function UploadPageContent() {
         video: { facingMode: 'environment' } // Prefer rear camera if available
       });
 
-      MobileDebugger.log('info', 'CAMERA', '✅ Cámara activada exitosamente', {
-        tracks: stream.getTracks().length,
-        videoTracks: stream.getVideoTracks().length,
-      });
-
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         // Try to play the video if autoplay is blocked
-        videoRef.current.play().catch((playError) => {
-          MobileDebugger.log('warn', 'CAMERA', 'Error al reproducir video (autoplay)', playError);
+        videoRef.current.play().catch(() => {
+          // Error silencioso en autoplay
         });
       }
-    } catch (err) {
-      const error = err as Error & { code?: unknown; constraint?: unknown };
-      console.error('Error accessing camera:', err);
-      MobileDebugger.log('error', 'CAMERA', 'Error al acceder a la cámara', {
-        name: error?.name,
-        message: error?.message,
-        code: error?.code,
-        constraint: error?.constraint,
-      });
+    } catch {
       setError('No se pudo acceder a la cámara. Por favor, selecciona una imagen.');
       setIsCameraActive(false);
     }
@@ -232,7 +210,6 @@ function UploadPageContent() {
       }
       // Solo manejar errores reales
       setError('Ocurrió un error inesperado al enviar la imagen.');
-      console.error(err);
     } finally {
       clearInterval(progressInterval);
       setIsSubmitting(false);

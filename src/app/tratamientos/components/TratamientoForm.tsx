@@ -46,7 +46,6 @@ interface TratamientoFormProps {
 }
 
 export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initialData }: TratamientoFormProps) {
-  console.log('🟣 TratamientoForm - Componente renderizado/re-renderizado');
   
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,22 +59,8 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
   const [medications, setMedications] = useState<TreatmentMedicationFormData[]>([]);
   const [images, setImages] = useState<TreatmentImage[]>([]);
 
-  // ✅ Log para detectar montaje/desmontaje del componente
-  useEffect(() => {
-    console.log('✅ TratamientoForm - Componente MONTADO');
-    return () => {
-      console.log('❌ TratamientoForm - Componente DESMONTADO');
-    };
-  }, []);
-
-  // ✅ Log para debug: detectar cambios en images
-  useEffect(() => {
-    console.log('🔴 TratamientoForm - Estado images cambió:', images.length);
-  }, [images]);
-
   // Inicializar datos cuando se está editando
   useEffect(() => {
-    console.log('🟡 TratamientoForm - useEffect initialData disparado:', !!initialData);
     if (initialData) {
       // Configurar paciente seleccionado
       if (initialData.patientId && initialData.patientType) {
@@ -275,8 +260,6 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
             <TreatmentImageUploader
               images={images}
               onImagesChange={(newImages) => {
-                console.log('🟢 TratamientoForm - setImages llamado desde TreatmentImageUploader, de', images.length, 'a', newImages.length);
-                console.trace('🔍 Stack trace de setImages');
                 setImages(newImages);
               }}
               disabled={isSubmitting}
@@ -358,9 +341,9 @@ export function TratamientoForm({ onSubmit, onCancel, medicinas, userId, initial
 
             {/* Mensaje de ayuda */}
             {medications.length === 0 && (
-              <div className="bg-warning/10 border border-warning/20 text-warning px-4 py-3 rounded-md">
+              <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 text-[var(--color-warning)] px-4 py-3 rounded-md">
                 <div className="flex items-start gap-2">
-                  <div className="text-warning">💡</div>
+                  <div className="text-[var(--color-warning)]">💡</div>
                   <div>
                     <p className="font-medium">Información requerida</p>
                     <p className="text-sm mt-1">

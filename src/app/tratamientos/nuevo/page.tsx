@@ -25,7 +25,6 @@ export default function NuevoTratamientoPage() {
   const { medicinas, loading: loadingMedicinas, error: errorMedicinas } = useMedicinas();
   const { createTratamiento } = useTratamientos();
 
-  console.log('🔵 NuevoTratamientoPage - Componente renderizado');
 
   const handleCreate = async (tratamiento: {
     name: string;

@@ -245,7 +245,7 @@ const MedicamentosTable: React.FC<MedicamentosTableProps> = ({
                       {med.PRESENTACION}
                     </TableCell>
                     <TableCell className={`${classes.cellPadding} ${classes.colPrecio} text-foreground font-medium`}>
-                      <Badge variant="secondary" className={`bg-success/10 text-success ${classes.badgeSize}`}>
+                      <Badge variant="secondary" className={`bg-[var(--color-success)]/10 text-[var(--color-success)] ${classes.badgeSize}`}>
                         ${med.PRECIO}
                       </Badge>
                     </TableCell>

@@ -281,8 +281,8 @@ export function MedicationSelector({
                   {stockInfo && (
                     <div className={`p-3 rounded-md ${
                       stockInfo.suficiente 
-                        ? "bg-success/10 border border-success/20" 
-                        : "bg-destructive/10 border border-destructive/20"
+                        ? "bg-[var(--color-success)]/10 border border-[var(--color-success)]/20" 
+                        : "bg-[var(--color-error)]/10 border border-[var(--color-error)]/20"
                     }`}>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">

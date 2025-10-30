@@ -249,7 +249,7 @@ export function VerDetallesDialog({ tratamiento, medicinas }: VerDetallesDialogP
                               🤖 Análisis con Inteligencia Artificial
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-md max-h-60 overflow-y-auto border border-blue-200 dark:border-blue-800">
+                              <div className="bg-[var(--color-info)]/10 p-4 rounded-md max-h-60 overflow-y-auto border border-[var(--color-info)]/20">
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{image.aiAnalysis}</p>
                               </div>
                             </AccordionContent>
@@ -362,7 +362,7 @@ export function VerDetallesDialog({ tratamiento, medicinas }: VerDetallesDialogP
                       🤖 Análisis IA
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="bg-blue-900/40 backdrop-blur-md p-4 rounded-md max-h-32 overflow-y-auto border border-blue-400/30">
+                      <div className="bg-[var(--color-primary-soft-blue)]/40 backdrop-blur-md p-4 rounded-md max-h-32 overflow-y-auto border border-[var(--color-primary-soft-blue)]/30">
                         <p className="text-white text-sm whitespace-pre-wrap leading-relaxed">{selectedImage.aiAnalysis}</p>
                       </div>
                     </AccordionContent>

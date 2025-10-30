@@ -268,19 +268,19 @@ const HistorialPage = () => {
   const obtenerColorBadge = (tipoAccion: string) => {
     switch (tipoAccion) {
       case "login":
-        return "bg-green-100 text-green-800";
+        return "bg-[var(--color-success)]/20 text-[var(--color-success)] border border-[var(--color-success)]/30";
       case "logout":
-        return "bg-gray-100 text-gray-800";
+        return "bg-[var(--color-muted)] text-[var(--color-muted-foreground)] border border-[var(--color-border)]";
       case "create":
-        return "bg-blue-100 text-blue-800";
+        return "bg-[var(--color-info)]/20 text-[var(--color-info)] border border-[var(--color-info)]/30";
       case "update":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-[var(--color-warning)]/20 text-[var(--color-warning)] border border-[var(--color-warning)]/30";
       case "delete":
-        return "bg-red-100 text-red-800";
+        return "bg-[var(--color-error)]/20 text-[var(--color-error)] border border-[var(--color-error)]/30";
       case "search":
-        return "bg-purple-100 text-purple-800";
+        return "bg-[var(--color-additional-purple)]/20 text-[var(--color-additional-purple)] border border-[var(--color-additional-purple)]/30";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-[var(--color-muted)] text-[var(--color-muted-foreground)] border border-[var(--color-border)]";
     }
   };
 

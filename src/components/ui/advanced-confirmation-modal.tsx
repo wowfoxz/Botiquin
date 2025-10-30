@@ -65,7 +65,7 @@ export function AdvancedConfirmationModal({
   const getIcon = () => {
     switch (variant) {
       case "warning":
-        return <AlertTriangle className="w-5 h-5 text-orange-500" />;
+        return <AlertTriangle className="w-5 h-5 text-[var(--color-warning)]" />;
       case "destructive":
         return <Trash2 className="w-5 h-5 text-destructive" />;
       default:
@@ -77,10 +77,10 @@ export function AdvancedConfirmationModal({
     switch (variant) {
       case "warning":
         return {
-          titleColor: "text-orange-600",
-          borderColor: "border-orange-200",
-          bgColor: "bg-orange-50",
-          textColor: "text-orange-800",
+          titleColor: "text-[var(--color-warning)]",
+          borderColor: "border-[var(--color-warning)]/20",
+          bgColor: "bg-[var(--color-warning)]/10",
+          textColor: "text-[var(--color-warning)]",
         };
       case "destructive":
         return {

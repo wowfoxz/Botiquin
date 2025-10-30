@@ -17,20 +17,17 @@ export function useNotificationProcessor() {
     const isProduction = process.env.NODE_ENV === 'production';
     
     if (!isProduction) {
-      console.log('ℹ️ NotificationProcessor: Deshabilitado en desarrollo');
       return;
     }
 
     const processNotifications = async () => {
       // Evitar llamadas concurrentes
       if (isProcessingRef.current) {
-        console.log('⏭️ Notificaciones ya se están procesando, saltando...');
         return;
       }
 
       try {
         isProcessingRef.current = true;
-        console.log('🔔 Procesando notificaciones automáticas...');
         
         const response = await apiFetch('/api/notifications/process', {
           method: 'POST',
@@ -39,14 +36,11 @@ export function useNotificationProcessor() {
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ Notificaciones procesadas:', data);
-        } else {
-          console.error('❌ Error procesando notificaciones:', response.statusText);
+        if (!response.ok) {
+          // Error silencioso - no loguear en producción
         }
-      } catch (error) {
-        console.error('❌ Error en proceso de notificaciones:', error);
+      } catch {
+        // Error silencioso - no loguear en producción
       } finally {
         isProcessingRef.current = false;
       }

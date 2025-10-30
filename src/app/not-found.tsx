@@ -43,18 +43,17 @@ const Custom404 = () => {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-4"
-      style={{ backgroundColor: 'var(--color-surface-primary)' }}
+      style={{ backgroundColor: 'var(--background)' }}
     >
       <div className="w-full max-w-2xl flex flex-col items-center">
         <h1
           className="text-3xl md:text-4xl font-bold mb-4 text-center"
-          style={{ color: 'var(--color-text-primary)' }}
+          style={{ color: 'var(--foreground)' }}
         >
           ¡Oops! Página no encontrada
         </h1>
         <p
-          className="text-center max-w-md mb-8"
-          style={{ color: 'var(--color-text-secondary)' }}
+          className="text-center max-w-md mb-8 text-muted-foreground"
         >
           Lo sentimos, la página que estás buscando no existe o ha sido movida.
         </p>
@@ -63,11 +62,7 @@ const Custom404 = () => {
       <div className="w-full max-w-2xl flex flex-col items-center mt-8">
         <Link
           href="/"
-          className="px-6 py-3 rounded-md transition-colors duration-300 font-medium"
-          style={{
-            backgroundColor: 'var(--color-primary-soft-blue)',
-            color: 'var(--color-text-inverse)'
-          }}
+          className="px-6 py-3 rounded-md transition-colors duration-300 font-medium bg-[var(--color-primary-soft-blue)] text-[var(--color-primary-foreground)] hover:opacity-90"
         >
           Volver al inicio
         </Link>

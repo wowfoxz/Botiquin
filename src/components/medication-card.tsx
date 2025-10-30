@@ -263,7 +263,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
   };
 
   return (
-    <Card className={`overflow-hidden ${isExpired ? 'border-red-500' : 'border-green-500'} border-l-4`}>
+    <Card className={`overflow-hidden border-l-4 ${isExpired ? 'border-[var(--color-error)]' : 'border-[var(--color-success)]'}`}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1">
@@ -302,7 +302,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
         <div className="flex justify-between items-center mb-3">
           <div className="text-sm">
             <span className="font-semibold">Cantidad:</span> 
-            <span className={quantity < 0 ? "text-red-500 font-bold" : ""}>
+            <span className={quantity < 0 ? "text-[var(--color-error)] font-bold" : ""}>
               {quantity} {unit}
             </span>
             {quantity < 0 && (
@@ -316,7 +316,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
             disabled={quantity <= 0}
             variant="default"
             size="sm"
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="bg-[var(--color-primary-soft-blue)] hover:opacity-90 text-[var(--color-primary-foreground)]"
           >
             Usar
           </PressButton>
@@ -396,7 +396,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                 </div>
                 <div className="grid grid-cols-3 items-center gap-4">
                   <span className="font-semibold">Vence:</span>
-                  <span className={`col-span-2 ${isExpired ? 'text-red-500 font-bold' : ''}`}>
+                  <span className={`col-span-2 ${isExpired ? 'text-[var(--color-error)] font-bold' : ''}`}>
                     {expirationDateFormatted}
                   </span>
                 </div>
@@ -429,7 +429,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs h-6 px-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                      className="text-xs h-6 px-2 text-[var(--color-primary-soft-blue)] hover:opacity-80 hover:bg-[var(--color-primary-soft-blue)]/10"
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Editar
@@ -511,7 +511,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                         >
                           Cancelar
                         </Button>
-                        <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                        <Button type="submit" className="bg-[var(--color-primary-soft-blue)] hover:opacity-90 text-[var(--color-primary-foreground)]">
                           Guardar Cambios
                         </Button>
                       </div>
@@ -525,7 +525,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      className="text-xs h-6 px-2 text-[var(--color-error)] hover:opacity-80 hover:bg-[var(--color-error)]/10"
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
                       Eliminar
@@ -564,7 +564,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs h-6 px-2 text-green-500 hover:text-green-600 hover:bg-green-50"
+                      className="text-xs h-6 px-2 text-[var(--color-success)] hover:opacity-80 hover:bg-[var(--color-success)]/10"
                     >
                       Desarchivar
                     </Button>
@@ -600,7 +600,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                         >
                           Cancelar
                         </Button>
-                        <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                        <Button type="submit" className="bg-[var(--color-success)] hover:opacity-90 text-white">
                           Confirmar y Desarchivar
                         </Button>
                       </div>
@@ -613,7 +613,7 @@ const MedicationCard = ({ medication }: MedicationCardProps) => {
                 onClick={handleArchive}
                 variant="ghost"
                 size="sm"
-                className="text-xs h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                className="text-xs h-6 px-2 text-[var(--color-error)] hover:opacity-80 hover:bg-[var(--color-error)]/10"
               >
                 Archivar
               </Button>

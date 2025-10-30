@@ -87,12 +87,12 @@ export function NotificacionesTab({
             <div className="flex items-center gap-4">
               <div
                 className={`p-2 rounded-full ${
-                  isSubscribed ? "bg-green-100" : "bg-primary/10"
+                  isSubscribed ? "bg-[var(--color-success)]/20" : "bg-primary/10"
                 }`}
               >
                 <Smartphone
                   className={`h-6 w-6 ${
-                    isSubscribed ? "text-green-600" : "text-primary"
+                    isSubscribed ? "text-[var(--color-success)]" : "text-primary"
                   }`}
                 />
               </div>
@@ -157,8 +157,8 @@ export function NotificacionesTab({
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                       isSubscribed
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
+                        : "bg-[var(--color-error)]/20 text-[var(--color-error)]"
                     }`}
                     aria-live="polite"
                   >
@@ -206,12 +206,12 @@ export function NotificacionesTab({
             <div className="flex items-center gap-4">
               <div
                 className={`p-2 rounded-full ${
-                  preferencias?.email ? "bg-green-100" : "bg-primary/10"
+                  preferencias?.email ? "bg-[var(--color-success)]/20" : "bg-primary/10"
                 }`}
               >
                 <BellOff
                   className={`h-6 w-6 ${
-                    preferencias?.email ? "text-green-600" : "text-primary"
+                    preferencias?.email ? "text-[var(--color-success)]" : "text-primary"
                   }`}
                 />
               </div>
@@ -221,8 +221,8 @@ export function NotificacionesTab({
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                       preferencias?.email
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
+                        : "bg-[var(--color-error)]/20 text-[var(--color-error)]"
                     }`}
                     aria-live="polite"
                   >
@@ -245,12 +245,12 @@ export function NotificacionesTab({
             <div className="flex items-center gap-4">
               <div
                 className={`p-2 rounded-full ${
-                  preferencias?.sound ? "bg-green-100" : "bg-primary/10"
+                  preferencias?.sound ? "bg-[var(--color-success)]/20" : "bg-primary/10"
                 }`}
               >
                 <Clock
                   className={`h-6 w-6 ${
-                    preferencias?.sound ? "text-green-600" : "text-primary"
+                    preferencias?.sound ? "text-[var(--color-success)]" : "text-primary"
                   }`}
                 />
               </div>
@@ -260,8 +260,8 @@ export function NotificacionesTab({
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                       preferencias?.sound
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
+                        : "bg-[var(--color-error)]/20 text-[var(--color-error)]"
                     }`}
                     aria-live="polite"
                   >

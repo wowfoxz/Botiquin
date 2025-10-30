@@ -293,7 +293,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
               </span>
             </div>
             {/* Disclaimer */}
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-xs text-yellow-800">
+            <div className="mt-4 p-3 bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 rounded-md text-xs text-[var(--color-warning)]">
               <p className="font-semibold mb-1">Precios de referencia:</p>
               <p>
                 promedio de valores declarados por laboratorios al Vademécum Nacional de Medicamentos (VNM),

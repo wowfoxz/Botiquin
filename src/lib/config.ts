@@ -69,13 +69,4 @@ export const config = {
 // Exportar también las configuraciones para referencia
 export { PRODUCTION_CONFIG, DEVELOPMENT_CONFIG };
 
-// Log de configuración en desarrollo
-if (!isProduction) {
-  console.log('🔧 Configuración cargada:', {
-    NODE_ENV: process.env.NODE_ENV,
-    BASE_PATH: config.BASE_PATH,
-    API_URL: config.API_URL,
-    APP_VERSION: config.APP_VERSION,
-  });
-}
 

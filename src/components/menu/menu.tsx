@@ -17,6 +17,8 @@ import {
   LogOut
 } from "lucide-react";
 
+// Eliminar componente NotificationBadge y su uso
+
 const Menu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -142,8 +144,7 @@ const Menu = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-40"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
               onClick={closeMenu}
             />
             <motion.div
@@ -151,7 +152,7 @@ const Menu = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 h-full w-64 shadow-xl z-50 p-4"
+              className="fixed top-0 left-0 h-full w-64 shadow-xl z-50 p-4 flex flex-col"
               style={{ backgroundColor: "var(--background)" }}
             >
               <div className="flex justify-center items-center w-full">
@@ -171,7 +172,7 @@ const Menu = () => {
                   margin: "1rem 0",
                 }}
               ></div>
-              <nav>
+              <nav className="flex-1">
                 <ul className="space-y-2">
                   {menuItems.map((item, index) => (
                     <motion.li
@@ -203,36 +204,37 @@ const Menu = () => {
                       </Link>
                     </motion.li>
                   ))}
-                  <motion.li
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: menuItems.length * 0.1 }}
-                    className="rounded-md"
-                    style={{ backgroundColor: "var(--muted)" }}
-                  >
-                    <form action={logoutUser} className="w-full">
-                      <button
-                        type="submit"
-                        className="flex items-center gap-3 w-full text-left py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
-                        style={{ color: "var(--foreground)" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "var(--destructive)";
-                          e.currentTarget.style.color =
-                            "var(--destructive-foreground)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "";
-                          e.currentTarget.style.color = "var(--foreground)";
-                        }}
-                      >
-                        <LogOut className="w-5 h-5 flex-shrink-0" />
-                        <span>Cerrar Sesión</span>
-                      </button>
-                    </form>
-                  </motion.li>
                 </ul>
               </nav>
+              {/* Footer SIEMPRE ANCLADO abajo */}
+              <div className="mt-auto pt-4 border-t border-border">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: menuItems.length * 0.1 }}
+                >
+                  <form action={logoutUser} className="w-full">
+                    <button
+                      type="submit"
+                      className="flex items-center gap-3 w-full text-left py-3 px-4 rounded-md transition-colors duration-200 hover:bg-opacity-80"
+                      style={{ color: "var(--foreground)" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          "var(--destructive)";
+                        e.currentTarget.style.color =
+                          "var(--destructive-foreground)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "";
+                        e.currentTarget.style.color = "var(--foreground)";
+                      }}
+                    >
+                      <LogOut className="w-5 h-5 flex-shrink-0" />
+                      <span>Cerrar Sesión</span>
+                    </button>
+                  </form>
+                </motion.div>
+              </div>
             </motion.div>
           </>
         )}

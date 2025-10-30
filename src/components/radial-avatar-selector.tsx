@@ -366,16 +366,16 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
                         alt={consumidor.name}
                         className="object-cover"
                       />
-                      <AvatarFallback className="bg-gray-100 text-gray-600 flex items-center justify-center">
+                      <AvatarFallback className="bg-[var(--color-muted)] text-[var(--color-muted-foreground)] flex items-center justify-center">
                         <User className="w-8 h-8" />
                       </AvatarFallback>
                     </Avatar>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="bg-gray-900 text-white">
+                <TooltipContent side="top" className="bg-[var(--color-card)] text-[var(--color-card-foreground)] border border-[var(--color-border)]">
                   <p className="font-medium">{consumidor.name}</p>
                   {consumidor.rol && (
-                    <p className="text-xs text-gray-300">{consumidor.rol}</p>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">{consumidor.rol}</p>
                   )}
                 </TooltipContent>
               </Tooltip>
@@ -383,7 +383,7 @@ const RadialAvatarSelector: React.FC<RadialAvatarSelectorProps> = ({
           })}
           
           {/* Botón central (para referencia visual) */}
-          <div className="w-8 h-8 bg-blue-500 rounded-full shadow-xl border-2 border-white flex items-center justify-center">
+          <div className="w-8 h-8 bg-[var(--color-primary-soft-blue)] rounded-full shadow-xl border-2 border-white flex items-center justify-center">
             <div className="w-4 h-4 bg-white rounded-full opacity-80" />
           </div>
         </div>

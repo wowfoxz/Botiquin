@@ -80,7 +80,7 @@ export default function TratamientosPage() {
   if (errorTratamientos || errorMedicinas) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-error">
+        <div className="text-[var(--color-error)]">
           Error: {errorTratamientos?.toString() || errorMedicinas?.toString()}
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function TratamientosPage() {
               <DockIcon className={`aspect-square rounded-full flex items-center justify-center ${
                 activeTab === item.id
                   ? 'bg-primary text-primary-foreground'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
               }`}>
                 {item.icon}
               </DockIcon>

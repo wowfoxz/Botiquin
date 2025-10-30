@@ -245,8 +245,8 @@ export default function AgregarMenorPage() {
                   )}
                 />
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-[var(--color-info)]/10 p-4 rounded-lg border border-[var(--color-info)]/20">
+                  <p className="text-sm text-[var(--color-info)]">
                     <strong>Nota:</strong> La contraseña inicial será el DNI del menor. 
                     Solo podrá registrar tomas para sí mismo.
                   </p>
@@ -334,8 +334,8 @@ export default function AgregarMenorPage() {
                   )}
                 />
 
-                <div className="bg-amber-50 p-4 rounded-lg">
-                  <p className="text-sm text-amber-800">
+                <div className="bg-[var(--color-warning)]/10 p-4 rounded-lg border border-[var(--color-warning)]/20">
+                  <p className="text-sm text-[var(--color-warning)]">
                     <strong>Nota:</strong> Este menor no podrá iniciar sesión. 
                     Solo los adultos podrán registrar tomas para él.
                   </p>
